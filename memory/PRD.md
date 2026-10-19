@@ -159,3 +159,9 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Cause : en production, tous les PDF renvoyaient 500 — les polices GPSans/GPSerif étaient lues dans /usr/share/fonts/truetype/liberation, absent du conteneur de production.
 - Correctif : 7 polices Liberation (licence SIL OFL) embarquées dans backend/fonts/ ; pdf_fonts.py les charge en priorité, dossier système en repli.
 - Agent de test iteration_45 : 23/23 backend (factures PDF/Excel FR/EN confirmé + en attente, exports registre et butin) + 4/4 frontend sans toast d'erreur. En ligne seulement après Deploy.
+
+## 2026-10-19 — SEO / aperçu de partage refait (« dessin d'enfant » signalé sur Discord)
+- Nouvelle image Open Graph /og-golden-pirates.jpg 1200×630 générée par /app/scripts/og/make_og.py (illustration feast-pirates.png du site, polices du site Pirata One / Cinzel / IM Fell en OFL dans /app/scripts/og/fonts, titre doré, sceau de cire GP original, bandeau RECRUTEMENT OUVERT · RECRUITING, double cadre or). /og-image.png écrasée avec la même image (anciens liens).
+- Nouvelles icônes monogramme GP doré : favicon.ico, favicon-48, icon-192/512, apple-touch-icon ; site.webmanifest (Android).
+- index.html : titre + description + keywords, og:image complet (secure_url/type/taille/alt), og:locale:alternate, twitter:image:alt, hreflang, JSON-LD @graph Organization (logo, email) + WebSite. Seo.jsx : nouvelle image + alt, faux compte twitter:site retiré, titres /suivi et /donations. llms.txt + sitemap complétés.
+- Agent de test iteration_10 (SEO) : 100 %. En ligne après Deploy.

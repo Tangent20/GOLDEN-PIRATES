@@ -2,18 +2,19 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useLang } from "@/lib/i18n";
 
-const BASE_TITLE = "GOLDEN PIRATES — Royaume 1023 | Call of Dragons";
+const BASE_TITLE = "GOLDEN PIRATES — Alliance pirate du Royaume 1023 · Call of Dragons";
 const BASE_DESC =
-  "GOLDEN PIRATES — L'alliance souveraine du Royaume 1023 (Call of Dragons). Recrutement pour la fin de la Saison 2 : rejoignez l'équipage.";
-const BASE_TITLE_EN = "GOLDEN PIRATES — Kingdom 1023 | Call of Dragons";
+  "Hissez le pavillon noir avec les GOLDEN PIRATES, alliance souveraine du Royaume 1023 de Call of Dragons. Équipage soudé, KvK coordonnés : candidatez en ligne.";
+const BASE_TITLE_EN = "GOLDEN PIRATES — Pirate alliance of Kingdom 1023 · Call of Dragons";
 const BASE_DESC_EN =
-  "GOLDEN PIRATES — The sovereign alliance of Kingdom 1023 (Call of Dragons). End-of-Season 2 recruitment: join the crew.";
+  "Raise the black flag with GOLDEN PIRATES, the sovereign alliance of Kingdom 1023 in Call of Dragons. A tight crew, coordinated KvK: apply online today.";
 const CANONICAL_BASE = "https://golden-pirates.org";
-const OG_IMAGE = "https://golden-pirates.org/og-image.png";
+const OG_IMAGE = "https://golden-pirates.org/og-golden-pirates.jpg";
+const OG_ALT = "GOLDEN PIRATES — l'équipage trinque autour du coffre au trésor, sceau de cire GP, recrutement ouvert du Royaume 1023";
 
 const ROUTES = {
   "/suivi": {
-    title: "Suivre ma candidature — GOLDEN PIRATES",
+    title: "Suivre ma candidature · Espace Recrue — GOLDEN PIRATES",
     desc: "Consultez l'état de votre dossier avec votre code de suivi GP-1023-XXXX. Code perdu ? Retrouvez-le avec votre pseudo et votre Discord, ou votre puissance exacte.",
   },
   "/admin": {
@@ -22,8 +23,8 @@ const ROUTES = {
     noindex: true,
   },
   "/donations": {
-    title: "Le butin volontaire — GOLDEN PIRATES · Royaume 1023",
-    desc: "Soutenez le navire des Golden Pirates (Royaume 1023, Call of Dragons). L'entrée du site est libre et 100 % gratuite — chaque don est un cadeau volontaire.",
+    title: "Le Coffre du Navire · Soutenir l'équipage — GOLDEN PIRATES",
+    desc: "Remplissez le coffre des GOLDEN PIRATES (Royaume 1023, Call of Dragons) : don volontaire via PayPal, bordereau et facture instantanés, nom gravé au Hall des donateurs.",
   },
   "/conditions": {
     title: "Conditions générales & mentions légales — GOLDEN PIRATES",
@@ -84,7 +85,7 @@ const setTwitter = (title, desc) => {
     ["twitter:title", title],
     ["twitter:description", desc],
     ["twitter:image", OG_IMAGE],
-    ["twitter:site", "@GoldenPirates1023"],
+    ["twitter:image:alt", OG_ALT],
   ];
   items.forEach(([name, content]) => setMeta(name, content));
 };
@@ -112,6 +113,7 @@ export default function Seo() {
     setProp("og:title", title);
     setProp("og:description", desc);
     setProp("og:image", OG_IMAGE);
+    setProp("og:image:alt", OG_ALT);
     setProp("og:site_name", "GOLDEN PIRATES");
     setProp("og:type", "website");
     setProp("og:locale", isEn ? "en_US" : "fr_FR");

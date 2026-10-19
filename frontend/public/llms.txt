@@ -13,4 +13,6 @@ Site communautaire de fans, non affilié à Call of Dragons.
 
 - / : présentation de l'alliance, le Code des Pirates, le récit des saisons, le processus d'embarquement et le formulaire de candidature.
 - /suivi : suivi de candidature par code de suivi et récupération de code perdu.
+- /donations : le Coffre du Navire — don volontaire via PayPal (l'entrée du site reste 100 % gratuite), bordereau GPD-1023-XXXX, factures PDF/Excel et Hall des donateurs.
+- /conditions : mentions légales, conditions d'utilisation et protection des données (RGPD).
 - /admin : espace privé du Conseil des Capitaines (accès réservé, non indexé).
