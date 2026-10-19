@@ -1,0 +1,185 @@
+{
+  "summary": "Completed comprehensive testing of rejection cooldown anti-spam feature with pseudo/discord normalization. All 79 backend pytest passed. All 12 API anti-spam tests passed. UI cooldown warnings and notifications working correctly.",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend pytest: 79/79 tests passed",
+    "API: Same pseudo blocked with cooldown (retry_at set correctly)",
+    "API: Variant pseudo 'barbe_rouge' blocked (pseudo_norm working)",
+    "API: Uppercase variant 'BARBE ROUGE' blocked",
+    "API: Same discord with different pseudo blocked on submit (discord_key working)",
+    "API: Unrelated pseudo + discord accepted",
+    "API: Cooldown survives file deletion (rejections sanctuary working)",
+    "API: Pardon flow - setting rejected back to pending lifts cooldown",
+    "API: Duplicate active application blocked (409)",
+    "API: Already accepted pseudo blocks new application (409)",
+    "API: reapply_at field set correctly for rejected applications",
+    "API: Track endpoint returns reapply_at for rejected status",
+    "UI: Cooldown warning displayed on apply form with date",
+    "UI: Variant pseudos show cooldown warning",
+    "UI: English UI translations working (cooldown messages)",
+    "UI: Free pseudo shows green check with 'free' state",
+    "UI: Cooldown date formatted correctly (18 NOVEMBRE 2026)"
+  ],
+  "test_report_links": [
+    "/app/test_cooldown_antispam.py",
+    "/app/test_reports/cooldown_test_output.txt",
+    "/app/.screenshots/cooldown_warning.png",
+    "/app/.screenshots/cooldown_english.png"
+  ],
+  "action_item_for_main_agent": "",
+  "updated_files": [
+    "/app/test_cooldown_antispam.py"
+  ],
+  "success_percentage": {
+    "backend": "100% (79/79 pytest + 12/12 API tests)",
+    "frontend": "100% (5/5 UI tests)"
+  },
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_test_itself": false,
+  "detailed_test_results": {
+    "backend_pytest": {
+      "total": 79,
+      "passed": 79,
+      "failed": 0,
+      "test_file": "/app/backend/tests/"
+    },
+    "api_anti_spam_tests": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Submit and reject application",
+          "status": "PASS",
+          "details": "Application rejected successfully, reapply_at set to 30 days from rejection"
+        },
+        {
+          "name": "Same pseudo blocked by cooldown",
+          "status": "PASS",
+          "details": "Pseudo 'Barbe.Rouge' blocked with cooldown state and retry_at"
+        },
+        {
+          "name": "Variant pseudo blocked (pseudo_norm)",
+          "status": "PASS",
+          "details": "Variant 'barbe_rouge' blocked - pseudo normalization working"
+        },
+        {
+          "name": "Uppercase variant blocked",
+          "status": "PASS",
+          "details": "Uppercase 'BARBE ROUGE' blocked - case-insensitive normalization working"
+        },
+        {
+          "name": "Same discord blocked (discord_key)",
+          "status": "PASS",
+          "details": "Different pseudo with same discord '@BarbeRouge#1234' blocked with 429 cooldown"
+        },
+        {
+          "name": "Unrelated pseudo + discord accepted",
+          "status": "PASS",
+          "details": "New pseudo 'CapitaineTest' with new discord accepted"
+        },
+        {
+          "name": "Cooldown survives file deletion",
+          "status": "PASS",
+          "details": "After deleting rejected application, pseudo still blocked - rejections sanctuary working"
+        },
+        {
+          "name": "Pardon flow lifts cooldown",
+          "status": "PASS",
+          "details": "Setting rejected application back to pending lifts cooldown (state: active)"
+        },
+        {
+          "name": "Duplicate active blocked",
+          "status": "PASS",
+          "details": "Duplicate active application returns 409 duplicate_active"
+        },
+        {
+          "name": "Already accepted blocked",
+          "status": "PASS",
+          "details": "Already accepted pseudo returns 409 already_accepted"
+        },
+        {
+          "name": "reapply_at field set",
+          "status": "PASS",
+          "details": "Track endpoint returns reapply_at = rejection_date + 30 days"
+        },
+        {
+          "name": "Track endpoint for rejected",
+          "status": "PASS",
+          "details": "Track endpoint returns correct reapply_at for rejected applications"
+        }
+      ]
+    },
+    "ui_tests": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Cooldown warning on apply form",
+          "status": "PASS",
+          "details": "Cooldown warning displayed with state='cooldown' and date '18 NOVEMBRE 2026'"
+        },
+        {
+          "name": "Variant pseudo cooldown",
+          "status": "PASS",
+          "details": "Variant pseudo 'barbe_rouge' shows cooldown state"
+        },
+        {
+          "name": "English UI translations",
+          "status": "PASS",
+          "details": "English cooldown messages displayed correctly after language switch"
+        },
+        {
+          "name": "Free pseudo indicator",
+          "status": "PASS",
+          "details": "Free pseudo 'LibrePirate999' shows state='free' with green check"
+        },
+        {
+          "name": "Cooldown date formatting",
+          "status": "PASS",
+          "details": "Cooldown date formatted correctly in French (18 NOVEMBRE 2026)"
+        }
+      ]
+    }
+  },
+  "feature_verification": {
+    "pseudo_normalization": {
+      "status": "WORKING",
+      "details": "Pseudo variants (accents, dots, underscores, spaces, case) correctly normalized and blocked"
+    },
+    "discord_normalization": {
+      "status": "WORKING",
+      "details": "Discord tags normalized (case, @, #0 suffix) and same discord blocked across different pseudos"
+    },
+    "cooldown_persistence": {
+      "status": "WORKING",
+      "details": "Cooldown survives file deletion via rejections sanctuary collection"
+    },
+    "pardon_flow": {
+      "status": "WORKING",
+      "details": "Setting rejected application back to pending/reserve lifts cooldown"
+    },
+    "ui_indicators": {
+      "status": "WORKING",
+      "details": "Cooldown warnings displayed on apply form with date, variant pseudos blocked"
+    },
+    "reapply_date": {
+      "status": "WORKING",
+      "details": "reapply_at = rejection_date + 30 days, displayed correctly in UI"
+    }
+  },
+  "cleanup_performed": {
+    "test_applications_deleted": true,
+    "rejections_collection_cleared": true,
+    "command": "mongosh test_database --eval 'db.applications.deleteMany({pseudo: {$regex: /barbe|pirate|capitaine|test|libre/i}}); db.rejections.deleteMany({});'"
+  }
+}

@@ -163,7 +163,24 @@ REAPPLY_COOLDOWN_DAYS = 30
 IP_APPLICATIONS_PER_DAY = 6
 
 
-async def _pseudo_state(pseudo_key: str, now):
+def _pseudo_norm(pseudo: str) -> str:
+    """Empreinte « large » d'un pseudo : sans accents, sans casse, lettres/chiffres seulement.
+    « Jéan.Pirate », « jean_pirate », « J e a n-Pirate » → « jeanpirate » (anti-contournement du délai)."""
+    import unicodedata
+    txt = unicodedata.normalize("NFKD", pseudo or "")
+    txt = "".join(ch for ch in txt if not unicodedata.combining(ch))
+    return "".join(ch for ch in txt.lower() if ch.isalnum())
+
+
+def _discord_key(discord: str) -> str:
+    """Tag Discord normalisé (casse, espaces, @ initial, suffixe #0 des nouveaux pseudos)."""
+    d = (discord or "").strip().lower().lstrip("@").replace(" ", "")
+    if d.endswith("#0"):
+        d = d[:-2]
+    return d if len(d) >= 2 else ""
+
+
+async def _pseudo_state(pseudo_key: str, now, pseudo_norm: str = "", discord_key: str = ""):
     """État d'un pseudo face au registre : 'free' | 'active' | 'accepted' | 'cooldown' (+ retry_at)."""
     # Garde 1 — un seul dossier actif par pseudo (pas de doublon qui noie le registre)
     if await db.applications.find_one({"pseudo_lower": pseudo_key, "status": {"$in": ["pending", "reserve"]}}, {"_id": 1}):
@@ -173,7 +190,13 @@ async def _pseudo_state(pseudo_key: str, now):
         return "accepted", None
     # Garde 3 — délai de réflexion après un refus (sanctuaire des refus, puis repli registre)
     cooldown_base = None
-    rejected_rec = await db.rejections.find_one({"pseudo_lower": pseudo_key})
+    # Même pseudo exact, même pseudo « déguisé » (accents/points/espaces) OU même tag Discord
+    ors = [{"pseudo_lower": pseudo_key}]
+    if pseudo_norm and len(pseudo_norm) >= 2:
+        ors.append({"pseudo_norm": pseudo_norm})
+    if discord_key:
+        ors.append({"discord_key": discord_key})
+    rejected_rec = await db.rejections.find_one({"$or": ors}, sort=[("rejected_at", -1)])
     if rejected_rec:
         cooldown_base = rejected_rec.get("rejected_at")
     if not cooldown_base:
@@ -202,7 +225,7 @@ async def check_pseudo(pseudo: str = ""):
     key = safe_text(pseudo or "").strip().lower()
     if len(key) < 2 or len(key) > 32:
         return {"state": "invalid"}
-    state, retry_at = await _pseudo_state(key, now_utc())
+    state, retry_at = await _pseudo_state(key, now_utc(), _pseudo_norm(key))
     return {"state": state, "retry_at": retry_at.isoformat() if retry_at else None}
 
 
@@ -215,7 +238,7 @@ async def create_application(data: ApplicationCreate, request: Request):
     pseudo_key = data.pseudo.strip().lower()
     now = now_utc()
 
-    state, retry_at = await _pseudo_state(pseudo_key, now)
+    state, retry_at = await _pseudo_state(pseudo_key, now, _pseudo_norm(data.pseudo), _discord_key(data.discord))
     if state == "active":
         raise HTTPException(status_code=409, detail={
             "code": "duplicate_active",
@@ -1621,7 +1644,7 @@ async def export_pdf(lang: str = "fr", _: str = Depends(require_admin)):
 async def update_application(app_id: str, data: StatusUpdate, _: str = Depends(require_admin)):
     if data.status not in ("pending", "accepted", "rejected", "reserve"):
         raise HTTPException(status_code=400, detail="Statut invalide")
-    current = await db.applications.find_one({"id": app_id}, {"status": 1, "pseudo_lower": 1, "pseudo": 1})
+    current = await db.applications.find_one({"id": app_id}, {"status": 1, "pseudo_lower": 1, "pseudo": 1, "discord": 1})
     if not current:
         raise HTTPException(status_code=404, detail="Candidature introuvable")
     update = {"note": safe_text(data.note or "")}
@@ -1634,7 +1657,12 @@ async def update_application(app_id: str, data: StatusUpdate, _: str = Depends(r
             # Le refus est inscrit au sanctuaire : il survit au brûlage du dossier.
             await db.rejections.update_one(
                 {"pseudo_lower": pkey},
-                {"$set": {"pseudo_lower": pkey, "rejected_at": now_iso}},
+                {"$set": {
+                    "pseudo_lower": pkey,
+                    "pseudo_norm": _pseudo_norm(current.get("pseudo") or pkey),
+                    "discord_key": _discord_key(current.get("discord") or ""),
+                    "rejected_at": now_iso,
+                }},
                 upsert=True,
             )
         elif pkey:
@@ -2017,18 +2045,27 @@ async def seed():
     await db.rejections.create_index("pseudo_lower", unique=True)
     # Tentatives de récupération de code : auto-purge au bout de 2 h.
     await db.recovery_attempts.create_index("at", expireAfterSeconds=7200)
+    await db.rejections.create_index("pseudo_norm")
+    await db.rejections.create_index("discord_key")
     async for rej_doc in db.applications.find(
         {"status": "rejected"},
-        {"pseudo": 1, "pseudo_lower": 1, "status_changed_at": 1, "created_at": 1},
+        {"pseudo": 1, "pseudo_lower": 1, "discord": 1, "status_changed_at": 1, "created_at": 1},
     ).sort("created_at", 1):
         rej_key = rej_doc.get("pseudo_lower") or (rej_doc.get("pseudo") or "").strip().lower()
         if not rej_key:
             continue
         await db.rejections.update_one(
             {"pseudo_lower": rej_key},
-            {"$set": {"rejected_at": rej_doc.get("status_changed_at") or rej_doc.get("created_at")}},
+            {"$set": {
+                "rejected_at": rej_doc.get("status_changed_at") or rej_doc.get("created_at"),
+                "pseudo_norm": _pseudo_norm(rej_doc.get("pseudo") or rej_key),
+                "discord_key": _discord_key(rej_doc.get("discord") or ""),
+            }},
             upsert=True,
         )
+    # Anciens refus (dossiers déjà brûlés) : empreinte large calculée depuis le pseudo
+    async for rj in db.rejections.find({"pseudo_norm": {"$exists": False}}, {"pseudo_lower": 1}):
+        await db.rejections.update_one({"_id": rj["_id"]}, {"$set": {"pseudo_norm": _pseudo_norm(rj.get("pseudo_lower") or "")}})
     await db.login_attempts.create_index("identifier")
     await db.messages.create_index([("conv_code", 1), ("created_at", 1)])
     admin = await db.users.find_one({"email": ADMIN_EMAIL})

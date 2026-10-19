@@ -170,3 +170,8 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Cause : titre dimensionné uniquement sur la largeur (15vw → 192 px) + barre du bas en position absolue → sur écrans larges mais peu hauts, la barre et les vagues recouvraient les boutons.
 - Correctif Hero.jsx : barre du bas (hero-bottom-bar) dans le flux, contenu flex-1 centré, titre clamp(4.2rem, min(15vw, 19svh), 12rem), marge safe-area iOS ; index.css : espacements compacts si hauteur ≤ 820 px et ≤ 560 px.
 - Agent de test iteration_46 : 15/15 formats OK (portables 1366×625 → 32 px d'écart, 1536×730 → 63 px, tablettes, iPhone SE/14/Pro Max, Android 360, paysage), aucun débordement. En ligne après Deploy.
+
+## 2026-10-19 — Parcours REFUS vérifié + délai de 30 jours blindé
+- Notifications recrue OK : après un refus, /notifications signale nouveau statut + nouvelle note (pastilles Nav / onglet / « nouveau »), effacées après lecture ; /suivi affiche REFUSÉ, la note du Conseil et la date de re-postulation (refus + 30 j), bouton re-postuler verrouillé.
+- Contournements fermés : le sanctuaire des refus stocke pseudo_norm (sans accents/casse/ponctuation/espaces) et discord_key (sans casse/@/espaces/#0) ; le délai bloque le même pseudo, ses variantes (« Jéan.Pirate » = « jean_pirate » = « JEAN PIRATE ») ET le même tag Discord sous un autre pseudo. Survit au brûlage d'un dossier refusé ; pardon (repasser en examen/réserve/accepté) lève le délai. Index pseudo_norm/discord_key + rattrapage au démarrage pour les anciens refus.
+- Tests : pytest 79/79 ; agent de test iteration_47 : 12/12 API + 5/5 UI (FR/EN). Base purgée. En ligne après Deploy.
