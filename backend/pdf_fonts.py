@@ -14,19 +14,31 @@ import os
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-# Chemins Linux standards
+# Polices EMBARQUÉES dans le projet (backend/fonts) — présentes aussi en production.
+# Repli : dossier système Liberation (environnement de développement).
+_BUNDLED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 _LIB_DIR = "/usr/share/fonts/truetype/liberation"
 
-# Alias → chemin TTF
-_FONT_MAP = {
-    "GPSans": f"{_LIB_DIR}/LiberationSans-Regular.ttf",
-    "GPSans-Bold": f"{_LIB_DIR}/LiberationSans-Bold.ttf",
-    "GPSans-Italic": f"{_LIB_DIR}/LiberationSans-Italic.ttf",
-    "GPSans-BoldItalic": f"{_LIB_DIR}/LiberationSans-BoldItalic.ttf",
-    "GPSerif": f"{_LIB_DIR}/LiberationSerif-Regular.ttf",
-    "GPSerif-Bold": f"{_LIB_DIR}/LiberationSerif-Bold.ttf",
-    "GPSerif-Italic": f"{_LIB_DIR}/LiberationSerif-Italic.ttf",
+_FILES = {
+    "GPSans": "LiberationSans-Regular.ttf",
+    "GPSans-Bold": "LiberationSans-Bold.ttf",
+    "GPSans-Italic": "LiberationSans-Italic.ttf",
+    "GPSans-BoldItalic": "LiberationSans-BoldItalic.ttf",
+    "GPSerif": "LiberationSerif-Regular.ttf",
+    "GPSerif-Bold": "LiberationSerif-Bold.ttf",
+    "GPSerif-Italic": "LiberationSerif-Italic.ttf",
 }
+
+
+def _resolve(fname: str) -> str:
+    for d in (_BUNDLED_DIR, _LIB_DIR):
+        path = os.path.join(d, fname)
+        if os.path.exists(path):
+            return path
+    return os.path.join(_BUNDLED_DIR, fname)
+
+
+_FONT_MAP = {alias: _resolve(f) for alias, f in _FILES.items()}
 
 _registered = False
 

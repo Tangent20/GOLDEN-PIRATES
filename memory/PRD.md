@@ -154,3 +154,8 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 ## 2026-10-19 — Domaine golden-pirates.org repris sur ce compte
 - Vérifié en production : site 200, nouvelle page de dons en ligne, connexion Conseil OK (cookies sur le domaine), PayPal paypal.me/goldenpirates/7EUR, /suivi /donations /conditions 200. Canonical/og:url/og:image/robots déjà sur golden-pirates.org.
 - sitemap.xml complété avec /donations et /conditions (visible en ligne après le prochain Deploy).
+
+## 2026-10-19 — Correctif PDF en production (factures + registre)
+- Cause : en production, tous les PDF renvoyaient 500 — les polices GPSans/GPSerif étaient lues dans /usr/share/fonts/truetype/liberation, absent du conteneur de production.
+- Correctif : 7 polices Liberation (licence SIL OFL) embarquées dans backend/fonts/ ; pdf_fonts.py les charge en priorité, dossier système en repli.
+- Agent de test iteration_45 : 23/23 backend (factures PDF/Excel FR/EN confirmé + en attente, exports registre et butin) + 4/4 frontend sans toast d'erreur. En ligne seulement après Deploy.

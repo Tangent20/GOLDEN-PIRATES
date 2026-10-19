@@ -1,0 +1,62 @@
+{
+  "summary": "PDF/Excel export bug fix testing completed - All endpoints working correctly after font bundling fix",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend: POST /api/admin/login - Admin authentication (200)",
+    "Backend: POST /api/admin/donators - Create confirmed donation (200)",
+    "Backend: POST /api/donations/declare - Create pending donation (200)",
+    "Backend: GET /api/donations/invoice/pdf?receipt_id=X&lang=fr (confirmed) - Valid PDF with %PDF header (200)",
+    "Backend: GET /api/donations/invoice/pdf?receipt_id=X&lang=en (confirmed) - Valid PDF with %PDF header (200)",
+    "Backend: GET /api/donations/invoice/xlsx?receipt_id=X&lang=fr (confirmed) - Valid XLSX file (200)",
+    "Backend: GET /api/donations/invoice/xlsx?receipt_id=X&lang=en (confirmed) - Valid XLSX file (200)",
+    "Backend: GET /api/donations/invoice/pdf?receipt_id=X&lang=fr (pending) - Valid PDF with %PDF header (200)",
+    "Backend: GET /api/donations/invoice/xlsx?receipt_id=X&lang=en (pending) - Valid XLSX file (200)",
+    "Backend: GET /api/admin/donators/{id}/invoice/pdf?lang=fr - Valid PDF with %PDF header (200)",
+    "Backend: GET /api/admin/donators/{id}/invoice/pdf?lang=en - Valid PDF with %PDF header (200)",
+    "Backend: GET /api/admin/donators/{id}/invoice/xlsx?lang=fr - Valid XLSX file (200)",
+    "Backend: GET /api/admin/donators/{id}/invoice/xlsx?lang=en - Valid XLSX file (200)",
+    "Backend: GET /api/admin/export/pdf?lang=fr - Valid PDF with %PDF header (200)",
+    "Backend: GET /api/admin/export/pdf?lang=en - Valid PDF with %PDF header (200)",
+    "Backend: GET /api/admin/export/xlsx?lang=fr - Valid XLSX file (200)",
+    "Backend: GET /api/admin/export/xlsx?lang=en - Valid XLSX file (200)",
+    "Backend: GET /api/admin/donators/export/xlsx?lang=fr - Valid XLSX file (200)",
+    "Backend: GET /api/admin/donators/export/xlsx?lang=en - Valid XLSX file (200)",
+    "Backend: DELETE /api/admin/donators/{id} - Cleanup successful (200)",
+    "Frontend: Admin login successful - No error toast",
+    "Frontend: 'EXPORTER TOUT LE BUTIN' (FR) button - Success toast shown, no error toast",
+    "Frontend: 'EXPORTER TOUT LE BUTIN' (EN) button - Success toast shown, no error toast",
+    "Frontend: Registre export button - Modal opened successfully, no error toast"
+  ],
+  "test_report_links": [
+    "/app/test_pdf_excel_exports.py",
+    "/app/.screenshots/hall_du_butin_initial.png",
+    "/app/.screenshots/after_fr_export.png",
+    "/app/.screenshots/after_en_export.png",
+    "/app/.screenshots/registre_page.png"
+  ],
+  "success_percentage": {
+    "backend": "100% (23/23 tests passed)",
+    "frontend": "100% (4/4 export buttons tested, all successful with no error toasts)"
+  },
+  "updated_files": [
+    "/app/test_pdf_excel_exports.py"
+  ],
+  "action_item_for_main_agent": "",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_test_itself": false,
+  "detailed_findings": {
+    "root_cause_confirmed": "Production PDF endpoints returned 500 because fonts 'GPSans*' were loaded from /usr/share/fonts/truetype/liberation which does not exist in production container. Font registration silently skipped causing KeyError.",
+    "fix_verified": "Fonts now bundled in /app/backend/fonts/*.ttf and pdf_fonts.py resolves bundled dir first. All PDF/Excel endpoints now return 200 with valid files.",
+    "production_note": "Production (golden-pirates.org) will remain broken until user redeploys. Preview environment (golden-pirates.preview.emergentagent.com) is working correctly.",
+    "user_reported_error": "Toast 'Quelque chose a tourné à l'aiguière — réessaie' in admin 'Sceau du parchemin' modal",
+    "test_result": "NO error toasts detected. Success toasts shown instead: 'Registre exporté — bonne réunion d'officiers, Capitaine'"
+  }
+}
