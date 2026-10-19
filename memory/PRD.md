@@ -150,3 +150,7 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Backend : _paypal_url (paypal.me/goldenpirates/7EUR), champ anonymous, declare renvoie paypal_url, status renvoie paypal_url si en attente, /donators masque les anonymes + count + configured, /admin/donators pending_total, /admin/stats donations_pending, DELETE donateur protégé (id invalide → 404).
 - Conseil (ButinPanel) : bandeau « n dons à vérifier · X € », dons en attente en tête, badges À VÉRIFIER/CONFIRMÉ/ANONYME/DÉCLARÉ, mot du donateur, boutons CONFIRMER / REFUSER, badge rouge sur l'onglet Hall du butin.
 - Tests : pytest 79/79 ; agent de test iteration_44 : 72/72 (6 tailles d'écran sans débordement, parcours complet donateur → Conseil → Hall). Signalement FR/EN = faux positif (sélecteur), vérifié manuellement : la langue change sur /donations sans redirection. Base purgée.
+
+## 2026-10-19 — Domaine golden-pirates.org repris sur ce compte
+- Vérifié en production : site 200, nouvelle page de dons en ligne, connexion Conseil OK (cookies sur le domaine), PayPal paypal.me/goldenpirates/7EUR, /suivi /donations /conditions 200. Canonical/og:url/og:image/robots déjà sur golden-pirates.org.
+- sitemap.xml complété avec /donations et /conditions (visible en ligne après le prochain Deploy).
