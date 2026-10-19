@@ -156,7 +156,7 @@ export default function Hero() {
       data-testid="hero-section"
       data-role={role}
       onMouseMove={onMouseMove}
-      className="relative min-h-[100svh] flex flex-col justify-center overflow-hidden pb-10 sm:pb-0"
+      className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden"
     >
       <motion.div className="absolute inset-0" style={{ y: bgY, scale: bgScale }}>
         <img src={HERO_BG} alt={s.imgAlt} className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
@@ -207,12 +207,15 @@ export default function Hero() {
 
       <Waves />
 
+      {/* Le contenu occupe tout l'espace libre et se centre ; la barre du bas reste DANS le flux
+          (plus jamais posée par-dessus les boutons, quelle que soit la hauteur d'écran). */}
+      <div className="relative z-10 flex-1 flex items-center w-full">
       <motion.div
         style={{ opacity: contentFade, y: contentY }}
-        className="relative z-10 max-w-7xl mx-auto w-full px-5 sm:px-8 pt-24 md:pt-16"
+        className="hero-content max-w-7xl mx-auto w-full px-5 sm:px-8 pt-24 md:pt-28 pb-10 sm:pb-12"
       >
         <RevealLine delay={0.15}>
-          <div className="flex flex-wrap items-center gap-2.5 mb-6 md:mb-8" data-testid="hero-badge-kvk">
+          <div className="hero-badge flex flex-wrap items-center gap-2.5 mb-6 md:mb-8" data-testid="hero-badge-kvk">
             <span className="inline-flex items-center gap-2 border border-gold/40 bg-ink/60 backdrop-blur px-4 py-1.5 font-mono2 text-[10px] sm:text-xs tracking-[0.3em] text-gold">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-bloodglow opacity-75" />
@@ -224,10 +227,10 @@ export default function Hero() {
         </RevealLine>
 
         <h1 data-testid="hero-title" className="leading-[0.88]">
-          <RevealLine delay={0.3} className="font-display text-[clamp(4.2rem,15vw,12rem)] text-gold text-glow-gold">
+          <RevealLine delay={0.3} className="hero-title-line font-display text-[clamp(4.2rem,min(15vw,19svh),12rem)] text-gold text-glow-gold">
             GOLDEN
           </RevealLine>
-          <RevealLine delay={0.44} className="font-display text-[clamp(4.2rem,15vw,12rem)] text-stroke-gold">
+          <RevealLine delay={0.44} className="hero-title-line font-display text-[clamp(4.2rem,min(15vw,19svh),12rem)] text-stroke-gold">
             PIRATES
           </RevealLine>
         </h1>
@@ -236,7 +239,7 @@ export default function Hero() {
           <p
             data-testid="hero-welcome"
             data-role={role}
-            className="mt-5 md:mt-6 inline-flex items-start sm:items-center gap-2.5 font-mono2 text-[10px] sm:text-xs tracking-[0.25em] sm:tracking-[0.3em] text-goldlight max-w-full"
+            className="hero-welcome mt-5 md:mt-6 inline-flex items-start sm:items-center gap-2.5 font-mono2 text-[10px] sm:text-xs tracking-[0.25em] sm:tracking-[0.3em] text-goldlight max-w-full"
           >
             <Skull className="w-3.5 h-3.5 text-bloodglow shrink-0 mt-px sm:mt-0" />
             <span className="break-words min-w-0">{welcome}</span>
@@ -245,30 +248,32 @@ export default function Hero() {
         </RevealLine>
 
         <RevealLine delay={0.62}>
-          <p data-testid="hero-subtitle" className="font-fell italic text-base sm:text-xl md:text-2xl text-bone/90 mt-4 md:mt-5 max-w-2xl">
+          <p data-testid="hero-subtitle" className="hero-sub font-fell italic text-base sm:text-xl md:text-2xl text-bone/90 mt-4 md:mt-5 max-w-2xl">
             {s.sub}
           </p>
         </RevealLine>
 
         <motion.div
-          className="flex flex-col sm:flex-row gap-4 sm:gap-5 mt-9 md:mt-12"
+          className="hero-ctas flex flex-col sm:flex-row gap-4 sm:gap-5 mt-9 md:mt-12"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: EASE, delay: 0.85 }}
         >
-          <span className="inline-flex flex-col sm:flex-row gap-4 sm:gap-5">
+          <span className="inline-flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-5">
             {ctas}
           </span>
         </motion.div>
       </motion.div>
+      </div>
 
       <motion.div
-        className="relative z-10 mt-12 sm:mt-0 sm:absolute sm:bottom-0 sm:inset-x-0 border-t border-gold/10"
+        data-testid="hero-bottom-bar"
+        className="relative z-10 border-t border-gold/10 bg-gradient-to-t from-ink via-ink/80 to-transparent"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.3, duration: 1 }}
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-4">
           <div className="hidden sm:flex items-center gap-6 font-mono2 text-[10px] tracking-[0.35em] text-bone/50">
             <span>{s.chips[0]}</span>
             <span className="text-gold/50">✦</span>

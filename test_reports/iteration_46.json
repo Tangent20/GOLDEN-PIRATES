@@ -1,0 +1,38 @@
+{
+  "summary": "Hero layout fix verification complete - tested responsive spacing across 15 viewports (laptops, tablets, phones in portrait/landscape). All critical spacing checks passed: CTA buttons properly separated from bottom bar (32px gap on HP laptop 1366x625), no overlaps, no horizontal scroll. Button functionality verified (scroll to sections, navigation). No regression on other pages.",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Hero layout spacing at 1366x625 (HP laptop) - 32px gap between buttons and bottom bar",
+    "Hero layout spacing at 1536x730 (scaled Windows) - 63.4px gap",
+    "Hero layout spacing at 1280x650, 1440x780, 1920x950 (laptops/desktop)",
+    "Hero layout spacing at 1024x768, 768x1024, 1180x820, 820x1180 (tablets)",
+    "Hero layout spacing at 375x667, 390x844, 430x932, 360x800 (phones portrait)",
+    "Hero layout spacing at 844x390, 667x375 (phones landscape)",
+    "Title size balanced on all viewports (never exceeds 45% of viewport height)",
+    "No horizontal scroll on any viewport",
+    "No title/nav overlap on any viewport",
+    "Buttons same height on desktop row layouts",
+    "hero-cta-apply scrolls to #postuler section",
+    "hero-cta-track navigates to /suivi page",
+    "hero-scroll-cue scrolls to #alliance section",
+    "Regression check: /donations, /suivi, /conditions pages load without errors"
+  ],
+  "test_report_links": [],
+  "success_percentage": {
+    "frontend": "100%",
+    "layout_viewports": "15/15 (100%)",
+    "button_functionality": "3/3 (100%)"
+  },
+  "updated_files": [],
+  "action_item_for_main_agent": "",
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "false"
+}

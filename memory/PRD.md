@@ -165,3 +165,8 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Nouvelles icônes monogramme GP doré : favicon.ico, favicon-48, icon-192/512, apple-touch-icon ; site.webmanifest (Android).
 - index.html : titre + description + keywords, og:image complet (secure_url/type/taille/alt), og:locale:alternate, twitter:image:alt, hreflang, JSON-LD @graph Organization (logo, email) + WebSite. Seo.jsx : nouvelle image + alt, faux compte twitter:site retiré, titres /suivi et /donations. llms.txt + sitemap complétés.
 - Agent de test iteration_10 (SEO) : 100 %. En ligne après Deploy.
+
+## 2026-10-19 — Héros d'accueil rééquilibré (boutons collés à la barre du bas sur portable HP)
+- Cause : titre dimensionné uniquement sur la largeur (15vw → 192 px) + barre du bas en position absolue → sur écrans larges mais peu hauts, la barre et les vagues recouvraient les boutons.
+- Correctif Hero.jsx : barre du bas (hero-bottom-bar) dans le flux, contenu flex-1 centré, titre clamp(4.2rem, min(15vw, 19svh), 12rem), marge safe-area iOS ; index.css : espacements compacts si hauteur ≤ 820 px et ≤ 560 px.
+- Agent de test iteration_46 : 15/15 formats OK (portables 1366×625 → 32 px d'écart, 1536×730 → 63 px, tablettes, iPhone SE/14/Pro Max, Android 360, paysage), aucun débordement. En ligne après Deploy.

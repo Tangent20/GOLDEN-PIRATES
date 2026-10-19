@@ -302,3 +302,20 @@ button.bg-gold:disabled { filter: grayscale(0.35) brightness(0.85); }
   50% { transform: translateY(-6px) rotate(3deg); }
 }
 @media (prefers-reduced-motion: reduce) { .bottle-bob { animation: none; } }
+
+
+/* ===== Héros d'accueil — équilibre sur écrans peu hauts (portables 1366×768, 1536×864 à 125 %,
+   tablettes en paysage, téléphones couchés). Placé hors @layer pour primer sur les utilitaires. ===== */
+@media (min-width: 640px) and (max-height: 820px) {
+  .hero-root .hero-content { padding-top: 6.25rem; padding-bottom: 2rem; }
+  .hero-root .hero-badge { margin-bottom: 1rem; }
+  .hero-root .hero-welcome { margin-top: 1rem; }
+  .hero-root .hero-sub { margin-top: 0.75rem; font-size: 1.25rem; line-height: 1.6rem; }
+  .hero-root .hero-ctas { margin-top: 1.75rem; }
+}
+@media (min-width: 640px) and (max-height: 560px) {
+  .hero-root .hero-content { padding-top: 5.25rem; padding-bottom: 1.5rem; }
+  .hero-root .hero-title-line { font-size: clamp(3rem, 17svh, 6rem); }
+  .hero-root .hero-sub { font-size: 1.05rem; line-height: 1.4rem; }
+  .hero-root .hero-ctas { margin-top: 1.25rem; }
+}
