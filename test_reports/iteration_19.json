@@ -1,0 +1,26 @@
+{
+  "summary": "E2E testing of the butin goal progress bar on /donations + admin goal editor. Backend pytest (test_butin_goal.py) = 8/8 passed. Playwright E2E = all scenarios green: single donations-hall-total element (no duplication), live math correct (0% → 25% → 100% capped emerald with 'OBJECTIF ATTEINT' → 53% after goal switched to 200), admin goal editor loads existing goal on reload and persists, invalid input (0) correctly disables save button, EN parity verified ('TREASURE GOAL', '53 % OF THE GOAL'), mobile 390px has no horizontal overflow, no non-benign console errors. DB cleaned up: 0 donators, goal reset to 100.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_butin_goal.py",
+    "/app/test_reports/pytest/butin_goal.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Admin.jsx ButinPanel load() uses setGoal((prev) => prev === '' ? String(data.goal) : prev) — correct, preserves user edits but needs the GET to complete before user looks; works in practice.",
+    "Donations.jsx: single data-testid='donations-hall-total' asserted — passes. goalPct capped at 100 correctly.",
+    "Server endpoint PUT /api/admin/butin/goal validation (ge=1, le=100000) is tight — all boundary tests pass."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! (used)",
+  "seed_data_creation": "Created and then removed TEST_Barre (25€) and TEST_Barre2 (80€). Goal was changed to 200 for test then reset to 100. Final DB state: 0 donators, goal=100.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Butin goal feature fully verified. test_butin_goal.py (8 tests) is the regression suite. Live math validated via Playwright: 25% / 100% capped / 53%. EN strings validated: TREASURE GOAL, N % OF THE GOAL. 1 total element on page confirmed. DB left clean (goal=100, 0 donators)."
+}

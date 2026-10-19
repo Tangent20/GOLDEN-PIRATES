@@ -1,0 +1,56 @@
+{
+  "summary": "Full backend + frontend validation of Golden Pirates anti-spam re-application strategy. 15/15 pytest tests pass. UI verified end-to-end: Suivi locked chip, Admin 2e TENTATIVE badge + previous decision line, ApplyForm toasts (duplicate_active + cooldown with formatted date).",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_golden_pirates.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py — the x-forwarded-for parsing picks split(',')[-1], i.e. the LAST hop. In a typical ingress chain the real client IP is the FIRST entry; the current logic effectively keys the IP-rate-limit on the ingress IP (same for every caller). Consider using the FIRST non-trusted value or a dedicated TRUSTED_PROXIES list. In our tests all pod/browser traffic ended up sharing the same stored IP, which still enforced the per-IP cap but means two legitimate users behind the same ingress share the daily 3-slot pool.",
+  "Admin.jsx pseudoGroups is rebuilt on every render (O(N) per keystroke of search). For >200 dossiers it's fine, but could be memoised with useMemo keyed on applications.",
+    "server.py handles both status + note updates in a single PATCH but silently coerces note to '' when the client sends null; consider validating StatusUpdate.note length (max_length) explicitly like other fields.",
+    "Admin.jsx uses non-breaking fallbacks (c.status[history.prev.status]?.label) — good — but a missing status label would still render 'DOSSIER PRÉCÉDENT : undefined' because the ?? is not applied. Minor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/__init__.py",
+    "/app/backend/tests/test_golden_pirates.py"
+  ],
+  "success_rate": { "backend": "100%", "frontend": "100%" },
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! (seedé) — admin anti-brute-force: 5 fails = lock 15min",
+  "seed_data_creation": "During tests we created temporary docs with prefixes TEST_* and GP-TST-* and deleted them in an autouse fixture. For the admin badge UI test we inserted a 2nd pending application (GP-TST-A2ND, pseudo PirateTestA) via direct Mongo insert and removed it before cleanup. Final state: GP-1023-HAT2 and all test seeds have been deleted per the agent-note instruction. Collection db.applications is empty.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite lives in /app/backend/tests/test_golden_pirates.py (pytest, pytest-xdist safe). It auto-seeds DB fixtures (TEST_/GP-TST- prefixes) and cleans up. The ip_limit test uses a canary POST to discover the backend-visible IP first (ingress rewrites XFF so spoofing fails) and then seeds the right IP in Mongo. If you need to re-add a locked-reapply fixture for the Suivi UI, insert an application with status='rejected' and status_changed_at within the last 30 days.",
+  "detailed_coverage": {
+    "backend": {
+      "duplicate_active_pending": "PASS — 409 code=duplicate_active (also case-insensitive variant verified)",
+      "duplicate_active_reserve": "PASS — 409 code=duplicate_active",
+      "already_accepted": "PASS — 409 code=already_accepted",
+      "cooldown_<30d": "PASS — 429 code=cooldown with retry_at ≈ status_changed_at+30d",
+      "cooldown_>30d": "PASS — 200, new tracking code emitted",
+      "ip_limit": "PASS — 429 code=ip_limit after 3 in 24h window from same stored IP",
+      "track_reapply_at_rejected": "PASS — ISO ≈ +30d",
+      "track_reapply_at_other_statuses": "PASS — null for pending/reserve/accepted",
+      "track_404": "PASS",
+      "admin_login_wrong_pw": "PASS — 401",
+      "admin_me": "PASS",
+      "admin_patch_status_changed_at": "PASS — unchanged when status identical, bumped on change",
+      "admin_stats": "PASS",
+      "admin_list_no_mongo_id": "PASS — _id excluded"
+    },
+    "frontend": {
+      "suivi_locked_chip_FR": "PASS — reapply-locked-chip text='RE-POSTULATION VERROUILLÉE — 30 JOURS DE MER', reapply-btn absent",
+      "admin_login": "PASS — logout-btn visible after login",
+      "admin_attempt_badge": "PASS — admin-attempt-badge-{id} = '2ᵉ TENTATIVE' on the newer application, exactly 1 badge on page",
+      "admin_prev_decision": "PASS — admin-prev-decision-{id} = 'DOSSIER PRÉCÉDENT : REFUSÉ — 17 oct. 2026, 09:43'",
+      "applyform_duplicate_active_toast": "PASS — french message rendered via sonner",
+      "applyform_cooldown_toast": "PASS — rendered with formatted date 'à partir du 16 novembre 2026'"
+    }
+  }
+}

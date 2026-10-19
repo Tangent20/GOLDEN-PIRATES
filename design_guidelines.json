@@ -1,0 +1,86 @@
+{
+  "project_name": "Golden Pirates Navbar Rebuild - Tactical Command Dock (Kingdom 1023)",
+  "app_type": "bilingual_pirate_recruitment_portal",
+  "design_archetype": "Brass & Obsidian Tactical War-Room HUD / Strategic Quarterdeck Command Dock",
+  "theme": "Weathered Obsidian Glass, Antique Brass Accents, Gold Foil (#D4AF37), Crimson Velvet (#8B0000), Bone Vellum (#E8D8C8)",
+  "redesign_rationale": "Replaces the dark ink full-screen overlay menu with a modern, high-density Strategic Command Dock. Features horizontal strategic navigation clusters, permanently visible CONSEIL access button, role-adaptive action slots without layout shift, zero-flicker cached session management, and a sleek sliding Tactical HUD drawer for mobile/tablet.",
+  "strategic_grouping_concept": {
+    "cluster_1_brand": "Brand Identity Hub (GOLDEN PIRATES logo mark with rotating helm, ROYAUME 1023 brass badge)",
+    "cluster_2_navigation": "Strategic Anchor Tabs ([I. ALLIANCE], [II. CODE], [III. RÉCIT], [IV. PROCESSUS], [BUTIN & TRÉSOR]) with active glowing indicators",
+    "cluster_3_command": "Command Actions (Bilingual FR/EN toggle, Permanent CONSEIL Login/Dashboard button, and Dynamic Audience Action slot)"
+  },
+  "audience_role_rules": {
+    "visitor": {
+      "visible_cta": "Gold 'POSTULER' CTA (scrolls smoothly to #postuler application form)",
+      "forbidden_cta": "'Suivre ma candidature' is hidden unless a candidature bottle exists in storage"
+    },
+    "recruit": {
+      "trigger": "Detected via localStorage 'gp_bottles' (non-empty array) or active recruit session",
+      "visible_cta": "'SUIVRE MA CANDIDATURE' button (navigates to /suivi with active status pill)",
+      "forbidden_cta": "'POSTULER' CTA is strictly HIDDEN everywhere in the header to avoid duplicate submissions"
+    },
+    "council_admin": {
+      "trigger": "Active admin session in storage/cookie ('gp-auth')",
+      "visible_cta": "Permanent 'CONSEIL' button with 'ACTIF / OFFICIER' indicator",
+      "shortcuts": "Quick access pills to Registre (/admin) and Messagerie (/admin#messagerie)"
+    }
+  },
+  "typography": {
+    "brand_heading": {
+      "font_family": "Pirata One, serif",
+      "styles": "text-xl sm:text-2xl font-bold tracking-wider text-[#D4AF37] uppercase"
+    },
+    "navigation_links": {
+      "font_family": "IM Fell English, serif",
+      "styles": "text-sm sm:text-base tracking-wide text-[#E8D8C8] hover:text-[#D4AF37] transition-colors"
+    },
+    "command_badges": {
+      "font_family": "ui-monospace, 'JetBrains Mono', monospace",
+      "styles": "text-xs tracking-widest uppercase font-bold text-[#D4AF37] bg-[#0A0F18]/80 border border-[#D4AF37]/40 px-3 py-1.5 rounded"
+    }
+  },
+  "colors": {
+    "header_bg_scrolled": "bg-[#06090E]/95 backdrop-blur-xl border-b border-[#D4AF37]/30 shadow-[0_4px_30px_rgba(0,0,0,0.8)]",
+    "header_bg_top": "bg-gradient-to-b from-[#06090E]/90 via-[#06090E]/60 to-transparent",
+    "gold_accent": "#D4AF37",
+    "gold_hover": "#F0C850",
+    "bone_text": "#E8D8C8",
+    "crimson_council": "#8B0000",
+    "glass_panel": "backdrop-blur-2xl bg-[#0C121C]/90 border border-[#D4AF37]/30"
+  },
+  "interactive_behaviored_specifications": {
+    "session_caching": "Module-level cached auth state to guarantee zero loading flicker on initial page mount",
+    "zero_layout_shift": "Action button slot maintains fixed min-width dimensions (min-w-[160px] md:min-w-[200px]) across role state changes",
+    "reactive_events": "Listens for 'gp-auth-changed', 'gp_bottles_change', and window 'storage' events for instant state re-renders without full reload",
+    "mobile_drawer": "Tactical sliding HUD accordion with body scroll lock (overflow: hidden) and Escape key event handler"
+  },
+  "image_urls": {
+    "vintage_map": "https://images.pexels.com/photos/20476788/pexels-photo-20476788.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "nautical_compass": "https://images.pexels.com/photos/32563237/pexels-photo-32563237.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  },
+  "testing_attributes": {
+    "nav_header": "data-testid='nav-header'",
+    "nav_logo": "data-testid='nav-logo'",
+    "nav_cta_apply": "data-testid='nav-cta-apply'",
+    "nav_cta_suivi": "data-testid='nav-cta-suivi'",
+    "nav_link_council": "data-testid='nav-link-council'",
+    "nav_link_council_login": "data-testid='nav-link-council-login'",
+    "nav_link_admin_registry": "data-testid='nav-link-admin-registry'",
+    "nav_link_admin_messages": "data-testid='nav-link-admin-messages'",
+    "nav_link_alliance": "data-testid='nav-link-manifesto'",
+    "nav_link_code": "data-testid='nav-link-code'",
+    "nav_link_recit": "data-testid='nav-link-timeline'",
+    "nav_link_processus": "data-testid='nav-link-process'",
+    "nav_link_butin": "data-testid='nav-link-butin'",
+    "nav_menu_toggle": "data-testid='nav-menu-toggle'",
+    "nav_menu_close": "data-testid='nav-menu-close'",
+    "lang_switcher": "data-testid='lang-switcher-btn'"
+  },
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Execute all interactive nav component logic in React JS (.jsx/.js). Do not use TypeScript annotations.",
+    "Ensure the permanent CONSEIL button is always accessible in the top header (opens login modal or redirects to /admin).",
+    "Strictly hide POSTULER CTA for existing recruits (localStorage gp_bottles) and replace it with SUIVRE MA CANDIDATURE.",
+    "Support desktop, tablet, and 390px mobile viewports with zero text truncation or visual overlapping.",
+    "All interactive buttons and navigation links MUST include data-testid attributes matching test expectations."
+  ]
+}

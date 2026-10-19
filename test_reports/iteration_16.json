@@ -1,0 +1,22 @@
+{
+  "summary": "Frontend-only test of same-tab reactivity (CustomEvent gp_bottles_change) + 3-public menu + admin flow + tablet + EN lang. ALL 11 checks passed. Nav.jsx header CTA swaps (POSTULER <-> SUIVRE MA CANDIDATURE) within <1s of setItem('gp_bottles')+dispatch and removeItem+dispatch on same tab, no reload. Footer.jsx also swaps footer-apply-link <-> footer-track-link reactively on same tab (visitor keeps a muted secondary track link by design — verified against Footer.jsx l.101-132). Visitor menu 390x844 shows apply-menu+status+butin+ESPACE CONSEIL. Recruit menu hides apply-menu and renders nav-link-status with bg-gold text-ink primary classes. Admin menu (admin@goldenpirates.io) shows nav-link-admin-registry + nav-link-admin-messages + nav-link-butin + nav-link-public-site and HIDES nav-link-admin + nav-cta-apply-menu. nav-link-admin-messages routes to /admin#messagerie. nav-link-public-site routes to /. Tablet 768x1024 visitor menu: no horizontal overflow (scrollW=clientW=768). Escape and nav-menu-close both restore body.overflow to empty. EN lang shows Apply / Track / Treasure / Council.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Footer.jsx visitor state intentionally renders two separate <li> for apply + track (gold/muted) — test spec wording 'SANS footer-apply-link' only applies to the recruit state; verified behavior matches design."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! (used /admin login OK)",
+  "seed_data_creation": "None — only localStorage gp_bottles toggled and cleaned at end of each block",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Same-tab reactivity via window.dispatchEvent(new CustomEvent('gp_bottles_change')) is fully wired across Nav.jsx (header + mobile menu) and Footer.jsx. Both components re-read localStorage.gp_bottles on 'storage' (cross-tab) and 'gp_bottles_change' (same-tab). Suivi.jsx persistRack dispatches the custom event after each write. Admin menu uses nav-link-admin-registry / nav-link-admin-messages / nav-link-public-site (NOT nav-link-admin). Admin dashboard reads location.hash to switch tabs — /admin#messagerie activates MESSAGERIE tab.",
+  "rca of the issue": "N/A — no issue found."
+}

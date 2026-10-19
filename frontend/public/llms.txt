@@ -1,0 +1,16 @@
+# GOLDEN PIRATES — Portail de recrutement du Royaume 1023
+
+Site communautaire de fans, non affilié à Call of Dragons.
+
+- Portail de recrutement de l'alliance GOLDEN PIRATES, Royaume 1023 du jeu Call of Dragons.
+- Recrutement préparé pour la fin de la Saison 2 : les recrues déposent leur candidature en ligne (puissance visée 6M à 20M+, niveau de troupes, activité quotidienne, tag Discord).
+- Chaque recrue reçoit un code de suivi unique au format GP-1023-XXXX pour consulter l'état de son dossier.
+- Le code perdu se récupère avec le pseudo et le tag Discord, ou sans Discord avec le pseudo et la puissance exacte du compte.
+- Une messagerie interne permet d'échanger avec le Conseil des Capitaines pendant l'examen du dossier.
+- Espace Conseil privé (non indexé) : registre des candidatures, décisions, messagerie et exports Excel/PDF pour les réunions d'officiers.
+
+## Pages
+
+- / : présentation de l'alliance, le Code des Pirates, le récit des saisons, le processus d'embarquement et le formulaire de candidature.
+- /suivi : suivi de candidature par code de suivi et récupération de code perdu.
+- /admin : espace privé du Conseil des Capitaines (accès réservé, non indexé).

@@ -1,0 +1,28 @@
+{
+  "summary": "Full validation of /suivi reorganization into a 4-tab hub + exhaustive button audit (desktop 1440, tablet 768, mobile 390). Created 2 test applications (ONGLET_* / ONGLET_B_*), sent an admin Council message to produce an unread badge, validated all tab mechanics, sticky bar, badges, notifications, rack ordering/view/drop/reapply, recover flow (power route + copy + see), ChatBox send, PeerDen mount, i18n EN labels, then burned all test data (applications=0, messages=0, peer_messages=0, rejections=0, login_attempts=0, recovery_attempts=0).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/suivi tablist desktop (max-w-3xl)", "issues": ["The container is capped at max-w-3xl (768px) while 4 full tab labels total ~962px; on narrow desktop/tablet widths users must horizontally scroll the tablist to reach the 4th tab (ÉTAGÈRE À BOUTEILLES). Mobile already shows short labels (MON/BOUTEILLE/TANIÈRE/ÉTAGÈRE) via sm:hidden; consider enabling the short labels on more breakpoints or widening the hub to max-w-5xl so all 4 tabs are visible without horizontal scroll on desktop."]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_14.json"],
+  "action_items": [
+    "(Low priority) Widen /suivi tabs container or shorten desktop labels so the 4th tab is visible without horizontal scroll on 1024-1280px viewports."
+  ],
+  "critical_code_review_comments": [
+    "Suivi.jsx is 772 lines - still readable but close to the 700-line split threshold; consider extracting RackBlock (already a helper), the recover panel, and the notifications panel into separate components.",
+    "Default rack value is loaded from localStorage synchronously in useState initializer — correct and safe.",
+    "copyRecovered has proper execCommand fallback for http/non-secure contexts (verified: button toggled to '✓✓' in automation where Clipboard API is restricted)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023!",
+  "seed_data_creation": "Created 2 test applications (ONGLET_1792316185 → GP-1023-MNRH, ONGLET_B_1792316191_B → GP-1023-5E7D) + 1 admin message + 1 recovery attempt. All burned at the end — DB verified empty: applications=0, messages=0, peer_messages=0, rejections=0, login_attempts=0, recovery_attempts=0.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The 4-tab Suivi hub (tab-dossier/mer/taniere/etagere) works end-to-end. Default active tab = dossier (aria-selected=true), only the active panel is in DOM (verified: status-result-card disappears when tab-mer active, and vice-versa). Sticky tablist measured top=80px after full scroll (sticky top-20). Badge on tab-mer correctly reflects unread_messages from /api/notifications/{code}. notif-goto-mer and notif-update-btn both switch to the correct tab. Rack sorting is 'most recently viewed first' (verified: after viewing CODE2 then CODE1, order was [CODE1, CODE2]). rack-view switches to tab-dossier automatically. rack-drop removes items. rack-reapply navigates to /#postuler. Recovery flow (power route) worked, copy button fallback showed ✓✓, recover-view-btn loaded the dossier. ChatBox send: before=0 → after=2 messages (user's new one + admin's existing one). PeerDen renders peer-search-input/peer-search-btn. EN labels verified: MY STATUS & FILE / BOTTLE TO THE SEA / THE CREW'S DEN / THE BOTTLE SHELF. Mobile 390x844: no body horizontal overflow; tablist is horizontally scrollable (sw=420 cw=350) with short labels. Only cosmetic finding: on desktop (max-w-3xl=768px) the 4th tab is partially clipped and requires horizontal scroll in the tablist — not a functional issue; main agent may consider widening the hub.",
+  "rca of the issue": "Not a bug fix pass — this was a validation pass after refactor from stacked blocks to 4-tab hub. All functional complaints from the user ('boutons non fonctionnels', 'tout dans une seule page') are resolved by the new architecture."
+}

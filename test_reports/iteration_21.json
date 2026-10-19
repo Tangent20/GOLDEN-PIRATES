@@ -1,0 +1,77 @@
+{
+  "summary": "Frontend-only exhaustive sweep of the FROM-ZERO navbar rebuild (Nav.jsx + useAdminSession.js module cache). Every spec item from the review request was reproduced on the live preview URL. All critical behaviours pass: visitor-only POSTULER header CTA, menu structure (NAVIGATION / TON ESPACE or LE CONSEIL / LE BUTIN), zero admin-leak, zero duplication, VOUS Y ETES/YOU'RE HERE states on /suivi and /donations with clicks being no-ops, recruit live reactivity without closing the menu, admin menu switch within ~1s of login via gp-auth-changed (NO reload needed), REGISTRE click lands on /admin with ZERO login-form flashes (polled DOM every 30ms for 6s, 0 flashes), menu stable 4s untouched, mobile 390 has no horizontal overflow, EN translations correct, logout flips menu back to visitor. Zero /auth/me calls during 5 SPA menu navigations (cache works). donations-hall-total count = exactly 1. No console errors beyond the pre-existing benign 401 noise.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "detailed_results": {
+    "desktop_visitor_1440": {
+      "header_cta_visible": true,
+      "nav_link_public_site_removed": true,
+      "nav_cta_apply_menu_removed": true,
+      "menu_shows_status_and_butin": true,
+      "menu_hides_admin_items": true,
+      "esc_closes_menu": true,
+      "menu_stable_4s": true
+    },
+    "recruit_reactivity": {
+      "menu_stays_open_on_gp_bottles_change": true,
+      "status_button_turns_gold_solid_live": true,
+      "header_cta_hidden_for_recruit": true,
+      "persists_after_reload": true
+    },
+    "suivi_page": {
+      "vous_y_etes_label_present": "SUIVRE MA CANDIDATURE — VOUS Y ETES",
+      "click_is_noop": true,
+      "menu_stays_open_after_click": true
+    },
+    "donations_page": {
+      "donations_hall_total_count": 1,
+      "butin_shows_vous_y_etes": true
+    },
+    "admin_flow": {
+      "login_without_reload_flips_menu": true,
+      "admin_menu_has_registry_and_messages": true,
+      "admin_menu_hides_status_button": true,
+      "login_form_flashes_during_registre_nav": 0,
+      "lands_on_admin_dashboard": true,
+      "logout_flips_menu_back_to_visitor": true
+    },
+    "cache_correctness": {
+      "auth_me_calls_during_5_SPA_navigations": 0,
+      "auth_me_calls_during_initial_load_FYI": 8,
+      "note": "Initial-load count of 8 is likely React StrictMode double-mounting Nav+Footer; the guard only protects against SECOND calls once the first resolves. All subsequent in-app navigation = 0 calls. Not blocking, but could be reduced by setting checkedOnce synchronously inside the useEffect before firing refreshAdminSession."
+    },
+    "mobile_390": {
+      "cta_hidden_on_mobile_as_expected": true,
+      "horizontal_overflow": false,
+      "en_markers_present": { "The Alliance": true, "YOUR SPACE": true, "TRACK MY APPLICATION": true, "TREASURE": true }
+    },
+    "regression": {
+      "home_loads": true,
+      "suivi_loads": true,
+      "donations_loads_with_progress_and_hall": true,
+      "conditions_loads": true,
+      "console_errors": "only pre-existing benign 401s (ignored per spec)"
+    }
+  },
+  "test_report_links": [],
+  "action_items": [
+    "OPTIONAL (minor): 8 /auth/me calls fire on initial cold load (React StrictMode double-mount of Nav+Footer races the checkedOnce flag). Guard it synchronously inside refreshAdminSession by flipping checkedOnce=true BEFORE awaiting the request so the second subscriber short-circuits. Not blocking — SPA navigation is already 0."
+  ],
+  "critical_code_review_comments": [
+    "useAdminSession.js: checkedOnce is set only AFTER the request resolves, so concurrent StrictMode double-mounts of Nav+Footer can both see !checkedOnce and both fire /auth/me (observed 8 calls on cold load). Flip the flag synchronously at the top of refreshAdminSession() to debounce.",
+    "Nav.jsx is clean, well-structured, ~310 lines, no duplication. Good use of module-level cache + listeners pattern.",
+    "Pre-existing: 401 console noise on home page from other requests — unrelated to this change but worth cleaning long-term."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "N/A (skipped per request)", "frontend": "100% on all spec items; 1 minor non-blocking observation" },
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! — worked.",
+  "seed_data_creation": "None. localStorage.gp_bottles was set/cleared during tests and logged out at the end.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Nav rebuild is solid. If main agent fixes the initial 8-call StrictMode race, quick retest = reload / and count /api/auth/me requests (should drop to 1-2). SPA menu nav already yields 0.",
+  "rca of the issue": "Original bug (buttons flipping / login-form flash) was caused by useAdminSession re-firing /auth/me on every pathname change inside both Nav and Footer. The rebuild moved the result to a module-level cache (isAdminCached + checkedOnce + listeners Set) with gp-auth-changed as the only invalidation trigger. Verified: polling the DOM every 30ms during the REGISTRE click found ZERO login-form flashes, and 5 in-app menu navigations produced ZERO /auth/me calls."
+}

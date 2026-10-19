@@ -1,0 +1,38 @@
+{
+  "summary": "Full test pass on the rebuilt /admin login (LE COFFRE). Backend pytest 5/6 passed (unauth /auth/me, bad pw 401, success login, real admin still works, cleanup); 1 failed = brute-force lockout never triggers from external URL. Frontend Playwright validated: (TEST1) form visible in 1.38s even with /auth/me delayed 8s, admin-login-checking indicator present during delay then disappears, 0 .loading elements (splash successfully removed); (TEST2) real login admin@goldenpirates.io/Capitaine1023! -> dashboard visible; (TEST3) wrong password shows inline admin-login-error 'Secret refusé — le coffre reste verrouillé.', typing clears it; (TEST5) offline -> 'La mer est agitée — vérifie ta connexion et réessaie.' and button re-clickable; (TEST6a) reload after login -> dashboard persists (12h cookie OK); (TEST7) no horizontal overflow at 1440x900, 768x1024, 390x844; (TEST8) FR title 'LE COFFRE DU CONSEIL' confirmed. TEST4 FAILED silently: 6 consecutive bad logins with fake email all returned 401, never 429 — DB shows requests were split across 2 pod IPs (10.81.4.212 and 10.81.4.213 each with fails=3), so the per-{ip}:{email} counter never reaches 5. The real client IP is masked by the k8s ingress; backend reads request.client.host (internal pod/proxy IP) instead of X-Forwarded-For.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/admin/login", "issue": "Anti-brute-force lockout BROKEN behind k8s ingress. Backend uses request.client.host for the identifier, but each request is routed through a different internal proxy IP (10.81.4.212 / 10.81.4.213 observed). Across 6 real attempts fails stayed at 3/3 across two separate login_attempts documents, so the 5-fail threshold is NEVER reached and no 429 is ever returned to real external attackers. Fix: parse X-Forwarded-For first entry (fallback to request.client.host) for the identifier. Verified: db.login_attempts after test shows two docs with fails=3 for the same fake email.", "priority": "CRITICAL"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_admin_login_lockout.py",
+    "/app/test_reports/pytest/iteration_12.xml"
+  ],
+  "action_items": [
+    "CRITICAL — Fix admin_login lockout identifier to use X-Forwarded-For (or request.headers.get('x-forwarded-for','').split(',')[0].strip() or request.client.host). Without this fix, the 5-fails/15-min protection is a no-op on the live site and the sealing message cannot be exercised in production.",
+    "After fix, re-run test_admin_login_lockout.py::test_bruteforce_lockout_fake_email and the Playwright TEST4 flow (6× bad login with fictional email) to confirm the admin-login-error shows the 15-minute sealing message on the 6th attempt."
+  ],
+  "critical_code_review_comments": [
+    "server.py:293 — request.client.host is the proxy IP in k8s; use X-Forwarded-For for any security-sensitive per-IP logic.",
+    "Admin.jsx LoginScreen: solid implementation — no splash, instant form, inline error plaque, Loader2 spinner, 429/401/ECONNABORTED/Network Error mapped correctly, autoFocus + inputMode=email + autoCapitalize=none + 16px font (base) OK for iOS. Form clears error on keystroke. Session persistence via /auth/me on mount is correct and non-blocking (form renders immediately).",
+    "api.js: 15s timeout + array-safe formatApiError is clean. OK.",
+    "Backend lockout logic sets locked_until on the SAME request that reaches fails>=5, so the 5th attempt still returns 401 and only the 6th returns 429. This is acceptable but should be documented (and tested as 'lockout engages on the 6th attempt')."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_admin_login_lockout.py (new)"
+  ],
+  "success_rate": {"backend": "83% (5/6)", "frontend": "100% of login-screen scenarios (TEST1,2,3,5,6a,7,8). TEST4 brute-force observable failure is a backend bug, not a frontend bug."},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! (from /app/memory/test_credentials.md). Fake email used for bruteforce: ghost-<timestamp>@test.com",
+  "seed_data_creation": "None — only transient login_attempts rows created, purged after test (db.login_attempts.deleteMany({}) returned 2 deleted). applications/messages collections untouched.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login screen reconstruction is 100% functional on the frontend. The ONLY remaining issue is server-side: anti-brute-force keyed on request.client.host which is masked by the k8s ingress. After main agent patches server.py admin_login to use X-Forwarded-For, re-run /app/backend/tests/test_admin_login_lockout.py and the Playwright 6×bad-login flow with a fictional email to confirm the 6th attempt returns 429 with the 15-min sealing message in admin-login-error. Do not run the 5× attempt with the real admin email (would seal it); use pirate-fantome@test.com. Verify db.login_attempts afterwards and purge test rows.",
+  "rca of the issue": "Repro: POST /api/admin/login with same email+bad password 6 times from the public URL. Expected: 6th call returns 429. Actual: all 6 return 401. db.login_attempts shows the attempts split into 2 documents by distinct internal proxy IPs. RCA: server.py line 293 uses request.client.host which, behind the k8s ingress-nginx proxying to 2+ backend pods (or 2+ upstream connections), is NOT the real client IP but the internal pod/proxy IP, and it rotates per request. The 5-fail counter is therefore partitioned across multiple identifiers and never trips. Mitigation: ident = (request.headers.get('x-forwarded-for','').split(',')[0].strip() or (request.client.host if request.client else 'unknown')) + ':' + email."
+}

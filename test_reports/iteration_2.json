@@ -1,0 +1,25 @@
+{
+  "summary": "Frontend-only verification of the Footer admin-link removal bug fix on Golden Pirates. Tested footer on 3 pages (/, /suivi, /admin) in FR + EN, desktop (1440x900) and mobile (390x844). Verified new footer-apply-link, section link navigation, back-to-top, and nav-link-admin regression (menu entry with 'VOUS Y ÊTES / YOU'RE HERE' indicator on /admin that does not navigate on click). All test criteria pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Footer.jsx is clean: no footer-admin-link anywhere, only footer-apply-link (new, gold-styled primary) + footer-track-link.",
+    "i18n.jsx: adminLink key removed from both FR (lines ~316) and EN (lines ~633) footer blocks; applyLink and trackLink present and localized correctly.",
+    "Nav.jsx: nav-link-admin remains the ONLY discreet admin access (full-screen menu), and is non-clickable on /admin via onClick=undefined with aria-current='page' — good a11y pattern.",
+    "Minor (not blocking): Nav.jsx calls GET /auth/me on every mount which logs harmless 401s to console for unauthenticated visitors — consider swallowing silently (e.g., using a dedicated public endpoint or interceptor-level suppression)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "test_credentials": "Not used — did not log in (anti-brute-force avoided). Credentials noted: admin@goldenpirates.io / Capitaine1023!",
+  "seed_data_creation": "None. Registry left untouched (0 candidatures).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Bug fix 'remove admin link from footer' confirmed complete. Verified on /, /suivi, /admin (unauth) in FR+EN, desktop+mobile. footer-admin-link absent everywhere; footer-apply-link ('Postuler — rejoindre l'équipage' / 'Apply — join the crew') navigates to /#postuler (section visible at y=98); footer-track-link navigates to /suivi; footer section buttons from /suivi correctly route to /#alliance etc.; footer-back-to-top returns scrollY=0; nav-link-admin stays in full-screen MENU with 'VOUS Y ÊTES / YOU'RE HERE' marker on /admin and does not re-navigate. No 'Capitaines/Conseil/Captains/Council' leak in footer text in either language.",
+  "rca of the issue": "Original bug: Footer displayed 'Espace Conseil — accès Capitaines' link visible to all visitors/recruits exposing admin area. Fix (verified): adminLink key dropped from i18n FR+EN footer dicts and the corresponding <li> removed from Footer.jsx 'LES ESPACES / SPACES' column; replaced by a primary gold-styled footer-apply-link above footer-track-link. The only remaining Council access is nav-link-admin inside the full-screen MENU (Nav.jsx), unchanged. Verified end-to-end."
+}

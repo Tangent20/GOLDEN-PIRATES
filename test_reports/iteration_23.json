@@ -1,0 +1,33 @@
+{
+  "summary": "Exhaustive multi-device audit of the 'Dock de Commandement Tactique' navbar (Nav.jsx, 4th rebuild). WIDTH MATRIX sweep at 360/390/414/768/1024/1150/1279/1280/1366/1440/1920 confirms: ZERO horizontal overflow at every width; header height stays 64px (<md) / 80px (>=md) — NO wrap to 2 lines anywhere; xl breakpoint boundary clean (menu-toggle visible 360-1279, hidden 1280+; 5 dock tabs visible 1280+, hidden <1280). DOUBLON sweep: at every width/persona exactly ONE POSTULER (or SUIVRE) is visible to the user — at 768-1279 with drawer open the header POSTULER remains in the DOM (hidden md:flex) but is fully covered by the drawer overlay (elementFromPoint confirms drawer is topmost at header-POSTULER's center). FR/EN parity perfect: 'L'alliance/Le Code/Le Récit/Processus/LE BUTIN/CONSEIL/ROYAUME 1023' ⇄ 'The Alliance/The Code/The Saga/Process/THE TREASURE/COUNCIL/KINGDOM 1023'. Live recruit reactivity works WITH drawer open (gp_bottles set → POSTULER disappears, drawer stays open). Admin login succeeds; CONSEIL badge gold-active on /admin (aria-current=page); CONSEIL click from /donations → /admin with ZERO login-form flashes (0/100 samples saw login form, 6 saw the admin-session-checking loader — expected). Admin drawer @768 shows LE REGISTRE+LA MESSAGERIE+LE BUTIN, no POSTULER/SUIVRE. SPA navigation /api/auth/me counter: 0 extra calls across 2 SPA clicks (home→donations→home) after cold load. iOS checks @390: drawer backdrop-filter=blur(40px) applied, safe-area footer padding=12px, drawer height=viewport, no 100vh gap. Backdrop click closes drawer; body overflow restored. Regression on /, /suivi, /donations (exactly 1 donations-hall-total), /conditions all pass; footer has 4 columns + credits block; ZERO non-benign console errors across all 4 routes. Cleanup done: admin logged out, gp_bottles removed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Nav drawer (<1280 widths, iOS/Safari-focused)",
+        "issues": [
+          "Scroll-lock is only enforced via body.style.overflow='hidden'. Programmatic window.scrollTo(0,500) WHILE drawer open at 768×1024 still scrolled the page to scrollY=500 (body overflow:hidden does not fully lock scroll in Chromium headless, and is known to be bypassed on iOS Safari). For true iOS scroll-lock, use the position:fixed + top:-scrollY hack or add overflow:hidden on html as well. — NON-BLOCKING: user interaction via touch is still visually locked because the full-screen drawer overlay captures all pointer events; this is only observable via programmatic scrollTo."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "(Optional, iOS hardening) Harden drawer scroll-lock in Nav.jsx useEffect: also set document.documentElement.style.overflow='hidden' when open, OR adopt the position:fixed+top:-scrollY technique to truly prevent background scroll on iOS Safari. The current implementation works for touch (overlay captures events) but programmatic scroll still fires."
+  ],
+  "critical_code_review_comments": [
+    "Nav.jsx line 162: `.hidden md:flex` on the header action slot keeps POSTULER rendered at 768-1279 under the drawer. Not a real doublon (drawer overlay is topmost), but if you ever lower drawer z-index below z-[85], this would surface — consider adding `xl:flex` AND hiding when `open===true` for defense-in-depth.",
+    "Nav.jsx useEffect lines 37-40: body scroll-lock relies solely on body overflow — see design-issues note above for iOS hardening.",
+    "Nav.jsx uses two independent `nav-link-butin` testids (header + drawer) with the same value — Playwright/CSS queries need to scope by header/drawer parent; acceptable but worth noting in docs for future testers."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100% (all critical paths pass; 1 non-blocking iOS scroll-lock advisory)"},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! — login OK; logged out at end of run",
+  "seed_data_creation": "none; test gp_bottles set + removed; admin session terminated",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Nav is stable across 360→1920, dock mode kicks in exactly at xl (1280px). The one open advisory is iOS scroll-lock hardening (optional). All DOUBLON concerns resolved: at 768-1279 with drawer open the header POSTULER is DOM-present but covered by drawer; elementFromPoint confirms drawer is topmost. SPA /api/auth/me counter is correctly 1 per cold load + 0 on SPA navigations. Admin login + CONSEIL-no-flash from /donations verified (0/100 DOM samples saw login form). FR/EN labels all match the request. 1 donations-hall-total on /donations. 0 non-benign console errors.",
+  "rca of the issue": "n/a — no new bugs. The iOS scroll-lock advisory stems from using `body.style.overflow='hidden'` only; Chromium/iOS can still scroll the html element programmatically. Fix: lock `document.documentElement` too, or use position:fixed+top=-scrollY on body (classic iOS pattern)."
+}

@@ -1,0 +1,35 @@
+{
+  "summary": "Frontend-only validation of the splash fix for ESPACE CONSEIL (/admin). All performance targets met: Coffre now displays well under 1.5s in every scenario (normal, slow network 10s, aborted /auth/me, mobile). Real login works. Revisit as Capitaine goes straight to dashboard without flashing back to Coffre. Button regression (menu, FR/EN, POSTULER, SUIVRE) OK.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "test_1_menu_click_desktop": "PASS - Coffre visible 886ms via nav-menu-toggle -> nav-link-admin",
+    "test_2_direct_admin_normal": "PASS - 1198ms",
+    "test_3_slow_auth_me_10s": "PASS - Coffre shown in 1294ms despite 10s delayed /auth/me (no network block)",
+    "test_4_aborted_auth_me": "PASS - Coffre shown in 1465ms, form fully usable (email+password typed successfully)",
+    "test_5a_real_login": "PASS - admin@goldenpirates.io / Capitaine1023! -> dashboard visible",
+    "test_5b_revisit_logged_in": "PASS - Dashboard displayed in 469ms, no return to Coffre (login form hidden)",
+    "test_6_mobile_390x844": "PASS - Coffre visible 885ms, no horizontal overflow",
+    "regression_fr_en_toggle": "PASS - EN content detected after toggle, FR restored",
+    "regression_postuler_cta": "PASS - navigates to /#postuler, form visible",
+    "regression_suivre": "PASS - navigates to /suivi"
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fix in Admin.jsx is clean: splash state + setTimeout(600ms) runs independently of /auth/me axios call. Conditional rendering at lines 659-663 cleanly handles the 3 states (splash loading / login / dashboard). No regressions introduced.",
+    "Minor: the splash timer runs even when a valid cached session returns quickly (<600ms) - but harmless because `authed === true` short-circuits the splash branch (dashboard renders immediately as observed in test 5b at 469ms)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! - used once, login successful",
+  "seed_data_creation": "None - per instructions, no DB writes this iteration",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The 0.6s splash fix is validated across all network scenarios (normal, slow 10s, aborted). The 12s guard from iteration_5 has been successfully replaced. Registry is empty - do not create data unless explicitly asked. All data-testids: nav-menu-toggle (not nav-menu-btn), nav-link-admin, nav-link-status, nav-cta-apply, admin-login-form, admin-login-input-email, admin-login-input-password, admin-login-btn, admin-logout-btn.",
+  "rca of the issue": "Original bug: /admin blocked rendering on await /auth/me (3s+ perceived lag). Fix (verified): parallel splash state displayed for max 600ms via setTimeout, decoupling UI from network. Session check continues in background and swaps to dashboard once resolved."
+}

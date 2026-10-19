@@ -1,0 +1,34 @@
+{
+  "summary": "Frontend-only test of the 4th navbar rebuild (Command Dock + permanent CONSEIL + right-side HUD drawer). Covered all requested scenarios at 1440 / 768 / 390: desktop inline dock tabs, visitor/recruit/admin state swaps in the fixed-width action slot, drawer open/close/Esc/body-scroll-lock, mobile brand text, live recruit reactivity via gp_bottles_change while drawer is open, EN parity, admin login + no-login-flash on SPA navigations back to /admin, and quick regression on /suivi + /conditions. 22 of 23 explicit checks PASS. Only observation: /api/auth/me is called 6 extra times across 2 full page loads + 2 SPA clicks after admin login — higher than the stated '0 extra on SPA navigations' guarantee, but the critical outcome (NO admin-login-form flash sampled at ~30ms) is clean on every SPA re-entry to /admin. User's main complaint (login-form flash) is confirmed FIXED. No horizontal overflow at any breakpoint. No clipped text. No layout shift when role flips (slot width stable at 210px for suivi button, >= 170px min).",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Admin session caching across SPA navigations",
+        "issue": "After login, 6 additional /api/auth/me calls were observed across 2 full page.goto() loads + 2 SPA button clicks (should be 2 total — one per full reload — if module cache is strict). The 4 extra calls likely come from multiple components mounting useAdminSession on each cold-load. SPA click-only transitions were not isolated in this run (clicks happened on cold-loaded pages). Does NOT cause the login-form flash — that is confirmed fixed. Suggest measuring more precisely in a pure click-only sequence.",
+        "affected_selectors": ["nav-link-council"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Low-priority: verify useAdminSession module cache really dedupes within a single React tree — the gross call count after login (4 during login + several on subsequent pages) suggests either multiple consumers each firing or the cache is scoped per module instance; the stated '1 cold-load / 0 SPA' KPI should be re-measured with pure clicks."
+  ],
+  "critical_code_review_comments": [
+    "Nav.jsx is 364 lines — clean and well-scoped; no DRY violation.",
+    "All interactive elements have data-testid — great testability.",
+    "The dock tab 'nav-link-butin' and the drawer 'nav-link-butin' share the same data-testid; selectors need .first() — minor, acceptable.",
+    "aria-current='page' is set correctly for the current-page tabs — good a11y.",
+    "The crimson CONSEIL button swap to gold-active uses both border + bg + shadow — strong visual affordance when authed on /admin."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (skipped per request)", "frontend": "96% (22/23 explicit checks)" },
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! — verified working, logged out at end of test",
+  "seed_data_creation": "none; set + cleared localStorage.gp_bottles during recruit tests",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Nav is now in a very good state after 4 iterations. All 5 dock tabs render inline on >=lg, drawer is tablet/mobile only, CONSEIL is permanent on every persona/page, action slot is fixed-width (no shift). The previously-reported admin-login-form flash on CONSEIL click while authed is FIXED (sampled DOM every 30ms, never saw the login input). EN labels: THE ALLIANCE / THE CODE / THE SAGA / PROCESS / THE TREASURE / COUNCIL / KINGDOM 1023 — all correct. Mobile 390 brand text 'GOLDEN PIRATES' + 'ROYAUME 1023' visible. Live reactivity via window Event('gp_bottles_change') while drawer open: works — POSTULER disappears, SUIVRE turns gold.",
+  "rca of the issue": "N/A — this iteration verifies a rebuild, not a bug fix. Previously-reported admin login-form flash is resolved."
+}

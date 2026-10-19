@@ -1,0 +1,24 @@
+{
+  "summary": "Verified axios 15s timeout + 12s anti-freeze guard on /admin: slow (13s), aborted-forever, and nominal responses all correctly show the Coffre within ~12-13s instead of hanging indefinitely. Full regression on nav/menu/apply/admin/export/messagerie/logout all passed. Created and deleted a TEST_ application end-to-end; registry left empty.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin dashboard", "issues": ["Minor: REGISTRE tab badge polling showed stale 'pending=1' briefly after delete while stats grid already showed 0 — polling interval is 15s, cosmetic only"]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Admin.jsx uses two useEffects to manage authed state (fetch + guard). This works but could be unified. The 12s guard is a safe fallback given axios timeout is 15s (guard fires first — correct ordering).",
+    "api.js timeout=15000 applies to ALL requests including file downloads (xlsx/pdf export). Large exports on slow networks could time out. Consider per-request override on export calls."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (frontend-only)", "frontend": "100%" },
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! (used once, successful)",
+  "seed_data_creation": "Created TEST_pirate_35751 (GP-1023-3ESX) during flow test, deleted via BRÛLER — registry restored to empty.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Fix verified. Tests covered: (1) delayed /auth/me 13s — Coffre shows at ~13s, (2) never-responding /auth/me — Coffre shows at ~12s, (3) fast path <1s, (4) real login, (5) search/export clicks, (6) messagerie tab, (7) logout, (8) menu POSTULER→form, (9) apply submission with tracking code GP-1023-XXXX format, (10) admin delete flow. All PASS."
+}

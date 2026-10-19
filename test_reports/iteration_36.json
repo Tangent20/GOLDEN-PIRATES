@@ -1,0 +1,35 @@
+{
+  "summary": "CRITICAL: Notification hub polling is completely broken - making 825 requests in 45s instead of expected ~3 requests. The central hub is not consolidating requests as designed. Testing stopped early due to this blocking issue.",
+  "backend_issues": {
+    "critical_bugs": []
+  },
+  "frontend_issues": {
+    "critical_bugs": [
+      {
+        "component": "/app/frontend/src/lib/notifHub.jsx",
+        "issue": "Central hub polling NOT working - 825 requests in 45s instead of ~3 requests (every 15s)",
+        "impact": "CRITICAL - Massive over-polling will cause performance issues, battery drain, and potential rate limiting",
+        "details": "Expected: ~3 requests to /api/notifications/{code} in 45s (one every 15s). Actual: 825 requests (~18 requests/second). The hub is either not consolidating requests or there's an infinite loop/rapid re-render causing constant re-subscriptions.",
+        "fix_priority": "CRITICAL",
+        "affected_files": [
+          "/app/frontend/src/lib/notifHub.jsx",
+          "/app/frontend/src/components/Nav.jsx",
+          "/app/frontend/src/pages/Suivi.jsx"
+        ]
+      }
+    ],
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [],
+  "test_report_links": [],
+  "success_percentage": {
+    "backend": "N/A - not tested",
+    "frontend": "0% - Critical polling bug blocks all notification features"
+  },
+  "updated_files": [],
+  "action_item_for_main_agent": "CRITICAL: Fix the notification hub polling system in /app/frontend/src/lib/notifHub.jsx. The hub is making 825 requests in 45 seconds instead of the expected ~3 requests (one every 15s). This suggests either: (1) the hub is not being used correctly by components, (2) there's an infinite loop/rapid re-render, or (3) the subscription mechanism is broken. Debug the _ensureHub, _subscribe, and interval timer logic. Verify that useRecruitNotif and useAdminNotif are properly consolidating requests. Test with DevTools Network tab to confirm polling frequency before proceeding with other notification features.",
+  "should_call_test_agent_after_fix": "true",
+  "should_main_agent_test_itself": "false"
+}

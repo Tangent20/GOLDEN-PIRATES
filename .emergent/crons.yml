@@ -1,0 +1,10 @@
+crons:
+  # Ping de maintien en éveil : évite l'écran « réveiller le serveur » au retour des visiteurs.
+  # 15 minutes = cadence minimale autorisée en production.
+  - name: keep-alive
+    description: "Ping de maintien en éveil toutes les 15 minutes pour éviter l'écran « réveiller le serveur »"
+    cron: "*/15 * * * *"
+    endpoint: "{{BASE_URL}}/api/cron/keep-alive"
+    method: POST
+    enabled: true
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.

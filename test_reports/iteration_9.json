@@ -1,0 +1,36 @@
+{
+  "summary": "Validation ciblée du correctif route-aware du message d'erreur recover + régression express. Les 4 messages d'erreur FR/EN × power/discord sont désormais corrects, la récupération réussie fonctionne, l'anti-pirate 429 reste intact, et pytest 32/32 verts.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_scenarios_verified": {
+    "FR_route_power_wrong_power": "✅ 'Aucune bouteille au nom de ce pseudo avec cette puissance — vérifie l'orthographe exacte de ta candidature.' (ne mentionne PAS Discord)",
+    "FR_route_discord_wrong_discord": "✅ 'Aucune bouteille au nom de ce pseudo ET ce Discord — vérifie l'orthographe exacte de ta candidature.'",
+    "EN_route_power_wrong_power": "✅ 'No bottle under this pseudo with this power — check the exact spelling from your application.'",
+    "EN_route_discord_wrong_discord": "✅ 'No bottle under this pseudo AND this Discord — check the exact spelling from your application.'",
+    "FR_route_power_success_normalized": "✅ Puissance '8 m' (espace+casse) → recover-success affiche GP-1023-GUPV, ajouté à l'étagère localStorage, VOIR MON DOSSIER présent",
+    "anti_bot_6th_attempt": "✅ 6ᵉ POST /api/applications/recover depuis la même IP → HTTP 429 code=recover_limit",
+    "pytest_full_suite": "✅ 32/32 passed in 5.94s (19 test_golden_pirates.py + 13 test_recovery.py), série (-p no:xdist)"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_golden_pirates.py",
+    "/app/backend/tests/test_recovery.py",
+    "/app/test_reports/pytest/iteration_9.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Suivi.jsx handler recover() ligne 170 : le ternaire `recRoute === 'power' ? s.recoverFailPower : s.recoverFail` est propre et minimal. Alternative possible : utiliser `err.response.data.detail.msg` du backend (déjà générique côté API), ce qui dispenserait de dupliquer la logique côté client, mais le choix actuel est acceptable et laisse le libellé maîtrisé côté UI.",
+    "i18n.jsx : la paire `recoverFail` / `recoverFailPower` est bien symétrique FR/EN (lignes 170-171 FR, 510-511 EN). Pas de divergence."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "100% (32/32)", "frontend": "100% (5/5 scénarios UI)" },
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! (non utilisé cette itération ; cleanup fait via mongo direct car le curl POST /api/admin/login retournait un 307 — probablement une redirection d'ingress sur un path exact, non bloquant pour ce test ciblé).",
+  "seed_data_creation": "1 candidature témoin TEST_SansDiscord (code GP-1023-GUPV, power '8M', discord 'pasdediscord') créée via POST /api/applications pour le test UI. SUPPRIMÉE à la fin (db.applications TEST_* purgée). db.recovery_attempts purgée. Registre final : 0 TEST_app, 0 recovery_attempt.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Correctif route-aware du message d'erreur recover validé bout-en-bout. Les 4 clés i18n (recoverFail/recoverFailPower × FR/EN) sont bien synchronisées. L'IP du pod reste partagée : purger db.recovery_attempts avant chaque run manuel. Suite pytest Golden Pirates stable à 32/32 (série obligatoire, pas de xdist). Rien à retester côté recover pour l'instant.",
+  "rca of the issue": "N/A — correctif déjà validé, pas de régression détectée."
+}

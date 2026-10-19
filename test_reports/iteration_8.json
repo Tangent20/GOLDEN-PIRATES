@@ -1,0 +1,47 @@
+{
+  "summary": "Validation bout-en-bout de la route PAS DE DISCORD (power) + badge Conseil 'CODE RÉCLAMÉ'. Backend 32/32 pytest verts (6 nouveaux tests ajoutés dans test_recovery.py : power exact, power normalisé, power faux→404 générique, 400 recover_need_one, pas de fuite de PII, stamp code_recovered_at). UI /suivi : les 2 routes présentes, PAS DE DISCORD avec '8 m' (espace+casse) renvoie bien GP-1023-R8CR, succès visible, code ajouté au rack localStorage, VOIR MON DOSSIER charge le dossier. Route DISCORD toujours fonctionnelle. Erreur 404 générique affichée. Admin : badge 'CODE RÉCLAMÉ' désormais visible après fix d'une clé i18n manquante.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Admin.jsx AppRow badge CODE RÉCLAMÉ",
+        "issue": "La clé i18n `recoveredBadge` n'était définie que sous `suivi.*` alors que le composant référence `c.admin.dash.recoveredBadge` (via `const d = c.admin.dash`). Le badge rendait un <span> vide (data-testid présent mais texte '')). CORRIGÉ par l'agent de test : ajout de `recoveredBadge` dans admin.dash FR (CODE RÉCLAMÉ) et EN (CODE CLAIMED).",
+        "selector": "[data-testid^='admin-recovered-badge-']",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "Suivi.jsx recover error (route power)",
+        "issue": "Quand l'utilisateur choisit la route PAS DE DISCORD et saisit un power faux, le message affiché côté UI reste `s.recoverFail` qui mentionne 'ce Discord' (texte FR : 'Aucune bouteille au nom de ce pseudo ET ce Discord'). Le backend renvoie bien un message générique ('ces infos'), mais le frontend ignore `detail.msg` et affiche un libellé i18n hardcodé lié à la route Discord. Non bloquant mais trompeur quand la recrue est sur la route power.",
+        "selector": "[data-testid='recover-error']",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_recovery.py",
+    "/app/backend/tests/test_golden_pirates.py",
+    "/app/test_reports/pytest/iteration_8.xml"
+  ],
+  "action_items": [
+    "Décider : rendre `recoverFail` conscient de la route choisie (FR/EN), ou mieux : utiliser `err.response.data.detail.msg` du backend qui est déjà générique. Mineur mais améliore l'honnêteté du message quand l'utilisateur est en route power."
+  ],
+  "critical_code_review_comments": [
+    "i18n : plusieurs clés dupliquées entre `suivi` et `admin.dash` (recoveredBadge). Envisager un namespace commun `badges.*` pour éviter la désynchronisation future.",
+    "Suivi.jsx recover() : préférer `err.response.data.detail.msg` du backend (déjà générique) plutôt qu'un libellé i18n hardcodé lié à Discord — supprime le piège quand la route power est utilisée.",
+    "server.py recover_tracking_code : le `norm()` sur discord/power est OK, mais `data.pseudo.strip().lower()` ne retire pas les espaces internes alors que `pseudo_lower` en base peut contenir des espaces normaux — la cohérence pseudo→pseudo_lower est maîtrisée côté create_application, pas besoin de changer.",
+    "RECOVERY_PER_HOUR=5 partagé par IP : OK pour anti-bot, mais pénalise les réseaux NAT (foyer / cybercafé). Non bloquant pour le MVP."
+  ],
+  "updated_files": [
+    "/app/frontend/src/lib/i18n.jsx (ajout `recoveredBadge` dans admin.dash FR + EN)",
+    "/app/backend/tests/test_recovery.py (ajout 6 tests : power exact, power normalisé, power faux générique, recover_need_one, no PII leak, stamp code_recovered_at)"
+  ],
+  "success_rate": { "backend": "100% (32/32)", "frontend": "100%" },
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! — OK",
+  "seed_data_creation": "Candidature TEST_NoDiscord (code GP-1023-R8CR, power=8M, discord=pasdediscord) créée via POST /api/applications pour validation UI, puis SUPPRIMÉE (db.applications TEST_* purgée). Registre final : 0 candidature. recovery_attempts purgée.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Suite pytest Golden Pirates : 19 (test_golden_pirates.py) + 13 (test_recovery.py, dont 6 nouveaux pour la route power) = 32/32 verts. IP partagée : purger db.recovery_attempts entre runs. Clé i18n `recoveredBadge` désormais présente dans admin.dash FR+EN — ne pas la retirer. Bug UI mineur ouvert : la bulle d'erreur recover affiche un texte qui mentionne 'Discord' même sur la route power (frontend hardcode) — à discrétion du main agent.",
+  "rca of the issue": "Badge 'CODE RÉCLAMÉ' vide côté admin : le composant Admin/AppRow utilise `const d = c.admin.dash` et affiche `{d.recoveredBadge}`, mais la clé n'existait que sous `suivi.recoveredBadge` (lignes 177/515 d'i18n.jsx). Le span data-testid était donc bien rendu, mais sans texte visible. Reproduction : /admin login → une candidature avec code_recovered_at posé → inspecter le span `admin-recovered-badge-{id}` → innerText vide. Mitigation appliquée : ajout de la clé dans l'objet admin.dash FR (CODE RÉCLAMÉ) et EN (CODE CLAIMED), à côté de `attemptBadge`."
+}

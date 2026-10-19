@@ -1,0 +1,22 @@
+{
+  "summary": "Full UI validation of the 3-audience Nav + Footer (visitor / recruit / admin) across 1440x900, 768x1024, 390x844. All data-testids resolved, no horizontal overflow at any viewport, admin dashboard hash navigation (#registry / #messagerie) and 3 tabs (admin-tab-registry / admin-tab-messages / admin-tab-butin) OK, recruit menu status button correctly styled 'OR plein' (bg-gold text-ink), recruit footer hides apply/keeps track+donation, EN translations verified (APPLY / TRACK MY APPLICATION / THE TREASURE / COUNCIL SPACE / The Alliance / The Code / The Saga / Process). One real bug found and FIXED by testing agent: Nav header CTA was stuck on 'POSTULER' (nav-cta-apply) for a recruit on initial page load/reload because the isRecruit state was only refreshed when the menu opened — added a mount-time + pathname-change effect and a storage event listener so the header switches to 'SUIVRE MA CANDIDATURE' (nav-cta-suivi) immediately. Post-fix retest confirms nav-cta-suivi at 1440/768 and correctly hidden by `hidden md:block` at 390 (same as apply CTA).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Footer.jsx reads localStorage synchronously during render on every render — fine because it's cheap, but it is NOT reactive. If a user applies, writes gp_bottles, and does NOT reload, the footer will not update until the next remount/route change. Consider lifting isRecruit to a shared hook or listening to storage/custom events (same pattern now used in Nav.jsx).",
+    "Nav.jsx: isRecruit now refreshes on mount + open + pathname change + storage event — good. Also consider firing a CustomEvent('gp_bottles_change') after any client-side write so same-tab updates are picked up (the native 'storage' event only fires cross-tab)."
+  ],
+  "updated_files": ["/app/frontend/src/components/Nav.jsx"],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "seed_data_creation": "None. Used localStorage gp_bottles to simulate the recruit; cleared at end of each test block. No DB writes.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Nav.jsx now has a reactive isRecruit (mount/pathname/open/storage). If the Footer gets the same issue report later, apply the same pattern there (currently it only re-reads on render which is enough on page nav but not on same-tab storage writes).",
+  "rca of the issue": "BUG: Recruit header still showed POSTULER after reload. RCA: Nav.jsx used `useEffect(..., [open])` guarded by `if (!open) return;` to read localStorage. On fresh mount isRecruit=false; header rendered nav-cta-apply; isRecruit only flipped when the user opened the menu — too late for the header. FIX: replaced the open-only effect with an effect depending on [open, location.pathname] that always re-reads gp_bottles, plus a window 'storage' listener for cross-tab syncing. Verified: at 1440/768 nav-cta-apply disappears and nav-cta-suivi appears immediately after reload with gp_bottles set."
+}

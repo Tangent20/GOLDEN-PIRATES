@@ -1,0 +1,22 @@
+{
+  "summary": "Frontend-only review of the new /conditions legal page + footer trust band + ApplyForm CGU acceptance link. All 10 requested feature points verified across FR/EN and desktop/mobile. 17/17 sections render with correct testids. SEO title/description contain Charly Soudan + golden.pirates@outlook.fr. Footer trust band shows on home, /donations and /conditions with editor block, mailto, CGU button navigating to /conditions, and two green badges. ApplyForm acceptance line (data-testid apply-cgu-accept) present in FR and EN and navigates to /conditions. Mobile 390px has 0 horizontal overflow, collapsible summary works and TOC items jump to sections. Recruit-aware apply/track behavior intact (apply shown when no gp_bottles, track shown when gp_bottles present).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Conditions.jsx: TOC renders twice in the DOM (desktop <aside> hidden on mobile + mobile <details> hidden on desktop), so data-testid conditions-toc-{id} is duplicated (34 nodes instead of 17). Not a bug but can confuse Playwright selectors — consider suffixing testids (e.g., -desktop / -mobile) or scoping via parent testid.",
+    "Benign console noise: multiple 401s on every page from useAdminSession polling the admin whoami endpoint when visitor is not logged in. Pre-existing from previous iterations, but could be silenced by short-circuiting the hook on 401 or filtering the log."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100%"},
+  "test_credentials": "Admin creds not needed; /admin not retested (previous iteration_16 11/11).",
+  "seed_data_creation": "None.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Verified: /conditions FR+EN with 17 sections, sticky desktop TOC + collapsible mobile summary, Charly Soudan editor card with address 36 avenue du parc 93290 Tremblay-en-France + mailto golden.pirates@outlook.fr, 3 green trust badges, contact CTA (data-testid conditions-contact-btn), back-to-top (conditions-back-top). Footer trust band testids: footer-trust-band, -editor, -mail (+-block), -cgu (+-block), -badges, -free, -nosale all present on home, donations and conditions. ApplyForm has data-testid apply-cgu-accept linking to /conditions, text FR 'EN SCELLANT TA CANDIDATURE, TU ACCEPTES LES CONDITIONS GÉNÉRALES DU SITE' / EN 'BY SEALING YOUR APPLICATION, YOU ACCEPT THE SITE'S TERMS & CONDITIONS'. SEO title 'Conditions générales & mentions légales — GOLDEN PIRATES' and meta description mentions both Charly Soudan and golden.pirates@outlook.fr. Mobile 390px: 0 horizontal overflow, summary expands, TOC jumps work (scrollY 0 -> 2446). Recruit-aware footer apply/track confirmed by toggling gp_bottles in localStorage. Donations page still loads with trust band. No regressions found. The 401 console errors are from useAdminSession polling and are pre-existing/benign."
+}

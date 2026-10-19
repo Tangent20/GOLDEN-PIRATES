@@ -1,0 +1,35 @@
+{
+  "summary": "Mission multilingue + non-régression surrogates : 14/14 nouveaux tests PASS, suite complète 52/52 PASS (6 lockout + 20 golden_pirates + 14 multilingual + 12 recovery). Le bug surrogate→500 est totalement neutralisé : (a) POST /api/messages/{code} avec payload JSON contenant un lone surrogate (\\ud83d) → 422 PROPRE renvoyé par le handler global RequestValidationError (le detail est 'Requête invalide — vérifie les champs envoyés.', aucun écho du surrogate, body décodable UTF-8 strict) ; (b) idem POST /api/peers/messages → 422 propre ; (c) POST /api/applications avec surrogate dans pseudo + message trop court → 422 propre ; (d) POST /api/applications avec surrogate dans un message VALIDE (longueur OK) → 422 propre également (Pydantic en mode strict rejette les lone surrogates au niveau du modèle avant même d'arriver à safe_text — c'est encore plus sûr que prévu, le texte piégé n'atteint jamais Mongo). Round-trips multilingues 100% intacts : (1) Conseil → recrue A avec 'Chinois 大家好 • Russe Здравствуйте • Arabe مرحبا • Hébreu שלום • ⚓🏴‍☠️' → relecture GET /api/messages/{code} identique octet par octet ; (2) Tanière A→B '我们一起 Здравствуй pirate ⚓' → B relit via /api/peers/thread, from_me=false, texte identique ; (3) recherche CJK '海盗' trouve B, champs exactement {app_id, pseudo, power, troops, status} — AUCUNE fuite discord/email/tracking_code/message/experience/ip ; (4) recherche cyrillique n'exfiltre pas le dossier de l'appelant. Candidature RTL arabe 'قرصانTest' + message 'مرحبا! أود الانضمام إلى تحالف القراصنة الذهبيين ⚓' → créée + relue à l'identique via /applications/track. Limites CJK validées : 1000 CJK en Tanière = 200 (longueur = 1000 chars) ; 1001 CJK = 422 propre ; 2000 chars mixtes en Conseil = 200 ; 2001 chars = 422. Nettoyage final confirmé : applications=0, messages=0, peer_messages=0, rejections=0, login_attempts=0.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_multilingual_messages.py",
+    "/app/test_reports/pytest/iteration_13.xml",
+    "/app/test_reports/pytest/iteration_13_full.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py:50 safe_text() — t.encode('utf-8','ignore').decode('utf-8') : correct et minimaliste. Appliqué uniformément aux 5 points d'entrée texte (create_application 5 champs, send_message recrue, admin_send_message, peers_send, update_application note). Belle couverture.",
+    "server.py:1121 handler global RequestValidationError → JSONResponse 422 détail générique : parfait bouclier qui empêche l'écho de l'input et donc tout crash d'encodage sur lone surrogate. Signalement UX cohérent avec le reste du site (français marin).",
+    "server.py:869 /peers/search utilise re.escape() avant regex Mongo + whitelist stricte des champs retournés (app_id/pseudo/power/troops/status) — safe pour CJK/cyrillique/arabe (re.escape neutralise toute metachar unicode).",
+    "Pydantic v2 (model_config) rejette les lone surrogates au niveau de la validation du str — c'est une 2e ligne de défense qui transforme même les cas 'valides-mais-piégés' en 422 propre avant que safe_text ne soit appelé. Comportement sain et observé sur les 3 endpoints.",
+    "Rien à redire sur la propreté — pytest 52/52 vert, DB vide après tests, aucune fuite de champs sensibles."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_multilingual_messages.py (nouveau — 14 cas)"
+  ],
+  "success_rate": {"backend": "100% (52/52, 14/14 new)", "frontend": "non testé (testing_type=backend)"},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! (consommé pour admin_session fixture et test_zz_cleanup, nettoyé)",
+  "seed_data_creation": "2 candidatures de test créées (МорячокТест2 cyrillique + 海盗测试 CJK) + 1 arabe (قرصانTest) + éventuellement 1 TestSurrogateX — TOUTES brûlées via DELETE /api/admin/applications/{id} par test_zz_burn, puis purge finale Mongo de peer_messages/rejections/login_attempts/messages. Vérifié post-run: toutes collections = 0.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Base vide (0 partout). Le correctif surrogates (safe_text + handler 422) est robuste et testé sur les 3 endpoints texte (/messages, /peers/messages, /applications). Pydantic v2 ajoute une 2e barrière avant même safe_text, donc même un message 'valide mais piégé' (longueur OK + surrogate) renvoie 422 propre — c'est le comportement correct, à documenter si l'utilisateur attendait un 200 'nettoyé' côté client. Prochains tests utiles : (a) tester un UPLOAD WebSocket si un jour les messages passent en temps réel ; (b) tester les notifications email (si implémentées) qui échappent au handler Pydantic. Le lockout brute-force (iteration_12 bug) semble OK sur les tests pytest (test_bruteforce_lockout_fake_email PASSED) — à re-vérifier derrière le vrai k8s ingress en production.",
+  "rca of the issue": "Repro initial (iteration précédente) : POST /api/messages/{code} avec body=b'{\"text\":\"test \\\\ud83d brut\"}' → le JSON parser Python accepte la séquence et crée une str Python contenant un lone surrogate U+D83D ; Pydantic v2 strict refuse ce str → RequestValidationError ; FastAPI par défaut échoue dans la sérialisation UJSON de l'input dans le body d'erreur (lone surrogate non-encodable UTF-8) → 500. Correctif : (1) handler global @app.exception_handler(RequestValidationError) qui ignore totalement l'input et renvoie un detail fixe en français → 422 ; (2) helper safe_text() en 2e ligne pour tout surrogate qui aurait traversé la validation (ex: upload HTTP raw). Validé sur 4 cas distincts (3 endpoints + 1 payload valide piégé), 0 occurrence de 500 sur 14 tests."
+}

@@ -1,0 +1,41 @@
+{
+  "summary": "La Bouteille perdue (POST /api/applications/recover + UI /suivi) testée de bout en bout : 7/7 pytests verts, 19/19 suite existante toujours verte, parcours UI complet validé (succès, erreur générique bilingue, rack LS, VOIR MON DOSSIER, copier ✓✓), régression /suivi OK (track, 404, reset, rack, chat). Registre vidé après coup.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Suivi / recover-copy-btn",
+        "issue": "Clé i18n `recoverCopy` manquante — avant clic le bouton n'affichait aucun libellé à côté de l'icône (undefined). CORRIGÉ par l'agent de test (ajout COPIER / COPY dans fr + en).",
+        "selector": "[data-testid=recover-copy-btn]",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_recovery.py",
+    "/app/backend/tests/test_golden_pirates.py",
+    "/app/test_reports/pytest/recovery.xml"
+  ],
+  "action_items": [
+    "Aucune action bloquante. Le correctif i18n recoverCopy a été appliqué par le testeur — main agent peut valider / adopter."
+  ],
+  "critical_code_review_comments": [
+    "server.py grossit (~980 lignes) — envisager un split (routes publiques / admin / messaging / exports) pour maintenabilité.",
+    "RecoveryCreate.discord min_length=2 max_length=32 : limite stricte — un tag Discord nouveau format peut dépasser 32 (noms affichés jusqu'à 32 OK, mais pseudo+#1234 ancien format rentre). Ras.",
+    "Côté UI Suivi.jsx : la fonction handler recover() est appelée via onClick (bouton type=button) — bien, mais s.recoverHint est réutilisé comme message d'erreur quand un champ est vide, ce qui peut prêter à confusion (hint = aide, pas erreur). Mineur.",
+    "Les regex construites avec re.escape(discord) sont sûres anti-injection — bon. Pas de .limit(1) explicite mais sort+find_one est OK."
+  ],
+  "updated_files": [
+    "/app/frontend/src/lib/i18n.jsx (ajout recoverCopy FR+EN)",
+    "/app/backend/tests/test_recovery.py (nouveau)"
+  ],
+  "success_rate": { "backend": "100%", "frontend": "100%" },
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! (vérifié valide)",
+  "seed_data_creation": "Candidature TEST_UIRecov (code GP-1023-G23N) créée via /api/applications pour le test UI puis SUPPRIMÉE en base. recovery_attempts purgée. Registre final : 0 candidature.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Suite pytest Golden Pirates : 19 (test_golden_pirates.py) + 7 (test_recovery.py) = 26/26 verts. L'IP du pod partage le quota /applications/recover (5/h) et /applications (6/jour) : purger db.recovery_attempts et db.applications TEST_ avant tout nouveau run. La clé i18n recoverCopy est désormais présente (FR=COPIER, EN=COPY).",
+  "rca of the issue": "Bug mineur détecté : i18n `recoverCopy` n'existait pas → bouton copier rendait `undefined`/vide avant clic. Repro : /suivi → récupération réussie → regarder le texte à côté de l'icône Copy. Mitigation : ajout de la clé dans fr (COPIER) et en (COPY) dans /app/frontend/src/lib/i18n.jsx."
+}

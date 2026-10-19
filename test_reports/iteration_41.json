@@ -1,0 +1,151 @@
+{
+  "summary": "Completed comprehensive testing of Golden Pirates domain migration (.com → .org), Rose des Dons mobile fix, and MongoDB cleanup. All 3 major features verified successfully.",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "minor_observations": [
+      {
+        "component": "Language Switcher on /donations",
+        "issue": "Clicking EN/FR buttons navigates to homepage instead of staying on /donations page",
+        "impact": "Cannot verify EN labels on /donations page directly, but SEO tags update correctly on homepage",
+        "severity": "LOW",
+        "note": "This may be intentional behavior. Language switcher works correctly on homepage."
+      }
+    ]
+  },
+  "passed_tests": [
+    "MongoDB Cleanup: 0 applications, 0 donators, all stats zero, no test pseudos found",
+    "Backend Sanity: Create/track/delete application works with empty DB",
+    "Backend Sanity: Donation invoice creation and retrieval works",
+    "Rose des Dons Mobile (FR): All 4 chips show full labels without ellipsis on 390x844 viewport",
+    "Rose des Dons Mobile (FR): Labels are 'Soutien', 'Hall', 'Pourquoi', 'Facture' (no truncation)",
+    "Rose des Dons Layout: grid-cols-4 on all viewports (390/414/393/412/768/1024/1440px)",
+    "Rose des Dons Tap Targets: All chips ≥64px height (exceeds 44px minimum)",
+    "Rose des Dons Scroll: All 4 chips scroll to correct sections (#soutien, #jauge, #pourquoi, #facture)",
+    "Rose des Dons Responsive: No horizontal overflow on any viewport",
+    "SEO Canonical URLs: All pages point to https://golden-pirates.org (/, /suivi, /donations, /conditions)",
+    "SEO Hreflang: fr, en, x-default tags present on all pages",
+    "SEO og:url: Points to golden-pirates.org/donations",
+    "SEO og:image: Points to golden-pirates.org/og-image.png",
+    "SEO og:locale: fr_FR (dynamic based on language)",
+    "SEO og:locale:alternate: en_US present",
+    "SEO twitter:card: summary_large_image",
+    "SEO twitter:image: Points to golden-pirates.org",
+    "SEO theme-color: #06090E",
+    "SEO document.documentElement.lang: fr (dynamic)",
+    "SEO /admin: noindex, nofollow present",
+    "SEO sitemap.xml: Contains golden-pirates.org URLs",
+    "SEO robots.txt: Sitemap line points to golden-pirates.org/sitemap.xml",
+    "Regression: Donations page sections all functional (tiers, custom amount, progress bar, hall, receipt download)"
+  ],
+  "test_report_links": [
+    "/app/backend_test.py"
+  ],
+  "success_percentage": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend_rose_des_dons": "100% (4/4 test categories passed)",
+    "frontend_seo": "100% (4/4 test categories passed)",
+    "overall": "100% (all critical tests passed)"
+  },
+  "action_item_for_main_agent": "",
+  "updated_files": [
+    "/app/backend_test.py"
+  ],
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_test_itself": false,
+  "detailed_test_results": {
+    "mongodb_cleanup": {
+      "applications_count": 0,
+      "donators_count": 0,
+      "stats": {
+        "total": 0,
+        "pending": 0,
+        "accepted": 0,
+        "reserve": 0,
+        "rejected": 0
+      },
+      "test_pseudos_found": false,
+      "status": "PASS"
+    },
+    "backend_sanity": {
+      "create_application": "PASS",
+      "track_application": "PASS",
+      "notifications_endpoint": "PASS",
+      "delete_application": "PASS",
+      "donation_invoice_pdf": "PASS",
+      "donation_invoice_public": "PASS",
+      "status": "PASS"
+    },
+    "rose_des_dons_mobile": {
+      "viewport": "390x844",
+      "labels_fr": {
+        "soutien": "Soutien (no ellipsis)",
+        "jauge": "Hall (no ellipsis)",
+        "pourquoi": "Pourquoi (no ellipsis)",
+        "facture": "Facture (no ellipsis)"
+      },
+      "layout": "grid-cols-4",
+      "tap_targets": "All ≥64px",
+      "scroll_functionality": "All chips scroll to correct sections",
+      "status": "PASS"
+    },
+    "rose_des_dons_responsive": {
+      "viewports_tested": [
+        "390x844 (iPhone 12/13/14)",
+        "414x896 (iPhone 14 Pro Max)",
+        "393x851 (Pixel 5)",
+        "412x915 (Samsung Galaxy)",
+        "768x1024 (iPad)",
+        "1024x768 (iPad Landscape)",
+        "1440x900 (Desktop)"
+      ],
+      "grid_layout": "grid-cols-4 on all viewports",
+      "horizontal_overflow": "None detected",
+      "status": "PASS"
+    },
+    "seo_domain_migration": {
+      "canonical_urls": {
+        "/": "https://golden-pirates.org/",
+        "/suivi": "https://golden-pirates.org/suivi",
+        "/donations": "https://golden-pirates.org/donations",
+        "/conditions": "https://golden-pirates.org/conditions"
+      },
+      "hreflang_tags": ["fr", "en", "x-default"],
+      "og_url": "https://golden-pirates.org/donations",
+      "og_image": "https://golden-pirates.org/og-image.png",
+      "og_locale": "fr_FR",
+      "og_locale_alternate": "en_US",
+      "twitter_card": "summary_large_image",
+      "twitter_image": "https://golden-pirates.org/og-image.png",
+      "theme_color": "#06090E",
+      "document_lang": "fr (dynamic)",
+      "admin_noindex": "noindex, nofollow",
+      "sitemap_xml": "Contains golden-pirates.org",
+      "robots_txt": "Sitemap: https://golden-pirates.org/sitemap.xml",
+      "status": "PASS"
+    }
+  },
+  "screenshots": [
+    ".screenshots/rose-des-dons-mobile-fr.png",
+    ".screenshots/rose-des-dons-mobile-en.png"
+  ],
+  "test_execution_date": "2026-10-19",
+  "test_environment": "https://treasure-pirates-1.preview.emergentagent.com",
+  "notes": [
+    "All test data successfully removed from MongoDB (0 applications, 0 donators)",
+    "Backend endpoints work correctly with empty database",
+    "Rose des Dons mobile fix verified: all labels show fully without ellipsis on 390x844 viewport",
+    "Rose des Dons layout is grid-cols-4 on ALL viewports (mobile to desktop)",
+    "All tap targets exceed 44px minimum (actual: 64px)",
+    "SEO domain migration complete: all URLs, images, and meta tags point to golden-pirates.org",
+    "Hreflang tags (fr/en/x-default) present on all pages",
+    "og:locale dynamically switches between fr_FR and en_US based on language",
+    "Static files (sitemap.xml, robots.txt) correctly reference golden-pirates.org",
+    "Language switcher navigates to homepage when clicked (may be intentional design)"
+  ]
+}

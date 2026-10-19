@@ -1,0 +1,304 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --background: 218 41% 4%;
+    --foreground: 36 41% 85%;
+    --card: 216 36% 9%;
+    --card-foreground: 36 41% 85%;
+    --popover: 216 36% 9%;
+    --popover-foreground: 36 41% 85%;
+    --primary: 45 65% 52%;
+    --primary-foreground: 218 41% 4%;
+    --secondary: 216 30% 14%;
+    --secondary-foreground: 36 41% 85%;
+    --muted: 216 30% 14%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 216 30% 14%;
+    --accent-foreground: 36 41% 85%;
+    --destructive: 0 72% 42%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 44 60% 20%;
+    --input: 44 60% 20%;
+    --ring: 45 65% 52%;
+    --radius: 0.25rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: #06090e;
+    color: #e8d8c8;
+    font-family: "IM Fell English", Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    /* Barre de défilement harmonisée sur Firefox aussi (webkit ci-dessous) */
+    scrollbar-color: #2a2413 #06090e;
+    scrollbar-width: thin;
+    accent-color: #d4af37;
+  }
+
+  h1, h2, h3, .display {
+    font-family: "Pirata One", "Cinzel Decorative", serif;
+    font-weight: 400;
+  }
+
+  ::selection {
+    background: #d4af37;
+    color: #06090e;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #06090e;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2a2413;
+    border-radius: 8px;
+    border: 2px solid #06090e;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9a7b1c;
+  }
+
+  /* VUE DE JOUR — plein soleil : contraste relevé pour la lisibilité extérieure */
+  html.sun-mode .text-bone\/50,
+  html.sun-mode .text-bone\/60,
+  html.sun-mode .text-bone\/70,
+  html.sun-mode .text-bone\/75,
+  html.sun-mode .text-bone\/80,
+  html.sun-mode .text-bone\/85,
+  html.sun-mode .text-bone\/90 {
+    color: #f7f1e3 !important;
+  }
+  html.sun-mode .text-mist {
+    color: #dbe2ea !important;
+  }
+  html.sun-mode .text-gold {
+    color: #f2c744 !important;
+  }
+  html.sun-mode .grain-layer {
+    opacity: 0.04 !important;
+  }
+  html.sun-mode .hero-veil {
+    opacity: 0.5 !important;
+  }
+
+  input, select, textarea {
+    outline: none;
+  }
+}
+
+@layer utilities {
+  .text-stroke-gold {
+    -webkit-text-stroke: 1.5px rgba(212, 175, 55, 0.9);
+    color: transparent;
+  }
+  @media (min-width: 768px) {
+    .text-stroke-gold {
+      -webkit-text-stroke-width: 2.5px;
+    }
+  }
+  .text-glow-gold {
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.35);
+  }
+  .frame-plate {
+    box-shadow:
+      inset 0 0 0 1px rgba(212, 175, 55, 0.25),
+      inset 0 0 40px rgba(0, 0, 0, 0.7);
+  }
+  .card-glow:hover {
+    box-shadow: 0 14px 40px -12px rgba(212, 175, 55, 0.3);
+  }
+  .rope-line {
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(212, 175, 55, 0.55) 0 6px,
+      rgba(154, 123, 28, 0.9) 6px 12px,
+      rgba(212, 175, 55, 0.25) 12px 18px,
+      rgba(90, 70, 20, 0.9) 18px 24px
+    );
+    border-top: 1px solid rgba(212, 175, 55, 0.35);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+  }
+}
+
+/* ================= LA BARRE DU NAVIRE (navbar pirate) ================= */
+@layer utilities {
+  .deck-planks {
+    background-color: #0a0f17;
+    background-image:
+      radial-gradient(120% 160% at 50% -70%, rgba(212, 175, 55, 0.14), transparent 55%),
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.32) 0 1px, transparent 1px 190px),
+      repeating-linear-gradient(180deg, rgba(232, 216, 200, 0.022) 0 1px, transparent 1px 16px),
+      linear-gradient(180deg, #0e1520 0%, #090d14 100%);
+  }
+  .plank-cut {
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+  }
+  .flag-cut {
+    clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%);
+  }
+  .gold-ingot {
+    background-image: linear-gradient(180deg, #f8de8a 0%, #d4af37 48%, #a8841f 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+  }
+  .gold-ingot:hover {
+    background-image: linear-gradient(180deg, #fde9a8 0%, #e2bf4a 48%, #b8932a 100%);
+  }
+  .brass-porthole {
+    border-radius: 9999px;
+    box-shadow:
+      0 0 0 1px rgba(212, 175, 55, 0.6),
+      0 0 0 3px #0a0f17,
+      0 0 0 4px rgba(212, 175, 55, 0.3),
+      0 0 18px rgba(212, 175, 55, 0.2);
+  }
+  .rope-line-v {
+    background: repeating-linear-gradient(
+      180deg,
+      rgba(212, 175, 55, 0.55) 0 6px,
+      rgba(154, 123, 28, 0.9) 6px 12px,
+      rgba(212, 175, 55, 0.25) 12px 18px,
+      rgba(90, 70, 20, 0.9) 18px 24px
+    );
+  }
+  .fuse-burn {
+    background: linear-gradient(90deg, rgba(185, 28, 28, 0.2), #d4af37 70%, #f5d77f);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.55);
+  }
+  .fuse-spark {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: radial-gradient(circle, #fff7d6 0%, #f5d77f 35%, #dc2626 75%, transparent 100%);
+    box-shadow: 0 0 10px 3px rgba(245, 215, 127, 0.75), 0 0 18px 6px rgba(220, 38, 38, 0.35);
+    transform: translate(50%, -50%);
+    animation: fuse-flicker 0.45s ease-in-out infinite alternate;
+  }
+  .pennant-sway {
+    transform-origin: 50% 0;
+    animation: pennant-sway 3.2s ease-in-out infinite;
+  }
+  .wheel-idle {
+    animation: wheel-rock 6s ease-in-out infinite;
+  }
+}
+
+@keyframes fuse-flicker {
+  0% { opacity: 1; transform: translate(50%, -50%) scale(1); }
+  100% { opacity: 0.65; transform: translate(50%, -50%) scale(1.45); }
+}
+@keyframes pennant-sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+@keyframes wheel-rock {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fuse-spark, .pennant-sway, .wheel-idle { animation: none; }
+}
+
+/* ================= LA MAGIE DU HÉROS ================= */
+.ember {
+  position: absolute;
+  bottom: -10px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #fff3c4 0%, #f5d77f 45%, rgba(212, 175, 55, 0) 75%);
+  box-shadow: 0 0 6px 1px rgba(245, 215, 127, 0.55);
+  opacity: 0;
+  animation-name: ember-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes ember-rise {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  12% { opacity: 0.9; }
+  70% { opacity: 0.5; }
+  100% { transform: translate3d(var(--drift, 0px), -78vh, 0); opacity: 0; }
+}
+.storm-flash {
+  background: radial-gradient(ellipse at 70% 10%, rgba(220, 230, 255, 0.55), transparent 60%);
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation: storm-flash 14s ease-out infinite;
+}
+@keyframes storm-flash {
+  0%, 88%, 100% { opacity: 0; }
+  89% { opacity: 0.35; }
+  90% { opacity: 0.05; }
+  91.5% { opacity: 0.22; }
+  93% { opacity: 0; }
+}
+.lantern-flicker { animation: lantern-flicker 4.5s ease-in-out infinite; }
+@keyframes lantern-flicker {
+  0%, 100% { opacity: 0.85; }
+  20% { opacity: 1; }
+  35% { opacity: 0.7; }
+  55% { opacity: 0.95; }
+  75% { opacity: 0.75; }
+}
+.wave-drift { animation: wave-drift 16s linear infinite; }
+.wave-drift-slow { animation: wave-drift 26s linear infinite reverse; }
+@keyframes wave-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+/* parchemin sombre / carte marine */
+.map-grid {
+  background-image:
+    linear-gradient(rgba(212, 175, 55, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212, 175, 55, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+.wax-seal {
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #d23a3a 0%, #8b0f0f 55%, #5a0707 100%);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.25), inset 0 -3px 6px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(139, 15, 15, 0.45);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ember, .storm-flash, .lantern-flicker, .wave-drift, .wave-drift-slow { animation: none; }
+  .ember { display: none; }
+}
+.ship-bob { animation: ship-bob 3.4s ease-in-out infinite; }
+@keyframes ship-bob {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-4px) rotate(4deg); }
+}
+@media (prefers-reduced-motion: reduce) { .ship-bob { animation: none; } }
+
+/* Tous les boutons d'or du navire deviennent des lingots (cohérence pirate sur chaque page) */
+button.bg-gold,
+a.bg-gold {
+  background-image: linear-gradient(180deg, #f8de8a 0%, #d4af37 48%, #a8841f 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+}
+button.bg-gold:hover,
+a.bg-gold:hover {
+  background-image: linear-gradient(180deg, #fde9a8 0%, #e2bf4a 48%, #b8932a 100%);
+}
+button.bg-gold:disabled { filter: grayscale(0.35) brightness(0.85); }
+.bottle-bob { animation: bottle-bob 4.2s ease-in-out infinite; transform-box: view-box; }
+@keyframes bottle-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-6px) rotate(3deg); }
+}
+@media (prefers-reduced-motion: reduce) { .bottle-bob { animation: none; } }

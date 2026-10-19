@@ -1,0 +1,30 @@
+{
+  "summary": "Validated i18n fix for nav.kingdom (ROYAUME 1023 / KINGDOM 1023) across header logo, footer logo and fullscreen menu bottom banner on all 3 routes (/, /suivi, /admin) in both FR and EN, with live FR↔EN toggle (no reload) and mobile 390x844 overflow check. All targeted bugs are fixed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Nav.jsx (293 lines) is approaching the file size limit; consider splitting the fullscreen menu overlay into its own component for maintainability.",
+    "Some /admin bootstrap requests return 401 in console (expected for unauthenticated Coffre view) — consider silencing or guarding the auth-check call to keep the console clean."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Translation fix (nav.kingdom) is verified on /, /suivi, /admin. FR shows 'ROYAUME 1023', EN shows 'KINGDOM 1023' in header logo, footer logo and menu bottom banner ('GOLDEN PIRATES — KINGDOM 1023'). LangSwitcher persists via localStorage key 'gp_lang'. Mobile 390x844 header does not overflow with 'KINGDOM 1023'. No leftover FR words (ROYAUME, POSTULER, L'alliance, récit, Conseil) detected in EN mode header/footer. Hero chips array also carries ROYAUME/KINGDOM — correct in both FR and EN blocks of i18n.jsx.",
+  "detailed_checks": {
+    "home_fr": "HEADER=GOLDEN PIRATES / ROYAUME 1023, FOOTER=— LE CONSEIL DES CAPITAINES G.P. 1023, menu banner='GOLDEN PIRATES — ROYAUME 1023'",
+    "home_en": "HEADER=GOLDEN PIRATES / KINGDOM 1023, menu banner='GOLDEN PIRATES — KINGDOM 1023'",
+    "suivi_fr": "HEADER + full footer: ROYAUME 1023, menu banner FR OK",
+    "suivi_en": "HEADER + full footer: KINGDOM 1023, menu banner EN OK",
+    "admin_fr": "HEADER + full footer: ROYAUME 1023, menu banner FR OK",
+    "admin_en": "HEADER + full footer: KINGDOM 1023, menu banner EN OK; live FR↔EN switch inside open menu works instantly without reload",
+    "mobile_390x844": "header shows 'KINGDOM 1023' in EN, scrollWidth==width (105px), no viewport overflow"
+  }
+}

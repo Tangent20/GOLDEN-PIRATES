@@ -1,0 +1,19 @@
+{
+  "summary": "SEO validation + light regression. Static head on / (via curl, no JS): unique title 'GOLDEN PIRATES — Royaume 1023 | Call of Dragons', description, robots='index, follow, max-image-preview:large, max-snippet:-1', og:type/site_name/title/description/locale=fr_FR, twitter:card=summary + title + description, 1 valid JSON-LD Organization block, 1 noscript block (h1+paragraphs), apple-touch-icon link, data:image/svg+xml icon, html lang=fr. No duplicates. canonical/og:url/og:image/sitemap.xml intentionally absent (documented omission — not reported as bug). Dynamic titles via Seo.jsx verified in rendered DOM across transitions / → /suivi → / → /admin → /: all titles correct at each transition; /admin properly sets robots='noindex, nofollow'; returning to / restores 'index, follow...'. Static assets: robots.txt served as text/plain with 17 User-agent lines and Disallow /api + /admin; llms.txt served as text/plain with full content; apple-touch-icon.png served as image/png, verified 180x180 PNG. Functional regression: SEOTEST_<ts> candidature POST → GP-1023-F8M6 generated; GET /applications/track OK; admin login (admin@goldenpirates.io) OK; DELETE /admin/applications/{id} returned {ok:true}; subsequent track returns 404. Final DB state verified empty: applications/rejections/recovery_attempts/messages/admin_messages all = 0. EN toggle functional on / and /suivi (title remains in FR as per Seo.jsx static mapping — intended). No horizontal overflow at 1440x900 (/) nor 390x844 (/ and /suivi).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Seo.jsx: setMeta only creates/updates meta tags but never cleans up when navigating away (e.g., meta description/robots keep last mounted value). Current implementation handles this correctly because every route call overrides description + robots unconditionally, so safe for current routes.",
+    "Seo.jsx: title is route-static and does not react to language toggle (FR title shown even in EN mode). If multi-language SEO is desired, extend ROUTES map with locale-aware titles. Not a bug for current scope (no domain, no sitemap, SEO baseline only)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023!",
+  "seed_data_creation": "Created transient application SEOTEST_1792239578 (code GP-1023-F8M6) and deleted via admin BRÛLER. DB final state verified empty across all collections.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "SEO baseline fully validated. If/when a production domain is confirmed, add canonical, og:url, og:image + sitemap.xml; re-run this iteration focused on those additions. Full product flows already covered in iteration_10.",
+  "rca of the issue": "No issue found."
+}

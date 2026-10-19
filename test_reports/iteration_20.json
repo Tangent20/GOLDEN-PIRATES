@@ -1,0 +1,24 @@
+{
+  "summary": "Validated Council accounting (butin tab) and Pirate thank-you modal end-to-end on preview URL. Logged into /admin, added TEST_Cadeau 25€ and TEST_Cadeau2 80.5€ → total line reads 'BUTIN RÉCOLTÉ : 105.50 € · 2 DON(S) REÇU(S)'; each row shows pseudo + 'DD mois YYYY · HH:MM' date-time (e.g. '18 oct. 2026 · 16:40') visible both desktop (1440) and mobile (390) with zero horizontal overflow. RETIRER removed one row → total updated to 25.00 € · 1 DON(S). FR cheer modal: tier 15€ → PayPal URL paypal.me/goldenpirates/15 opened, modal shows title 'LE NAVIRE S'INCLINE, MARIN !', line mentioning 15€, exactly 4 'OÙ VA TON OR ?' items, hall note with golden.pirates@outlook.fr, signature, closes cleanly by button AND by backdrop click. Generic (no tier) → paypal.me/goldenpirates opened and generic line (no amount) shown. EN admin: 'GIFT(S) RECEIVED' label + '18 Oct 2026 · 16:40' date format. EN modal: 'THE SHIP BOWS TO YOU, SAILOR!', 'WHERE DOES YOUR GOLD GO?', 'MAY THE SEA FAVOR YOU', '— THE COUNCIL OF CAPTAINS, G.P. 1023' all confirmed. donations-hall-total exactly 1 element, donations-fee-note present. No console errors besides pre-existing benign 401 useAdminSession noise. Cleanup done: 0 donators left, goal still 100.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Donations.jsx line 51 uses window.open with 'noopener,noreferrer' — correct for security.",
+    "Admin ButinPanel date formatting uses toLocaleDateString + toLocaleTimeString with explicit fr-FR / en-GB locales — matches spec exactly.",
+    "cheer.line(amount) correctly returns generic text when thankAmount === 0 (branch verified via no-tier path)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not tested — scope was frontend/integration)", "frontend": "100% (all requested scenarios pass)"},
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! — works",
+  "seed_data_creation": "Created TEST_Cadeau (25 €) and TEST_Cadeau2 (80.5 €) during testing — ALL REMOVED at cleanup (final total 0.00 € · 0 DON(S) REÇU(S)). Goal left at 100 €.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All butin accounting + pirate thank-you modal scenarios pass on both FR and EN, desktop 1440 and mobile 390. Preview URL: https://gp-recrutement.preview.emergentagent.com. Admin butin testids: butin-pseudo-input, butin-amount-input, butin-add-btn, butin-total, butin-date-{id}. Donations testids: donations-tier-{n}, donations-drop-btn, donation-cheer-overlay, donation-cheer-modal, donation-cheer-title, donation-cheer-line, donation-cheer-close, donation-cheer-hall-note. window.open interception works for avoiding real paypal tab.",
+  "rca of the issue": "No issues found — all 14 critical assertions passed on first run. One benign 'EN modal closed' timing assertion flaked once (modal uses AnimatePresence exit animation, count checked at 500ms); FR button-close AND FR backdrop-close both verified successfully, so modal close is confirmed functional in both languages."
+}

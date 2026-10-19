@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#06090E" />
+    <meta name="color-scheme" content="dark" />
+    <!-- Dis au navigateur de NE PAS mémoriser cette page HTML (seuls les JS/CSS versionnés sont cachés) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <!-- Tueur de Service Worker + nettoyage de caches résiduels d'anciennes versions.
+         Essentiel : si un internaute a visité le site quand il était publié via Emergent/Vercel,
+         un service worker a pu rester installé et renvoyer la vieille version. Ce script le tue. -->
+    <script>
+      (function () {
+        try {
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              regs.forEach(function (r) { r.unregister(); });
+            }).catch(function () {});
+          }
+          if (window.caches && caches.keys) {
+            caches.keys().then(function (keys) {
+              keys.forEach(function (k) { caches.delete(k); });
+            }).catch(function () {});
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      try {
+        localStorage.removeItem("GP_SUN");
+        var __root = document.documentElement;
+        var __applySun = function () {
+          var h = new Date().getHours();
+          var day = h >= 9 && h <= 19;
+          var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+          var contrast = window.matchMedia && window.matchMedia("(prefers-contrast: more)").matches;
+          __root.classList.toggle("sun-mode", contrast || (light && day));
+        };
+        __applySun();
+        ["(prefers-color-scheme: light)", "(prefers-contrast: more)"].forEach(function (q) {
+          var mq = window.matchMedia(q);
+          if (mq.addEventListener) mq.addEventListener("change", __applySun);
+        });
+        setInterval(__applySun, 60000);
+        if ("AmbientLightSensor" in window) {
+          try {
+            var __sensor = new AmbientLightSensor({ frequency: 0.25 });
+            __sensor.addEventListener("reading", function () {
+              if (typeof __sensor.illuminance === "number") __root.classList.toggle("sun-mode", __sensor.illuminance > 120);
+            });
+            __sensor.start();
+          } catch (e) {}
+        }
+      } catch (e) {}
+    </script>
+    <meta
+      name="description"
+      content="GOLDEN PIRATES — L'alliance souveraine du Royaume 1023 (Call of Dragons). Recrutement pour la fin de la Saison 2 : rejoignez l'équipage."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%2306090E' stroke='%23D4AF37' stroke-width='4'/%3E%3Cpath d='M32 6 L37 27 L58 32 L37 37 L32 58 L27 37 L6 32 L27 27 Z' fill='%23D4AF37'/%3E%3Ccircle cx='32' cy='32' r='5.5' fill='%2306090E'/%3E%3C/svg%3E"
+    />
+    <title>GOLDEN PIRATES — Royaume 1023 | Call of Dragons</title>
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <link rel="canonical" href="https://golden-pirates.org/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GOLDEN PIRATES" />
+    <meta property="og:url" content="https://golden-pirates.org/" />
+    <meta property="og:title" content="GOLDEN PIRATES — Alliance du Royaume 1023 | Call of Dragons" />
+    <meta
+      property="og:description"
+      content="L'alliance souveraine du Royaume 1023 (Call of Dragons). Recrutement pour la fin de la Saison 2 : rejoignez l'équipage."
+    />
+    <meta property="og:image" content="https://golden-pirates.org/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://golden-pirates.org/og-image.png" />
+    <meta name="twitter:title" content="GOLDEN PIRATES — Alliance du Royaume 1023 | Call of Dragons" />
+    <meta
+      name="twitter:description"
+      content="L'alliance souveraine du Royaume 1023 (Call of Dragons). Recrutement pour la fin de la Saison 2 : rejoignez l'équipage."
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "GOLDEN PIRATES",
+        "alternateName": "Golden Pirates — Royaume 1023",
+        "url": "https://golden-pirates.org",
+        "description": "Alliance souveraine du Royaume 1023 de Call of Dragons. Recrutement pour la fin de la Saison 2.",
+        "slogan": "L'or de la victoire ne coule que pour les équipages soudés."
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Polices NON bloquantes : si fonts.googleapis.com est bloqué (ex: Chine),
+         la page s'affiche immédiatement avec les polices de repli. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap"
+      />
+    </noscript>
+  </head>
+  <body>
+    <noscript>
+      <h1>GOLDEN PIRATES — l'alliance souveraine du Royaume 1023 de Call of Dragons</h1>
+      <p>
+        Les GOLDEN PIRATES ne recrutent pas des soldats : nous recrutons des marins que la mer n'a
+        pas encore domptés. Dans le Royaume 1023, notre pavillon noir ne flotte pas par hasard : il
+        flotte parce que derrière lui, chaque membre tire dans le même sens.
+      </p>
+      <p>
+        Recrutement préparé pour la fin de la Saison 2 : déposez votre candidature, puis suivez
+        votre dossier avec votre code de suivi GP-1023-XXXX. Code perdu ? Retrouvez-le avec votre
+        pseudo et votre Discord, ou votre puissance exacte.
+      </p>
+    </noscript>
+    <div id="root"></div>
+  </body>
+</html>

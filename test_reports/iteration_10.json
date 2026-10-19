@@ -1,0 +1,54 @@
+{
+  "summary": "Audit e2e complet — parcours recrue, suivi, récupération (Discord & puissance), bascule FR/EN sur /, /suivi, /admin, audit DOM anti-doublons par page, parcours Conseil (login + registre + stats + suppression). Pytest 32/32 verts. 1 écart observé entre spec et implémentation concernant le cooldown après BRÛLER d'un dossier pending.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Admin BRÛLER (DELETE) d'une candidature en status 'pending'",
+        "issue": "L'exigence utilisateur (étape 8) prévoit que la recrue ne puisse PAS re-postuler avant 30 jours après suppression. Observation réelle : après DELETE /api/admin/applications/{id} d'un dossier PENDING, la recrue AuditDoublon_1792238622 a pu créer une nouvelle candidature immédiatement (code GP-1023-WE5P reçu). Le sanctuaire des refus (db.rejections) n'est alimenté QUE lors d'une transition explicite vers 'rejected' (server.py L728-734). Le DELETE direct ne crée pas d'entrée sanctuaire. Comportement cohérent avec le code (BRÛLER d'un pending = pardon implicite) ET avec test_cooldown_survives_burn (qui teste reject→burn, pas pending→burn). À arbitrer : spec vs. implémentation.",
+        "affected_selectors": ["admin-action-delete-{app_id}", "submit-application-btn"]
+      }
+    ],
+    "design_issues": []
+  },
+  "e2e_scenarios_verified": {
+    "1_apply_submission": "✅ Candidature AUDIT soumise, code GP-1023-Q722 retourné, modal succès affiché, rack localStorage (gp_bottles) rempli",
+    "2_suivi_track_by_code": "✅ GET track retourne le dossier, statut 'EN EXAMEN' (= pending en i18n FR) affiché",
+    "3_recover_discord_success": "✅ Panneau 'J'AI PERDU MON CODE' ouvert, voie Discord sélectionnée, pseudo+discord saisis, code GP-1023-Q722 restitué dans recover-success, ajouté au rack localStorage",
+    "4_recover_power_error_wording": "✅ Voie puissance → 'Aucune bouteille au nom de ce pseudo avec cette puissance — vérifie l'orthographe exacte…' (ZÉRO mention de Discord dans l'erreur). Voie Discord → 'Aucune bouteille au nom de ce pseudo ET ce Discord…' (mention Discord correcte). Messages route-aware FR+EN confirmés.",
+    "5_lang_toggle_fr_en": "✅ Sur / /suivi /admin : FR affiche 'ROYAUME 1023' (0 'KINGDOM'), EN affiche 'KINGDOM 1023' (0 'ROYAUME'). Aucune occurrence croisée sur les 6 combinaisons page×langue testées.",
+    "6_dom_anti_duplicates": "✅ Audit testids par page : 0 doublon sur / (54 testids), /suivi (18 testids), /admin login (21 testids) et admin logged-in. Occurrences 'ESPACE RECRUE' ≤1 par page, 'ESPACE CONSEIL' ≤1 par page. Aucune section rendue 2× constatée.",
+    "7_admin_login_registry_stats_delete": "✅ Login admin@goldenpirates.io / Capitaine1023! OK (cookie httpOnly, toast 'Bien le bonjour, Capitaine'), stats 1 CANDIDATURE / 1 EN EXAMEN, dossier AuditDoublon_1792238622 affiché 1 seule fois, BRÛLER → stat total = 0 (dossier retiré du registre).",
+    "8_cooldown_after_delete": "⚠ ÉCART SPEC/IMPL : re-candidature possible immédiatement après BRÛLER d'un dossier pending (nouveau code GP-1023-WE5P créé). Voir integration_issues ci-dessus. Les tests pytest confirment que le cooldown s'applique bien après un refus explicite (test_cooldown_survives_burn, test_cooldown_sanctuary_still_blocks_before_expiry)."
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_golden_pirates.py",
+    "/app/backend/tests/test_recovery.py",
+    "/app/test_reports/pytest/iteration_10.xml"
+  ],
+  "action_items": [
+    "DÉCISION PRODUIT à prendre : le BRÛLER (DELETE direct) d'un dossier 'pending' doit-il déclencher le sanctuaire 30 jours ? Deux options : (a) considérer que BRÛLER = pardon (comportement actuel, cohérent avec le code) → mettre à jour la spec de l'audit pour l'indiquer ; (b) considérer que toute suppression doit préserver le sanctuaire → modifier server.py L748-755 pour inscrire pseudo_lower dans db.rejections avant le delete_one (avec rejected_at = now si pas déjà présent). Décision à prendre par le propriétaire.",
+    "(Optionnel, cosmétique) L'étiquette 'EN EXAMEN' affichée côté UI diffère du terme 'EN ATTENTE' mentionné dans la spec utilisateur — simple vocabulaire, pas un bug."
+  ],
+  "critical_code_review_comments": [
+    "server.py L748-755 (delete_application) : la suppression ne mémorise rien dans db.rejections. Si le produit veut vraiment un sanctuaire post-BRÛLER, une seule ligne upsert à ajouter avant delete_one. Sinon, documenter que BRÛLER = pardon.",
+    "Suivi.jsx recovery (localStorage key = 'gp_bottles') : fonctionne bien, pas de duplication si le code existe déjà (dédup correctement observée).",
+    "Admin.jsx registre : expansion par click sur le row (admin-app-row-*) révèle 5 actions (approve/reject/pending/reserve/delete) — bonne couverture testid.",
+    "Nav.jsx + Footer.jsx : rendu conditionnel 'ESPACE RECRUE'/'ESPACE CONSEIL' observé une seule fois max par page, aucune duplication détectée."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (32/32 pytest + e2e)",
+    "frontend": "87.5% (7/8 scénarios parfaits ; scénario 8 à arbitrer côté produit)"
+  },
+  "test_credentials": "admin@goldenpirates.io / Capitaine1023! — fonctionnel via POST /api/admin/login, cookies httpOnly.",
+  "seed_data_creation": "AuditDoublon_1792238622 (codes GP-1023-Q722 et GP-1023-WE5P) créée via le formulaire public pendant le test. INTÉGRALEMENT PURGÉE à la fin : 1 application supprimée (via admin BRÛLER + cleanup Mongo), 0 rejections, 4 recovery_attempts purgées, 0 messages. Base finale : 0 candidature AUDIT, 0 recovery_attempt. Base propre.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "L'écart identifié scénario 8 est le seul point ouvert et il s'agit d'une décision produit (BRÛLER = pardon ou = sanctuaire ?). Si l'option (b) est retenue, patcher delete_application pour upsert dans db.rejections, puis retester test_cooldown_survives_burn-like en démarrant d'un pending. Tout le reste (parcours recrue, suivi, récupération route-aware, bascule FR/EN, anti-doublons DOM, parcours admin) est conforme et stable. localStorage rack key = 'gp_bottles' (pas 'gp.rack').",
+  "rca_of_the_issue": "Scénario 8 — le code backend (server.py:748-755) implémente le DELETE comme une suppression nette, sans écriture dans db.rejections. Seule la transition PATCH /admin/applications/{id} status='rejected' alimente le sanctuaire (L728-734). L'exigence utilisateur de l'itération 10 attend que BRÛLER déclenche aussi le sanctuaire. Reproduction : POST /api/applications (pending) → DELETE /api/admin/applications/{id} → POST /api/applications même pseudo → 200 OK (nouveau code renvoyé) au lieu d'un 409/cooldown. Mitigation (option b, 2 lignes) : avant delete_one, upsert db.rejections {pseudo_lower, rejected_at: now_iso} si absent."
+}

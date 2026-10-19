@@ -1,0 +1,41 @@
+{
+  "summary": "Validated new pirate-themed French/English texts, countdown formatting, voyage map step highlighting, mobile hoist button, and multi-device layout across 20+ viewports. All core functionality working correctly.",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "FR texts: Eyebrow 'Le rôle d'équipage — 05', title 'Monte à bord, marin', migration banner 'LOI DE MIGRATION', countdown 'OUVERTURE DES PORTES J-xx · HHhMM', intro 'Les portes du Royaume 1023', promises list (3 items), all new form labels (NOM DE PIRATE, PUISSANCE DE FEU, RANG DE TES TROUPES, TES QUARTS DE VEILLE, PAVILLON DISCORD, FAITS D'ARMES, TA LETTRE AU CONSEIL)",
+    "EN texts: Eyebrow 'The crew roll — 05', title 'Come aboard, sailor', migration banner 'MIGRATION LAW', countdown 'GATES OPEN IN', voyage map 'THE CROSSING IN 5 PORTS OF CALL', hoist button 'HOIST THE SAIL', form labels (PIRATE NAME, FIREPOWER, YOUR TROOP RANK)",
+    "Old texts removed: No instances of 'RECRUTEMENT UNIQUEMENT EN FIN DE SAISON 2', 'LA SAISON 2 COMMENCE FIN OCTOBRE :', 'PSEUDO CALL OF DRAGONS' as standalone, 'PUISSANCE ACTUELLE', 'NIVEAU DE TROUPES', 'ACTIVITÉ QUOTIDIENNE', 'TAG DISCORD'",
+    "Countdown formatting: Value span 'J-xx · HHhMM' has whitespace-nowrap class, no line breaks at 320/360/375/390/412px widths",
+    "Countdown on /suivi page: Renders correctly with same formatting, no line breaks at narrow widths",
+    "Voyage map (desktop >=1024px): Visible, title 'LA TRAVERSÉE EN 5 ESCALES', all 5 steps (apply-voyage-0 through apply-voyage-4) present, step highlighting works correctly (gold-ingot class on current step, checkmark on completed steps)",
+    "Voyage map step highlighting: Step 0 highlighted initially, transitions correctly through steps 1→2→3→4, completed steps show checkmark, current step has gold-ingot class",
+    "Hoist button (mobile <1024px): Visible, text 'HISSER LA VOILE', click scrolls to form (scroll position increased), hidden on desktop",
+    "Device matrix (20 devices tested): iPhone SE, iPhone 12/13/14, iPhone 14 Pro Max, Pixel 5, Pixel 7, Galaxy S8, Galaxy S9+, Galaxy S20, Galaxy Fold (280px), 320x568, iPad Mini portrait/landscape, iPad Pro 11 portrait/landscape, Galaxy Tab S4, Desktop 1280x720, 1366x768, 1440x900, 1920x1080, 2560x1440",
+    "Device matrix checks: No horizontal scroll on any device (scrollWidth <= clientWidth + 1), section texts not clipped, form inputs >= 16px font on mobile (prevents zoom), tap targets >= 44px on touch devices (hoist button 52px), nav not overlapping form, voyage map visibility correct per breakpoint, hoist button visibility correct per breakpoint",
+    "Full flow regression (desktop 1920x1080): Filled all 5 steps, review panel shows new pirate labels in review rows, oath checkbox works, review-seal-btn submits successfully, application-success-modal displays with tracking code GP-1023-JZ4P",
+    "Full flow regression (mobile 390x844): Hoist button scrolls to form, filled all 5 steps, submitted successfully, tracking code GP-1023-CF89 generated",
+    "Console: Only 1 non-critical error (401 from API call), no React errors/warnings",
+    "Data-testid: No duplicates found in application-section (30 unique testids)"
+  ],
+  "test_report_links": [],
+  "action_item_for_main_agent": "",
+  "updated_files": [],
+  "success_percentage": {
+    "frontend": "100%",
+    "texts_validation": "100%",
+    "countdown_formatting": "100%",
+    "voyage_map": "100%",
+    "device_matrix": "100%",
+    "full_flow": "100%"
+  },
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_test_itself": false
+}
