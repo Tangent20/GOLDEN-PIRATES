@@ -875,11 +875,16 @@ function ButinPanel() {
   const [sealTarget, setSealTarget] = useState(null); // { id, pseudo, amount, email, receipt_id }
   const [sealing, setSealing] = useState(null); // "pdf" | "xlsx" | null
 
+  const [pendingInfo, setPendingInfo] = useState({ n: 0, total: 0 });
   const load = () =>
     api.get("/admin/donators")
       .then(({ data }) => {
-        setItems(data.items || []);
+        const list = data.items || [];
+        // À vérifier d'abord, puis les dons confirmés (du plus récent au plus ancien)
+        list.sort((x, y) => (x.status === "pending" ? 0 : 1) - (y.status === "pending" ? 0 : 1));
+        setItems(list);
         setTotal(data.total || 0);
+        setPendingInfo({ n: data.pending || 0, total: data.pending_total || 0 });
         setGoal((prev) => (prev === "" ? String(data.goal ?? "") : prev));
       })
       .catch(() => {});
@@ -911,6 +916,21 @@ function ButinPanel() {
       toast.error(formatApiError(err));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const [actingId, setActingId] = useState(null);
+  const decide = async (id, kind) => {
+    if (actingId) return;
+    setActingId(id);
+    try {
+      await api.post(`/admin/donators/${id}/${kind}`);
+      await load();
+      toast.success(kind === "confirm" ? a.butin.confirmedToast : a.butin.rejectedToast);
+    } catch (err) {
+      toast.error(formatApiError(err));
+    } finally {
+      setActingId(null);
     }
   };
 
@@ -1134,19 +1154,42 @@ function ButinPanel() {
         </button>
       </div>
 
+      {pendingInfo.n > 0 && (
+        <div data-testid="butin-pending-banner" className="mb-5 flex items-start gap-3 border-l-4 border-gold bg-gold/10 px-4 py-3.5">
+          <Hourglass className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+          <p className="font-fell text-base text-bone/90">
+            <span className="font-display text-lg text-gold">{a.butin.pendingCount(pendingInfo.n)}</span>
+            <span className="text-mist"> · {pendingInfo.total.toFixed(2)} €</span>
+          </p>
+        </div>
+      )}
+
       <p className="font-mono2 text-[11px] tracking-[0.3em] text-emerald-300 mb-6" data-testid="butin-total">
-        {a.butin.total} : {total.toFixed(2)} € · {items.length} {a.butin.giftsLabel}
+        {a.butin.total} : {total.toFixed(2)} € · {items.filter((x) => x.status === "confirmed").length} {a.butin.giftsLabel}
       </p>
 
       {items.length > 0 ? (
         <div className="space-y-3">
           {items.map((it) => (
-            <div key={it.id} data-testid={`butin-row-${it.id}`} className="flex flex-col gap-3 border border-gold/20 bg-deck/50 px-4 py-4 sm:flex-row sm:items-center sm:gap-4">
+            <div key={it.id} data-testid={`butin-row-${it.id}`} data-status={it.status} className={`flex flex-col gap-3 border px-4 py-4 sm:flex-row sm:items-center sm:gap-4 ${it.status === "pending" ? "border-gold/60 bg-gold/5" : "border-gold/20 bg-deck/50"}`}>
               <div aria-hidden className="w-9 h-9 rounded-full bg-gold border border-goldlight flex items-center justify-center shrink-0 rotate-3">
                 <span className="font-display text-base text-ink">{(it.pseudo || "?").trim().charAt(0).toUpperCase()}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-display text-lg text-bone truncate">{it.pseudo}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-display text-lg text-bone truncate">{it.pseudo}</p>
+                  <span data-testid={`butin-status-${it.id}`} className={`inline-flex items-center gap-1 font-mono2 text-[8.5px] tracking-[0.2em] px-2 py-0.5 border ${it.status === "pending" ? "border-gold/60 text-gold bg-gold/10" : "border-emerald-400/50 text-emerald-300 bg-emerald-500/10"}`}>
+                    {it.status === "pending" ? <Hourglass className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+                    {it.status === "pending" ? a.butin.statusPending : a.butin.statusConfirmed}
+                  </span>
+                  {it.anonymous && (
+                    <span className="font-mono2 text-[8.5px] tracking-[0.2em] px-2 py-0.5 border border-mist/40 text-mist">{lang === "en" ? "ANONYMOUS IN HALL" : "ANONYME AU HALL"}</span>
+                  )}
+                  {it.declared_by_donor && (
+                    <span className="font-mono2 text-[8.5px] tracking-[0.2em] px-2 py-0.5 border border-gold/25 text-gold/70">{a.butin.declaredByDonor}</span>
+                  )}
+                </div>
+                {it.message && <p className="font-fell italic text-sm text-bone/75 mt-1 break-words">« {it.message} »</p>}
                 <div className="flex flex-wrap items-center gap-2 mt-1">
                   <span className="font-mono2 text-[9px] tracking-[0.2em] text-gold/80">{a.butin.receiptLabel}</span>
                   <code data-testid={`butin-receipt-${it.id}`} className="font-mono2 text-[10px] tracking-[0.2em] text-goldlight bg-ink/70 border border-gold/30 px-2 py-0.5">
@@ -1176,6 +1219,28 @@ function ButinPanel() {
               </div>
               <p className="font-mono2 text-[11px] tracking-[0.15em] text-gold shrink-0">{it.amount.toFixed(2)} {it.currency || "€"}</p>
               <div className="flex flex-wrap gap-2 shrink-0">
+                {it.status === "pending" && (
+                  <>
+                    <button
+                      type="button"
+                      data-testid={`butin-confirm-${it.id}`}
+                      onClick={() => decide(it.id, "confirm")}
+                      disabled={!!actingId}
+                      className="inline-flex items-center gap-1.5 font-mono2 text-[9px] tracking-[0.2em] bg-emerald-500/20 text-emerald-200 border border-emerald-400/60 hover:bg-emerald-500/30 px-3 py-1.5 min-h-[36px] transition-colors disabled:opacity-50"
+                    >
+                      {actingId === it.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} {a.butin.confirm}
+                    </button>
+                    <button
+                      type="button"
+                      data-testid={`butin-reject-${it.id}`}
+                      onClick={() => decide(it.id, "reject")}
+                      disabled={!!actingId}
+                      className="inline-flex items-center gap-1.5 font-mono2 text-[9px] tracking-[0.2em] text-bloodglow border border-bloodglow/50 hover:bg-blood/20 px-3 py-1.5 min-h-[36px] transition-colors disabled:opacity-50"
+                    >
+                      <X className="w-3.5 h-3.5" /> {a.butin.reject}
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   data-testid={`butin-seal-${it.id}`}
@@ -1416,7 +1481,7 @@ export default function Admin() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("registry");
   const [activeConv, setActiveConv] = useState(null);
-  const [badges, setBadges] = useState({ unread: 0, pending: 0 });
+  const [badges, setBadges] = useState({ unread: 0, pending: 0, donations: 0 });
   const [exporting, setExporting] = useState(null);
   const [langAsk, setLangAsk] = useState(null);
   const [exportLangChoice, setExportLangChoice] = useState(null);
@@ -1485,7 +1550,7 @@ export default function Admin() {
   const adminNotif = useAdminNotif(authed === true);
   useEffect(() => {
     if (!adminNotif) return;
-    setBadges({ unread: adminNotif.unread || 0, pending: adminNotif.pending || 0 });
+    setBadges({ unread: adminNotif.unread || 0, pending: adminNotif.pending || 0, donations: adminNotif.donations || 0 });
     if (adminNotif.stats) setStats(adminNotif.stats);
   }, [adminNotif]);
 
@@ -1654,14 +1719,14 @@ export default function Admin() {
                   >
                     {t.key === "messages" ? <MessagesSquare className="w-4 h-4" /> : t.key === "butin" ? <Coins className="w-4 h-4" /> : <Scroll className="w-4 h-4" />}
                     {t.label}
-                    {((t.key === "messages" && badges.unread > 0) || (t.key === "registry" && badges.pending > 0)) && (
+                    {((t.key === "messages" && badges.unread > 0) || (t.key === "registry" && badges.pending > 0) || (t.key === "butin" && badges.donations > 0)) && (
                       <span
                         data-testid={`admin-tab-badge-${t.key}`}
                         className="relative inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 bg-blood text-bone font-mono2 text-[10px] tracking-[0.1em] shadow-[0_0_14px_rgba(185,28,28,0.55)]"
                       >
                         <span aria-hidden="true" className="absolute inset-0 bg-blood/70 animate-ping" />
                         <span className="relative">
-                          {t.key === "messages" ? badges.unread : badges.pending}
+                          {t.key === "messages" ? badges.unread : t.key === "butin" ? badges.donations : badges.pending}
                         </span>
                       </span>
                     )}

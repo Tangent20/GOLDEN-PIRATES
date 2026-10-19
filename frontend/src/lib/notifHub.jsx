@@ -157,7 +157,7 @@ export function useAdminNotif(active) {
           const unread = Array.isArray(cv.data)
             ? cv.data.reduce((acc, x) => acc + (x.unread || 0), 0)
             : 0;
-          return { pending: s.data?.pending || 0, unread, stats: s.data, conversations: cv.data };
+          return { pending: s.data?.pending || 0, unread, donations: s.data?.donations_pending || 0, stats: s.data, conversations: cv.data };
         },
         15000
       );

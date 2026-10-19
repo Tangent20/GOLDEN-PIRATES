@@ -395,6 +395,7 @@ async def admin_stats(_: str = Depends(require_admin)):
         "accepted": await db.applications.count_documents({"status": "accepted"}),
         "reserve": await db.applications.count_documents({"status": "reserve"}),
         "rejected": await db.applications.count_documents({"status": "rejected"}),
+        "donations_pending": await db.donators.count_documents({"status": "pending"}),
     }
 
 
@@ -852,13 +853,11 @@ async def export_xlsx(lang: str = "fr", _: str = Depends(require_admin)):
     )
 
 
-@api_router.get("/donations/paypal")
-async def donations_paypal(amount: Optional[float] = None):
-    # Le Capitaine configurer PAYPAL_DONATION_URL dans .env (paypal.me ou lien de don).
-    # Tant que la variable est absente, le coffre reste scellé : {configured: false}.
+def _paypal_url(amount: Optional[float] = None) -> Optional[str]:
+    """Lien PayPal du coffre avec montant pré-rempli en EUR (None si non configuré)."""
     url = os.getenv("PAYPAL_DONATION_URL", "").strip()
     if not url:
-        return {"configured": False}
+        return None
     amt = None
     try:
         amt = float(amount) if amount is not None else None
@@ -867,12 +866,18 @@ async def donations_paypal(amount: Optional[float] = None):
     if amt is not None:
         amt = round(min(max(amt, 1.0), 10000.0), 2)
     if "paypal.me" in url:
-        # Montant pré-rempli propre : 7 → "7", 7.5 → "7.5", 15.75 → "15.75" (jamais "7.0")
+        # 7 → "7EUR", 7.5 → "7.5EUR" (jamais "7.0") — devise forcée en euros
         amt_txt = f"{amt:.2f}".rstrip("0").rstrip(".") if amt is not None else None
-        full = f"{url.rstrip('/')}/{amt_txt}" if amt_txt else url
-    else:
-        sep = "&" if "?" in url else "?"
-        full = f"{url}{sep}amount={amt}" if amt else url
+        return f"{url.rstrip('/')}/{amt_txt}EUR" if amt_txt else url
+    sep = "&" if "?" in url else "?"
+    return f"{url}{sep}amount={amt}&currency_code=EUR" if amt else url
+
+
+@api_router.get("/donations/paypal")
+async def donations_paypal(amount: Optional[float] = None):
+    full = _paypal_url(amount)
+    if not full:
+        return {"configured": False}
     return {"configured": True, "url": full}
 
 
@@ -883,6 +888,7 @@ class DonatorIn(BaseModel):
     email: Optional[str] = Field(default=None, max_length=120)
     currency: Optional[str] = Field(default="EUR", max_length=6)
     message: Optional[str] = Field(default=None, max_length=400)
+    anonymous: bool = False
 
 
 class ButinGoalIn(BaseModel):
@@ -938,9 +944,12 @@ async def donators_list():
     return {
         "total": total,
         "goal": await get_butin_goal(),
+        "count": len(docs),
+        "configured": bool(os.getenv("PAYPAL_DONATION_URL", "").strip()),
         "items": [{
             "id": str(d["_id"]),
-            "pseudo": d.get("pseudo", ""),
+            "pseudo": "" if d.get("anonymous") else d.get("pseudo", ""),
+            "anonymous": bool(d.get("anonymous")),
             "amount": d.get("amount", 0),
             "created_at": d.get("created_at"),
         } for d in docs],
@@ -965,12 +974,15 @@ async def donators_list_admin(_=Depends(require_admin)):
             "receipt_id": d.get("receipt_id", ""),
             "status": _don_status(d),
             "declared_by_donor": bool(d.get("declared_by_donor")),
+            "anonymous": bool(d.get("anonymous")),
             "created_at": d.get("created_at"),
+            "confirmed_at": d.get("confirmed_at"),
         })
     confirmed = [x for x in items if x["status"] == "confirmed"]
     total = round(sum(float(x.get("amount", 0)) for x in confirmed), 2)
-    pending = sum(1 for x in items if x["status"] == "pending")
-    return {"items": items, "total": total, "pending": pending, "goal": await get_butin_goal()}
+    pend = [x for x in items if x["status"] == "pending"]
+    pending_total = round(sum(float(x.get("amount", 0)) for x in pend), 2)
+    return {"items": items, "total": total, "pending": len(pend), "pending_total": pending_total, "goal": await get_butin_goal()}
 
 
 class DonationDeclareIn(BaseModel):
@@ -979,6 +991,7 @@ class DonationDeclareIn(BaseModel):
     amount: float = Field(ge=0.5, le=10000)
     email: Optional[str] = Field(default=None, max_length=120)
     message: Optional[str] = Field(default=None, max_length=400)
+    anonymous: bool = False
 
 
 @api_router.post("/donations/declare")
@@ -1009,11 +1022,16 @@ async def donation_declare(data: DonationDeclareIn, request: Request):
         "receipt_id": receipt_id,
         "status": "pending",
         "declared_by_donor": True,
+        "anonymous": bool(data.anonymous),
         "ip": ip,
         "created_at": now_utc().isoformat(),
     }
     await db.donators.insert_one(doc)
-    return {"ok": True, "receipt_id": receipt_id, "status": "pending", "pseudo": doc["pseudo"], "amount": doc["amount"], "created_at": doc["created_at"]}
+    return {
+        "ok": True, "receipt_id": receipt_id, "status": "pending", "pseudo": doc["pseudo"],
+        "amount": doc["amount"], "anonymous": doc["anonymous"], "created_at": doc["created_at"],
+        "paypal_url": _paypal_url(doc["amount"]),
+    }
 
 
 @api_router.get("/donations/status/{receipt_id}")
@@ -1029,8 +1047,10 @@ async def donation_status(receipt_id: str):
         "amount": d.get("amount", 0),
         "currency": (d.get("currency") or "EUR").upper(),
         "status": _don_status(d),
+        "anonymous": bool(d.get("anonymous")),
         "created_at": d.get("created_at"),
         "confirmed_at": d.get("confirmed_at"),
+        "paypal_url": _paypal_url(d.get("amount")) if _don_status(d) == "pending" else None,
     }
 
 
@@ -1145,6 +1165,7 @@ async def donators_add(data: DonatorIn, _=Depends(require_admin)):
         "provider": "paypal",
         "receipt_id": receipt_id,
         "status": "confirmed",
+        "anonymous": bool(data.anonymous),
         "confirmed_at": now_utc().isoformat(),
         "created_at": now_utc().isoformat(),
     }
@@ -1154,7 +1175,11 @@ async def donators_add(data: DonatorIn, _=Depends(require_admin)):
 
 @api_router.delete("/admin/donators/{donator_id}")
 async def donators_remove(donator_id: str, _=Depends(require_admin)):
-    await db.donators.delete_one({"_id": ObjectId(donator_id)})
+    try:
+        oid = ObjectId(donator_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Bordereau introuvable.")
+    await db.donators.delete_one({"_id": oid})
     return {"ok": True}
 
 
