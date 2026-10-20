@@ -1,26 +1,26 @@
 [
   {
-    "content": "Catalogue : lister TOUTES les routes + boutons principaux + modales + formulaires",
-    "status": "in_progress"
+    "content": "Backend : champ optionnel `contact` dans ApplicationCreate + sanitation + exports",
+    "status": "completed"
   },
   {
-    "content": "Balayage automatisé : chaque route à 5 viewports (280/390/820/1440/2560), capture overflow + erreurs console + 404s",
-    "status": "pending"
+    "content": "i18n FR/EN : nouveau bloc `apply` (une page, contact segmenté, amorces, overlay)",
+    "status": "completed"
   },
   {
-    "content": "Test de chaque interaction : clic sur tous boutons primaires, ouverture/fermeture modales, soumission formulaires",
-    "status": "pending"
+    "content": "Réécrire ApplyForm.jsx en une seule page (zéro étape) + overlay succès",
+    "status": "completed"
   },
   {
-    "content": "Audit backend : smoke test de chaque endpoint API",
-    "status": "pending"
+    "content": "Admin.jsx + Suivi.jsx : afficher `contact` en repli du Discord",
+    "status": "completed"
   },
   {
-    "content": "Corriger tout ce qui est détecté",
-    "status": "pending"
+    "content": "Compilation esbuild + captures desktop 1920 / mobile 390 / tablette",
+    "status": "completed"
   },
   {
-    "content": "Appeler testing_agent_v3 pour validation finale",
-    "status": "pending"
+    "content": "Tests testing_agent (visiteur, pseudo bloqué, sans Discord, recrue, conseil, EN, responsive)",
+    "status": "completed"
   }
 ]

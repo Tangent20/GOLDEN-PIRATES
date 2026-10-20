@@ -224,3 +224,9 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 
 ## Correctif final (pré-publication)
 - Déconnexion admin : le cookie `access_token` est désormais supprimé avec les mêmes attributs que lors de sa création (`Secure`, `SameSite=None`, `HttpOnly`, `Max-Age=0`). Vérifié : après logout, `/api/auth/me` → `authed:false` et routes admin → 401. Aucun bug connu restant.
+
+## Refonte formulaire de recrutement — UNE PAGE, ZÉRO ÉTAPE (2026-10-20)
+- `ApplyForm.jsx` réécrit : 4 blocs visibles d'un coup (Identité, Force, Signaux, Lettre), chips puissance/troupes/activité, contact segmenté Discord / Autre / Aucun (champ conditionnel), 4 amorces de message, barre « voiles hissées » (6 critères), bouton unique SCELLER, brouillon silencieux (`gp_apply_draft_v2`), overlay succès plein écran 100dvh (code en grand, Copier, Suivre, Enrôler un autre compte, Échap).
+- Backend : nouveau champ optionnel `contact` (ApplicationCreate, track, exports XLSX colonne « AUTRE CONTACT », PDF repli). Champ `experience` conservé mais plus saisi (envoyé vide).
+- Admin/Suivi : colonne « DISCORD / CONTACT » avec repli sur `contact`.
+- Vérifié : testing agent iteration_59 (100 % frontend, backend OK) + vérifs manuelles : brouillon+reload, pseudo déjà pris, panneau recrue, panneau conseil (envoi désactivé), EN, 390/768/1920 sans débordement, inputs 16px.

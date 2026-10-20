@@ -598,7 +598,7 @@ function AppRow({ app, onUpdate, onDelete, history }) {
         </div>
         <div className="hidden lg:block lg:col-span-2 min-w-0">
           <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist">{d.discord}</p>
-          <p className="font-fell text-base text-bone/80 line-clamp-2">{app.discord}</p>
+          <p className="font-fell text-base text-bone/80 line-clamp-2">{app.discord || app.contact || "—"}</p>
         </div>
         <div className="col-span-12 sm:col-span-2 flex justify-end min-w-0" onClick={(e) => e.stopPropagation()}>
           <StatusBadge status={app.status} />
@@ -623,7 +623,7 @@ function AppRow({ app, onUpdate, onDelete, history }) {
                   </div>
                   <div>
                     <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{d.discord}</p>
-                    <p className="font-fell text-base text-bone/85 break-words">{app.discord}</p>
+                    <p className="font-fell text-base text-bone/85 break-words">{app.discord || app.contact || "—"}</p>
                   </div>
                 </div>
                 <div>
@@ -2141,7 +2141,8 @@ export default function Admin() {
       return (
         x.pseudo.toLowerCase().includes(q) ||
         x.tracking_code.toLowerCase().includes(q) ||
-        x.discord.toLowerCase().includes(q)
+        (x.discord || "").toLowerCase().includes(q) ||
+        (x.contact || "").toLowerCase().includes(q)
       );
     }
     return true;

@@ -936,7 +936,7 @@ export default function Suivi() {
                                 [s.fields.power, result.power],
                                 [s.fields.troops, result.troops],
                                 [s.fields.activity, result.activity],
-                                [s.fields.discord, result.discord],
+                                [s.fields.discord, result.discord || result.contact],
                               ].map(([label, value]) => (
                                 <div key={label} className="border-l border-gold/20 pl-3">
                                   <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{label}</p>

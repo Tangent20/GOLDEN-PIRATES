@@ -129,6 +129,8 @@ class ApplicationCreate(BaseModel):
     activity: str = Field(min_length=2, max_length=60)
     experience: str = Field(default="", max_length=1200)
     discord: str = Field(default="", max_length=60)
+    # Canal de contact alternatif pour les marins sans Discord (Telegram, WhatsApp, en jeu…)
+    contact: str = Field(default="", max_length=120)
     message: str = Field(min_length=10, max_length=2000)
 
 
@@ -284,7 +286,7 @@ async def check_pseudo(pseudo: str = ""):
 
 @api_router.post("/applications")
 async def create_application(data: ApplicationCreate, request: Request):
-    for _f in ("pseudo", "troops", "activity", "discord", "message"):
+    for _f in ("pseudo", "troops", "activity", "discord", "contact", "message"):
         setattr(data, _f, safe_text(getattr(data, _f) or ""))
     if data.experience:
         data.experience = safe_text(data.experience)
@@ -378,6 +380,7 @@ async def track_application(code: str):
         "activity": doc.get("activity", ""),
         "experience": doc.get("experience", ""),
         "discord": doc.get("discord", ""),
+        "contact": doc.get("contact", ""),
         "message": doc.get("message", ""),
         "peer_note": doc.get("peer_note", ""),
         "status": doc["status"],
@@ -582,6 +585,7 @@ EXPORT_COLUMNS = [
     ("troops", "TROUPES"),
     ("activity", "ACTIVITÉ"),
     ("discord", "DISCORD"),
+    ("contact", "AUTRE CONTACT"),
     ("status", "STATUT"),
     ("note", "NOTE DU CONSEIL"),
     ("created_at", "DÉPOSÉE LE"),
@@ -626,7 +630,7 @@ EXPORT_I18N = {
             "council_note": "NOTE DU CONSEIL", "sea_note": "NOTE DE MER",
         },
         "no_exp": "— aucune ligne dans le journal de bord —",
-        "col": {"tracking_code": "CODE DE SUIVI", "pseudo": "PSEUDO", "power": "PUISSANCE", "troops": "TROUPES", "activity": "ACTIVITÉ", "discord": "DISCORD", "status": "STATUT", "note": "NOTE DU CONSEIL", "created_at": "DÉPOSÉE LE", "experience": "EXPÉRIENCE", "message": "MESSAGE", "peer_note": "NOTE DE MER"},
+        "col": {"tracking_code": "CODE DE SUIVI", "pseudo": "PSEUDO", "power": "PUISSANCE", "troops": "TROUPES", "activity": "ACTIVITÉ", "discord": "DISCORD", "contact": "AUTRE CONTACT", "status": "STATUT", "note": "NOTE DU CONSEIL", "created_at": "DÉPOSÉE LE", "experience": "EXPÉRIENCE", "message": "MESSAGE", "peer_note": "NOTE DE MER"},
         "date_fmt": "%d/%m/%Y %H:%M",
         "file_suffix": "registre",
         "footer": "GOLDEN PIRATES — CONSEIL DES CAPITAINES · ROYAUME 1023 · CALL OF DRAGONS",
@@ -662,7 +666,7 @@ EXPORT_I18N = {
             "council_note": "COUNCIL'S NOTE", "sea_note": "SEA NOTE",
         },
         "no_exp": "— no entry in the logbook —",
-        "col": {"tracking_code": "TRACKING CODE", "pseudo": "PSEUDO", "power": "POWER", "troops": "TROOPS", "activity": "ACTIVITY", "discord": "DISCORD", "status": "STATUS", "note": "COUNCIL'S NOTE", "created_at": "SUBMITTED ON", "experience": "EXPERIENCE", "message": "MESSAGE", "peer_note": "SEA NOTE"},
+        "col": {"tracking_code": "TRACKING CODE", "pseudo": "PSEUDO", "power": "POWER", "troops": "TROOPS", "activity": "ACTIVITY", "discord": "DISCORD", "contact": "OTHER CONTACT", "status": "STATUS", "note": "COUNCIL'S NOTE", "created_at": "SUBMITTED ON", "experience": "EXPERIENCE", "message": "MESSAGE", "peer_note": "SEA NOTE"},
         "date_fmt": "%m/%d/%Y %H:%M",
         "file_suffix": "register",
         "footer": "GOLDEN PIRATES — COUNCIL OF CAPTAINS · KINGDOM 1023 · CALL OF DRAGONS",
@@ -1833,7 +1837,7 @@ async def export_pdf(lang: str = "fr", tz: str | None = None, _: str = Depends(r
             [Paragraph(L["labels"]["power"], lab), Paragraph(escape(d.get("power", "")) or "—", val),
              Paragraph(L["labels"]["troops"], lab), Paragraph(escape(d.get("troops", "")) or "—", val)],
             [Paragraph(L["labels"]["activity"], lab), Paragraph(escape(d.get("activity", "")) or "—", val),
-             Paragraph(L["labels"]["discord"], lab), Paragraph(escape(d.get("discord", "")) or "—", val)],
+             Paragraph(L["labels"]["discord"], lab), Paragraph(escape(d.get("discord", "") or d.get("contact", "")) or "—", val)],
             [Paragraph(L["labels"]["filed"], lab), Paragraph(fmt_dt(d.get("created_at"), _tz) or "—", val), "", ""],
             [Paragraph(L["labels"]["exp"], lab), Paragraph(escape(d.get("experience", "")) or L["no_exp"], val_italic), "", ""],
             [Paragraph(L["labels"]["msg"], lab), Paragraph(escape(d.get("message", "")) or "—", val), "", ""],

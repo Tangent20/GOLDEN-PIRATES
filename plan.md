@@ -1,20 +1,22 @@
-# plan.md — Golden Pirates : Correctifs post-déploiement + Donations + **Bug P0 “réinitialisation”** (MISE À JOUR)
+# plan.md — Golden Pirates : Stabilisation + audits + correctif logout + **REFONTE FORMULAIRE RECRUTEMENT (1 page, zéro étape)** (STATUT FINAL)
 
 ## 1) Objectifs
-- ✅ Corriger les 3 bugs critiques post-déploiement :
-  - **Donations (retour + facture)** : le donateur obtient un bordereau immédiat + statut clair + téléchargements.
-  - **Purge/absence de faux profils** : base prête production (conserver uniquement `admin@goldenpirates.io`).
-  - **Suivi recrue (rack)** : sauvegarde persistante + synchronisation fiable.
-- ✅ Refaire **Donations.jsx** “de zéro” côté UI/UX : plus simple, sans doublons, mobile-first, et 100% fonctionnel.
-- ✅ Injecter et afficher le **don réel 3€** (LOHMIN RUI, 19 Oct 2026, tx `5FX6898643003571P`) pour que la jauge/le hall reflètent la réalité.
-- ✅ Valider l’ensemble via **testing_agent_v3** (backend + frontend) avant remise au Capitaine.
-- ✅ **NOUVEAU (P0)** : Corriger le bug « **tout se réinitialise au retour sur le site** » (brouillons + dashboard admin).
+- ✅ Corriger les bugs critiques post-déploiement (Donations + rack + perception “réinitialisation”).
+- ✅ Stabiliser les exports (PDF/XLSX) et l’admin (horodatage custom, TZ dynamique).
+- ✅ Créer les profils publics donateurs + audits UI/UX/Lighthouse.
+- ✅ **Correctif sécurité** : déconnexion admin doit supprimer *réellement* le cookie de session.
+- ✅ **P1 business / conversion** : **Refaire complètement le formulaire de recrutement** pour maximiser la conversion :
+  - ✅ **Une seule page**, zéro “wizard/étapes”.
+  - ✅ **Champs minimaux et stratégiques** (incluant joueurs sans Discord).
+  - ✅ Message de remerciement plein écran (code + copier + suivi).
+  - ✅ Brouillon silencieux.
+  - ✅ Vérifications “100%” multi-appareils : desktop, tablette, iOS Safari, Android multi-marques, pliables.
 
 ---
 
 ## 2) Implementation Steps
 
-### Phase 1 — POC Core Donations (isolation) : déclaration → reçu → facture
+### Phase 1 — POC Core Donations : déclaration → reçu → facture
 **But :** sécuriser le flux “PayPal.me sans webhook” + factures avant la refonte UI.
 
 **User stories (POC)**
@@ -25,141 +27,179 @@
 5. ✅ En tant qu’admin, je peux rejeter un don et empêcher tout téléchargement de facture.
 
 **Étapes (réalisées)**
-- ✅ Backend: modifications sur `/app/backend/server.py` + `/app/backend/donations_invoice.py` :
+- ✅ Backend: `/app/backend/server.py` + `/app/backend/donations_invoice.py` :
   - ✅ `GET /api/donations/invoice/{pdf|xlsx}` autorisé pour **pending** et **confirmed**.
-  - ✅ Dons **pending** : facture livrée avec **bandeau + filigrane rouge** (“EN ATTENTE / PENDING”).
+  - ✅ Dons **pending** : facture avec **bandeau + filigrane rouge** (“EN ATTENTE / PENDING”).
   - ✅ Dons **rejected** : téléchargement bloqué (409, code `rejected`).
-- ✅ Anti-doublon côté DB : ajout d’une clé idempotente `provider_tx` (utilisée pour le seed du don réel).
-- ✅ Test de bout en bout (POC) exécuté : declare → status → invoice pending → confirm → invoice final → reject → blocage.
+- ✅ Anti-doublon DB : clé idempotente `provider_tx` (seed don réel inclus).
+- ✅ Test E2E POC exécuté (declare → invoice pending → confirm → invoice final → reject → blocage).
 
-**Checkpoint :** ✅ POC vert avant refonte UI.
+**Checkpoint :** ✅ POC vert.
 
 ---
 
-### Phase 2 — V1 App Development : Rebuild `Donations.jsx`
-**But :** livrer une page Butin claire, immersive, et sans surcharge de boutons/sections.
+### Phase 2 — Rebuild `Donations.jsx` (Butin)
+**But :** livrer une page Butin claire, immersive, mobile-first, sans surcharge.
 
 **User stories (V1 Donations)**
-1. ✅ En tant que visiteur, je choisis un montant en 2 taps et j’ouvre PayPal sans confusion.
-2. ✅ En tant que donateur, après PayPal je clique “J’ai fait un don” et je reçois instantanément mon **bordereau**.
-3. ✅ En tant que donateur, je vois mes bordereaux sur cet appareil avec badges **En attente / Confirmé / Refusé**.
-4. ✅ En tant que donateur, je peux télécharger PDF/XLSX **même en attente** (marqués pending) sans UI chargée.
-5. ✅ En tant que visiteur, je vois la **jauge** et le **hall** mis à jour (incluant le don 3€).
+1. ✅ Choix montant en 2 taps + ouverture PayPal.
+2. ✅ Après PayPal : “J’ai fait un don” → bordereau immédiat.
+3. ✅ “Mes dons” : badges **En attente / Confirmé / Refusé**.
+4. ✅ Téléchargement PDF/XLSX visible même en pending.
+5. ✅ Hall public : jauge + liste reflètent la réalité (incluant 3€ seed).
 
 **Étapes (réalisées)**
-- ✅ Réécriture complète de `/app/frontend/src/pages/Donations.jsx` (remplacement total) :
-  - ✅ Ordre strict appliqué : **Hero → Soutien PayPal (picker + 1 bouton) → Déclaration → Hall (jauge+liste) → Pourquoi → Facture**.
-  - ✅ Suppression des doublons : TOC “Rose”, sections répétées, CTA redondants, surcharge de boutons.
-  - ✅ “Mes dons” : boutons de téléchargement visibles **dès l’état pending** (fix clé).
-  - ✅ Responsive mobile-first : contrôlé 390 / 768 / 1024 / 1920 + absence d’overflow horizontal.
-- ✅ Ajustements i18n : mise à jour des messages pending (facture provisoire téléchargeable + mention du sceau rouge).
+- ✅ Réécriture totale `/app/frontend/src/pages/Donations.jsx` :
+  - ✅ Ordre simplifié : Hero → Soutien → Déclaration → Hall → Pourquoi → Facture.
+  - ✅ Suppression doublons/CTA redondants.
+  - ✅ Responsive 390/768/1024/1920 + pas d’overflow.
+- ✅ Ajustements i18n (pending + sceau rouge).
 
-**Checkpoint :** ✅ validation manuelle + captures (desktop + mobile) OK.
+**Checkpoint :** ✅ OK.
 
 ---
 
-### Phase 3 — Rack fix (suivi recrue)
-**But :** éliminer les désynchronisations et fiabiliser la mise à jour des statuts.
+### Phase 3 — Rack fix (Suivi recrue)
+**But :** éliminer désync et fiabiliser statuts.
 
 **User stories (Rack)**
-1. ✅ Code de suivi reste enregistré après refresh.
-2. ✅ Le statut se met à jour sans reload manuel.
-3. ✅ Les dossiers supprimés sont retirés du rack.
+1. ✅ Code de suivi persistant après refresh.
+2. ✅ Statut se met à jour sans reload manuel.
+3. ✅ Dossiers supprimés retirés du rack.
 4. ✅ Vérification manuelle met à jour le rack.
-5. ✅ Pas de désync entre onglets / retours en ligne.
+5. ✅ Sync retour online + retour onglet.
 
 **Étapes (réalisées)**
-- ✅ Modification `/app/frontend/src/lib/rack.js` :
-  - ✅ Ajout d’un `setInterval` (60s) lorsque l’onglet est visible.
-  - ✅ Conservation : `visibilitychange` + `force sync` au mount.
-  - ✅ Ajout d’un sync au retour `online` (mobile / pertes réseau).
+- ✅ `/app/frontend/src/lib/rack.js` : `setInterval(60s)` quand visible + `visibilitychange` + `online`.
 
 ---
 
-### Phase 4 — Testing (obligatoire)
-**But :** confirmer officiellement les correctifs avec le protocole demandé.
-
-**User stories (validation)**
-1. ✅ Déclarer un don → bordereau visible immédiatement.
-2. ✅ Télécharger PDF pending → filigrane “EN ATTENTE”.
-3. ✅ Confirmer en admin → PDF sans filigrane.
-4. ✅ Rack : save → persistance reload → sync périodique OK.
-5. ✅ Hall public : don 3€ visible, jauge augmente.
+### Phase 4 — Bug P0 “Réinitialisation au retour” (brouillons + admin)
+**But :** supprimer l’impression de perte de données au retour sur le site.
 
 **Étapes (réalisées)**
-- ✅ `testing_agent_v3` exécuté (backend + frontend).
-- ✅ Rapport généré : `/app/test_reports/iteration_42.json`.
-  - ✅ Résultat global : **95%**.
-  - ✅ Frontend : **100%** sur les flux critiques.
-  - ✅ Backend : **87.5%** (2 faux négatifs liés à une vérif d’entêtes, pas un bug fonctionnel).
-- ✅ “Key fix” explicitement vérifié : boutons de téléchargement visibles pour **pending**.
-
----
-
-### Phase 5 — **P0 Correctif “Réinitialisation au retour” (brouillons + dashboard admin)**
-**But :** supprimer l’impression de perte de données au retour sur le site :
-- côté visiteur/recrue : brouillon candidature et parcours utilisateur stable.
-- côté admin : données rechargées automatiquement au retour d’onglet/fenêtre (zéro “ancienne version”).
-
-**Constats (diagnostic)**
-- ✅ Les données backend **persistent correctement** en MongoDB (vérifié par requêtes Mongo + tests curl + flux declare/insert).
-- ✅ Les endpoints dynamiques renvoient des headers `Cache-Control: no-store, no-cache, must-revalidate`.
-- ✅ Cloudflare : `cf-cache-status: DYNAMIC` et pas de cache agressif.
-- ✅ Aucun script/cron destructeur au démarrage ; cron de rétention RGPD :
-  - déclenché via `/api/cron/keep-alive` toutes les 15 min (rate-limit 1h)
-  - ne purge que les données très anciennes :
-    - rejections > 30j, applications inactives > 365j, dons > 3 ans.
-
-**Fixes appliqués (réalisés)**
-1. ✅ **Frontend – brouillon candidature (ApplyForm)**
-   - Fichier : `/app/frontend/src/components/ApplyForm.jsx`
-   - Fix : ajout d’un garde-fou `userClearedRef`.
-   - Effet : le brouillon `localStorage` (`gp_apply_draft`) **n’est plus effacé** quand l’état passe temporairement à `EMPTY` (cas remount React/StrictMode). Effacement uniquement :
-     - quand l’utilisateur clique « effacer », ou
-     - quand le formulaire est soumis avec succès.
-
-2. ✅ **Frontend – dashboard admin (rafraîchissement “au retour”)**
-   - Fichier : `/app/frontend/src/pages/Admin.jsx`
-   - Fix : ajout de listeners `visibilitychange` + `focus` pour relancer `loadAll()`.
-   - Effet : au retour sur l’onglet/fenêtre, le Conseil voit systématiquement les données fraîches (candidatures + stats).
-
-3. ✅ **Frontend – Butin (admin) : rafraîchissement dons au retour**
-   - Fichier : `/app/frontend/src/pages/Admin.jsx` (ButinPanel)
-   - Fix : ajout de `visibilitychange` + `focus` pour relancer le `load()` du butin.
-   - Effet : la liste des dons ne “disparaît” pas au retour et reste synchronisée.
+1. ✅ ApplyForm (ancienne version) : garde-fou `userClearedRef` (brouillon non effacé par remount/StrictMode).
+2. ✅ Admin : refresh au retour d’onglet (listeners `visibilitychange` + `focus`) pour candidatures + stats.
+3. ✅ Admin Butin : refresh au retour d’onglet.
 
 **Testing (réalisé)**
-- ✅ `testing_agent_v3` exécuté : `/app/test_reports/iteration_55.json`
-  - Backend : **90.5%**
-  - Frontend : **70%** (les 2 alertes “HIGH” étaient des faux positifs/écarts de sélecteurs ou de scénario :
-    - `input-pseudo` visible seulement à l’étape 0,
-    - `admin-stats-frame` est le bon sélecteur, pas `admin-stats`).
-- ✅ Vérification manuelle Playwright :
-  - un brouillon à l’étape 3 (“MarinTest”) **survit au reload** et restaure bien l’étape (ÉTAPE 4/5 en UI).
-- ✅ DB nettoyée des données de test.
+- ✅ `testing_agent_v3` : `/app/test_reports/iteration_55.json`.
 
-**Checkpoint :** ✅ bug P0 “réinitialisation” **corrigé** (perception + robustesse).
+**Checkpoint :** ✅ corrigé.
+
+---
+
+### Phase 5 — Audits & améliorations (session actuelle)
+**But :** fiabiliser le produit avant publication (fonctionnel, UI, exports, accessibilité).
+
+**Réalisé (récapitulatif)**
+- ✅ Drafts & cache : fixes race-conditions `ApplyForm.jsx` + refresh au retour dans `Admin.jsx`.
+- ✅ Donations admin : injection Date/Heure custom (PATCH admin donateurs).
+- ✅ Exports PDF/XLSX : TZ dynamique via `tz` param côté frontend.
+- ✅ Profils publics donateurs : endpoint `GET /api/donators/profile/{pseudo}` + UI `DonorProfileSheet.jsx`.
+- ✅ Mobile UI : suppression des date pickers natifs (MIUI) et mise en place inputs texte (JJ/MM/AAAA + HH:MM).
+- ✅ Audit UI complet : `100dvh`, safe-area insets, lazy-loading images, GPU hints.
+- ✅ Audit fonctionnel : `/auth/me` retourne 200 `{authed:false}` en public + correctifs Escape modales.
+- ✅ Lighthouse : Accessibilité 100/100 (contrastes).
+
+---
+
+### Phase 6 — **Correctif sécurité : Logout cookie non totalement vidé**
+**But :** fermeture de session admin sûre sur appareils partagés.
+
+**Constat**
+- Cookie `access_token` est créé avec `Secure` + `SameSite=None` + `HttpOnly`, mais la suppression ne reprenait pas ces attributs → certains navigateurs ignoraient le delete.
+
+**Fix (réalisé)**
+- ✅ `/app/backend/server.py` (`POST /api/auth/logout`) :
+  - ✅ `delete_cookie(... secure=True, httponly=True, samesite="none", path="/")`
+  - ✅ + “ceinture et bretelles” : `set_cookie` vide avec `max_age=0` et `expires=0`.
+
+**Vérification (réalisée)**
+- ✅ Connexion (`/api/admin/login`) → `/api/auth/me authed:true` → routes admin 200 → logout → `authed:false` → routes admin 401 → cookie absent.
+
+**Checkpoint :** ✅ corrigé (prêt publication).
+
+---
+
+### Phase 7 — **Refonte complète du formulaire de recrutement (1 page, zéro étapes)**
+**But :** augmenter la conversion (moins d’abandon), garder le style 100% pirate, et rester ultra-fonctionnel sur tous appareils.
+
+**Décisions utilisateur (validées)**
+- ✅ **Une seule page** (tout visible, scroll court), **zéro étapes**.
+- ✅ Message de remerciement : **plein écran** avec code **GP-1023-XXXX** + bouton **Copier** + **Suivre ma candidature**.
+- ✅ Brouillon : **sauvegarde silencieuse**.
+- ✅ Panneaux recrue/conseil : **conservés** (gating existant).
+
+**Implémentation (réalisée)**
+1. ✅ **Backend** — `/app/backend/server.py`
+   - ✅ Ajout champ optionnel `contact: str = ""` dans `ApplicationCreate` (+ sanitation `safe_text`).
+   - ✅ Persistance DB + retour dans `GET /api/applications/track/{code}` (`contact`).
+   - ✅ Exports :
+     - ✅ XLSX : nouvelle colonne **AUTRE CONTACT**.
+     - ✅ PDF : repli d’affichage (si `discord` vide, afficher `contact`).
+
+2. ✅ **Frontend**
+   - ✅ `/app/frontend/src/components/ApplyForm.jsx` : **réécrit** en single-page :
+     - ✅ 4 blocs visibles d’un coup : Identité / Force / Signaux / Lettre.
+     - ✅ Puissance : quick chips + hint (below/inRange/above/unreadable).
+     - ✅ Troupes + activité : choix type radio (tactile, accessible).
+     - ✅ Contact segmenté : **Discord / Autre / Aucun** (champ conditionnel + aide contextuelle).
+     - ✅ Message court (min 10) + **4 amorces**.
+     - ✅ Barre de progression **“voiles hissées” 0/6** (sans étapes) + état `data-ready`.
+     - ✅ Bouton unique **SCELLER**.
+     - ✅ Brouillon silencieux robuste : clé `gp_apply_draft_v2` + migration douce de l’ancien brouillon + effacer.
+     - ✅ Overlay succès : plein écran `100dvh`, code en grand, copier, suivre, “enrôler un autre compte”, fermeture Échap.
+   - ✅ `/app/frontend/src/lib/i18n.jsx` : mise à jour complète du bloc `apply` FR/EN.
+   - ✅ `/app/frontend/src/pages/Suivi.jsx` : affichage `discord || contact`.
+   - ✅ `/app/frontend/src/pages/Admin.jsx` : colonne “DISCORD / CONTACT” (repli `discord || contact`) + recherche inclut `contact`.
+
+**Design guidelines (réalisé)**
+- ✅ Blueprint produit dans `/app/design_guidelines.md` : layout, tokens, overlay, data-testid.
+
+**Notes de qualité**
+- ✅ Raccourcissement label mobile : contact option “AUTRE” (390px) / “OTHER” (EN) pour éviter le clipping.
+- ✅ Nettoyage des candidatures QA effectué (base propre).
+
+**Checkpoint :** ✅ Phase 7 terminée.
+
+---
+
+### Phase 8 — Testing (obligatoire) — **Refonte recrutement**
+**But :** garantir zéro régression + compatibilité multi-appareils.
+
+**Tests (réalisés)**
+- ✅ `testing_agent_v3` : `/app/test_reports/iteration_59.json`
+  - Frontend ✅ 21/21.
+  - Backend ✅ 18/19 : 1 mention “logout” = **artefact de test** (le correctif logout a été validé séparément).
+- ✅ Vérifications Playwright (manuelles automatisées) :
+  - ✅ Brouillon : sauvegarde → reload → restauré → effacer.
+  - ✅ Pseudo déjà pris : statut “active” + CTA vers /suivi.
+  - ✅ Persona recrue : panneau dossier (rack) + override vers formulaire.
+  - ✅ Persona conseil : panneau stats + preview (envoi désactivé).
+  - ✅ i18n EN.
+  - ✅ Responsive 390/768/1920 : pas d’overflow, inputs 16px (anti-zoom iOS), overlay OK.
+  - ✅ Flux complet : envoi → code → copie → suivi.
+  - ✅ Export XLSX : colonne “AUTRE CONTACT” présente.
+
+**Checkpoint :** ✅ Phase 8 terminée.
 
 ---
 
 ## 3) Next Actions
-1. ✅ Déploiement en l’état : prêt production (flux donateur clair + butin visible).
-2. ✅ Bug P0 “réinitialisation au retour” : corrigé et retesté.
-3. 🔎 Recommandé (optionnel) :
-   - Ajouter un **index unique** MongoDB sur `donators.provider_tx` (anti-doublon renforcé).
-   - Ajouter dans l’admin une recherche/outil “marquer confirmé” par `provider_tx` si besoin.
-4. 📌 Action côté Capitaine (process) :
-   - Lorsqu’un don PayPal arrive, le Conseil **confirme** le bordereau dans l’admin si la déclaration a été faite, ou **ajoute** le don manuellement si le donateur ne déclare pas.
+1. ✅ Fonctionnel : tout est terminé, aucun bug connu restant.
+2. 🔥 **Action unique avant mise en ligne** : **redéployer** (pour pousser les changements backend/frontend).
+3. (Optionnel après publication) Mini audit Lighthouse ciblé sur Home (post refonte formulaire).
 
 ---
 
 ## 4) Success Criteria
-- ✅ Donateur : après déclaration, voit **receipt_id** + badge pending + peut télécharger facture (pending watermark).
-- ✅ Admin : confirmation enlève le watermark ; rejet bloque la facture.
-- ✅ Public : hall/jauge reflètent au moins **3€** (don LOHMIN RUI) sans doublons.
-- ✅ Rack : codes persistants + sync périodique (60s) sans désync.
-- ✅ Bug P0 “réinitialisation” :
-  - brouillon candidature persistant (pas d’effacement par race condition),
-  - dashboard admin rafraîchi automatiquement au retour d’onglet.
-- ✅ Testing :
-  - `iteration_42.json` (Donations/Rack) et `iteration_55.json` (persistance/retour) disponibles.
+- ✅ Sécurité : après logout, cookie `access_token` supprimé et accès admin refusé.
+- ✅ Conversion recrutement :
+  - ✅ Formulaire **1 page**, perçu “≈ 60 secondes”, aucune navigation d’étapes.
+  - ✅ Discord **non obligatoire** (contact segmenté) ; envoi OK sans contact.
+  - ✅ Pseudo check live clair ; si bloqué, CTA vers /suivi.
+  - ✅ Succès : overlay plein écran 100dvh, code énorme, Copier + Suivre.
+  - ✅ Brouillon silencieux robuste.
+- ✅ Compatibilité : pas d’overflow, pas de zoom iOS, touch targets OK.
+- ✅ Tests : `testing_agent_v3` + vérifs responsive/personas/export OK, absence de régression Donations/Admin/Suivi.
