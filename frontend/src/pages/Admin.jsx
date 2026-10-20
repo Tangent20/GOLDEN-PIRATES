@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence, useAnimationControls, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
-import { ChevronDown, LogOut, Search, Trash2, MessagesSquare, Anchor, Mail, KeyRound, Eye, EyeOff, Lock, Fingerprint, FileSpreadsheet, FileText, Loader2, Feather, X, Users, Hourglass, Sailboat, Flame, Scroll, Compass, Scale, Stamp, Coins, Map as MapIcon, ShieldCheck, Unlock, Check, AlertTriangle } from "lucide-react";
+import { ChevronDown, LogOut, Search, Trash2, MessagesSquare, Anchor, Mail, KeyRound, Eye, EyeOff, Lock, Fingerprint, FileSpreadsheet, FileText, Loader2, Feather, X, Users, Hourglass, Sailboat, Flame, Scroll, Compass, Scale, Stamp, Coins, Map as MapIcon, ShieldCheck, Unlock, Check, AlertTriangle, Pencil } from "lucide-react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import StatusBadge from "@/components/StatusBadge";
@@ -969,6 +969,16 @@ function ButinPanel() {
   useScrollLock(!!sealTarget);
   const [sealing, setSealing] = useState(null); // "pdf" | "xlsx" | null
 
+  // modal « Modifier le bordereau »  — ouvre un éditeur pour un don existant
+  const [editTarget, setEditTarget] = useState(null); // bordereau courant
+  useScrollLock(!!editTarget);
+  const [editBusy, setEditBusy] = useState(false);
+
+  // Fuseau du navigateur, affiché à côté des dates pour lever toute ambiguïté
+  const BROWSER_TZ = (() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch { return "UTC"; }
+  })();
+
   const [pendingInfo, setPendingInfo] = useState({ n: 0, total: 0 });
   const load = () =>
     api.get("/admin/donators")
@@ -1071,6 +1081,22 @@ function ButinPanel() {
       toast.success(a.butin.removed);
     } catch (err) {
       toast.error(formatApiError(err));
+    }
+  };
+
+  // Enregistre les modifications du bordereau (pseudo, montant, date/heure locales → ISO)
+  const saveEdit = async (patch) => {
+    if (editBusy || !editTarget) return;
+    setEditBusy(true);
+    try {
+      await api.patch(`/admin/donators/${editTarget.id}`, patch);
+      setEditTarget(null);
+      await load();
+      toast.success(a.butin.editSaved);
+    } catch (err) {
+      toast.error(formatApiError(err));
+    } finally {
+      setEditBusy(false);
     }
   };
 
@@ -1389,7 +1415,8 @@ function ButinPanel() {
                   {it.created_at
                     ? new Date(it.created_at).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
                       " · " +
-                      new Date(it.created_at).toLocaleTimeString(lang === "fr" ? "fr-FR" : "en-GB", { hour: "2-digit", minute: "2-digit" })
+                      new Date(it.created_at).toLocaleTimeString(lang === "fr" ? "fr-FR" : "en-GB", { hour: "2-digit", minute: "2-digit" }) +
+                      ` (${BROWSER_TZ})`
                     : "—"}
                   {it.email && <span className="ml-2 text-gold/70 break-all">· {it.email}</span>}
                 </p>
@@ -1418,6 +1445,14 @@ function ButinPanel() {
                     </button>
                   </>
                 )}
+                <button
+                  type="button"
+                  data-testid={`butin-edit-${it.id}`}
+                  onClick={() => setEditTarget(it)}
+                  className="inline-flex items-center gap-1.5 font-mono2 text-[9px] tracking-[0.2em] text-gold/90 border border-gold/40 hover:bg-gold/10 focus-visible:bg-gold/10 focus-visible:outline-none px-3 py-1.5 min-h-[36px] transition-colors"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> {a.butin.edit}
+                </button>
                 <button
                   type="button"
                   data-testid={`butin-seal-${it.id}`}
@@ -1518,6 +1553,229 @@ function ButinPanel() {
           </motion.div>
         </div>
       )}
+
+      {/* MODAL « MODIFIER LE BORDEREAU » — pseudo / montant / date / message */}
+      {editTarget && (
+        <EditDonatorModal
+          target={editTarget}
+          lang={lang}
+          busy={editBusy}
+          copy={a.butin}
+          onClose={() => !editBusy && setEditTarget(null)}
+          onSave={saveEdit}
+        />
+      )}
+    </div>
+  );
+}
+
+
+// ---------- Fiche d'édition d'un bordereau de don (modifiable à tout moment) ----------
+// La date/heure est éditée en fuseau LOCAL du Conseil puis convertie en ISO UTC
+// avant l'envoi. La facture scellée restera, elle, en heure de Paris.
+function EditDonatorModal({ target, lang, busy, copy, onClose, onSave }) {
+  const BROWSER_TZ = (() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch { return "UTC"; }
+  })();
+
+  const initial = useMemo(() => {
+    const d = target?.created_at ? new Date(target.created_at) : new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return {
+      pseudo: target?.pseudo || "",
+      amount: String(target?.amount ?? ""),
+      message: target?.message || "",
+      email: target?.email || "",
+      anonymous: !!target?.anonymous,
+      dateStr: `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`,
+      timeStr: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    };
+  }, [target]);
+
+  const [pseudo, setPseudo] = useState(initial.pseudo);
+  const [amount, setAmount] = useState(initial.amount);
+  const [message, setMessage] = useState(initial.message);
+  const [email, setEmail] = useState(initial.email);
+  const [anonymous, setAnonymous] = useState(initial.anonymous);
+  const [dateStr, setDateStr] = useState(initial.dateStr);
+  const [timeStr, setTimeStr] = useState(initial.timeStr);
+
+  const onDateChange = (v) => {
+    const raw = v.replace(/\D/g, "").slice(0, 8);
+    let out = raw;
+    if (raw.length >= 5) out = `${raw.slice(0,2)}/${raw.slice(2,4)}/${raw.slice(4)}`;
+    else if (raw.length >= 3) out = `${raw.slice(0,2)}/${raw.slice(2)}`;
+    setDateStr(out);
+  };
+  const onTimeChange = (v) => {
+    const raw = v.replace(/\D/g, "").slice(0, 4);
+    let out = raw;
+    if (raw.length >= 3) out = `${raw.slice(0,2)}:${raw.slice(2)}`;
+    setTimeStr(out);
+  };
+
+  const submit = () => {
+    const amt = parseFloat(String(amount).replace(",", "."));
+    if (!Number.isFinite(amt) || amt < 0.5) { toast.error(copy.editInvalidAmount); return; }
+    const dm = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!dm) { toast.error(copy.editInvalidDate); return; }
+    const tm = timeStr.match(/^(\d{2}):(\d{2})$/);
+    if (!tm) { toast.error(copy.editInvalidTime); return; }
+    const [, dd, mm, yyyy] = dm;
+    const [, hh, mn] = tm;
+    const local = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(hh), Number(mn));
+    if (isNaN(local.getTime())) { toast.error(copy.editInvalidDate); return; }
+    onSave({
+      pseudo: pseudo.trim(),
+      amount: amt,
+      message: message.trim(),
+      email: email.trim(),
+      anonymous,
+      created_at: local.toISOString(),
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/85 backdrop-blur-sm px-4 py-6"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        data-testid="butin-edit-modal"
+        className="relative w-full max-w-lg max-h-[88vh] overflow-y-auto border-2 border-gold/60 bg-deck frame-plate p-5 sm:p-7"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="font-mono2 text-[10px] tracking-[0.3em] text-gold/80 mb-1">{copy.editTitle}</p>
+        <p className="font-display text-2xl text-gold uppercase tracking-wide mb-1">{target.pseudo}</p>
+        <p className="font-mono2 text-[10px] tracking-[0.2em] text-goldlight mb-2">{target.receipt_id}</p>
+        <p className="font-fell italic text-sm text-mist mb-5">{copy.editSub}</p>
+
+        <div className="space-y-3.5">
+          <div>
+            <label className="block font-mono2 text-[9px] tracking-[0.25em] text-gold/80 mb-1.5">{copy.pseudoLabel}</label>
+            <input
+              data-testid="butin-edit-pseudo"
+              type="text"
+              value={pseudo}
+              onChange={(e) => setPseudo(e.target.value)}
+              maxLength={40}
+              className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone focus:border-gold focus:outline-none transition-colors"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-mono2 text-[9px] tracking-[0.25em] text-gold/80 mb-1.5">{copy.amountLabel}</label>
+              <input
+                data-testid="butin-edit-amount"
+                type="text"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))}
+                className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone focus:border-gold focus:outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block font-mono2 text-[9px] tracking-[0.25em] text-gold/80 mb-1.5">{copy.emailLabel}</label>
+              <input
+                data-testid="butin-edit-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                maxLength={120}
+                className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone focus:border-gold focus:outline-none transition-colors"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-mono2 text-[9px] tracking-[0.25em] text-gold/80 mb-1.5">
+              {lang === "en" ? "DATE & TIME" : "DATE & HEURE"} <span className="text-mist/80">— {BROWSER_TZ} ({copy.tzLocal})</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <input
+                data-testid="butin-edit-date"
+                type="text"
+                inputMode="numeric"
+                value={dateStr}
+                onChange={(e) => onDateChange(e.target.value)}
+                placeholder={lang === "en" ? "DD/MM/YYYY" : "JJ/MM/AAAA"}
+                maxLength={10}
+                className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone placeholder:text-bone/40 focus:border-gold focus:outline-none transition-colors"
+              />
+              <input
+                data-testid="butin-edit-time"
+                type="text"
+                inputMode="numeric"
+                value={timeStr}
+                onChange={(e) => onTimeChange(e.target.value)}
+                placeholder="HH:MM"
+                maxLength={5}
+                className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone placeholder:text-bone/40 focus:border-gold focus:outline-none transition-colors"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-mono2 text-[9px] tracking-[0.25em] text-gold/80 mb-1.5">{copy.messageLabel}</label>
+            <textarea
+              data-testid="butin-edit-message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              maxLength={400}
+              rows={2}
+              className="w-full bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone focus:border-gold focus:outline-none transition-colors resize-none"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              data-testid="butin-edit-anonymous"
+              type="checkbox"
+              checked={anonymous}
+              onChange={(e) => setAnonymous(e.target.checked)}
+              className="w-4 h-4 accent-gold"
+            />
+            <span className="font-mono2 text-[10px] tracking-[0.2em] text-gold/80">
+              {lang === "en" ? "ANONYMOUS GIFT" : "DON ANONYME"}
+            </span>
+          </label>
+        </div>
+
+        <div className="mt-6 flex flex-col-reverse sm:flex-row gap-3 justify-end">
+          <button
+            type="button"
+            data-testid="butin-edit-cancel"
+            onClick={onClose}
+            disabled={busy}
+            className="font-mono2 text-[10px] tracking-[0.2em] text-mist hover:text-bone border border-gold/25 hover:border-gold/50 px-5 py-2.5 min-h-[44px] transition-colors disabled:opacity-50"
+          >
+            {copy.editCancel}
+          </button>
+          <button
+            type="button"
+            data-testid="butin-edit-save"
+            onClick={submit}
+            disabled={busy}
+            className="font-mono2 text-[10px] tracking-[0.2em] text-gold border border-gold/60 bg-gold/10 hover:bg-gold/20 px-5 py-2.5 min-h-[44px] transition-colors inline-flex items-center gap-2 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} {copy.editSave}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={busy}
+          className="absolute top-2 right-2 text-mist hover:text-gold focus-visible:text-gold focus-visible:outline-none transition-colors p-2 disabled:opacity-50"
+          aria-label={copy.editCancel}
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </motion.div>
     </div>
   );
 }

@@ -1231,6 +1231,61 @@ async def donator_reject(donator_id: str, _=Depends(require_admin)):
     return {"ok": True}
 
 
+class DonatorPatchIn(BaseModel):
+    """Mise à jour partielle d'un bordereau de don par le Conseil.
+    Tous les champs sont optionnels ; seuls ceux fournis sont modifiés."""
+    model_config = ConfigDict(extra="ignore")
+    pseudo: Optional[str] = Field(default=None, min_length=2, max_length=40)
+    amount: Optional[float] = Field(default=None, ge=0.5, le=100000)
+    email: Optional[str] = Field(default=None, max_length=120)
+    message: Optional[str] = Field(default=None, max_length=400)
+    currency: Optional[str] = Field(default=None, max_length=6)
+    anonymous: Optional[bool] = None
+    created_at: Optional[str] = Field(default=None, max_length=40)
+
+
+@api_router.patch("/admin/donators/{donator_id}")
+async def donator_update(donator_id: str, data: DonatorPatchIn, _=Depends(require_admin)):
+    """Édite un bordereau à tout moment : pseudo, montant, email, message, date, monnaie, anonymat.
+    Les champs vides sont ignorés (pas d'écrasement non voulu)."""
+    try:
+        oid = ObjectId(donator_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Bordereau introuvable.")
+
+    update: dict = {}
+    if data.pseudo is not None:
+        update["pseudo"] = safe_text(data.pseudo.strip())[:40]
+    if data.amount is not None:
+        update["amount"] = round(float(data.amount), 2)
+    if data.email is not None:
+        update["email"] = (data.email or "").strip().lower()[:120] or None
+    if data.message is not None:
+        update["message"] = safe_text((data.message or "").strip())[:400] or None
+    if data.currency is not None:
+        update["currency"] = (data.currency or "EUR").strip().upper()[:6] or "EUR"
+    if data.anonymous is not None:
+        update["anonymous"] = bool(data.anonymous)
+    if data.created_at is not None:
+        iso = _iso_or_none(data.created_at)
+        if not iso:
+            raise HTTPException(status_code=400, detail="Date invalide — format ISO attendu.")
+        update["created_at"] = iso
+        # Si c'était un don déjà confirmé, on recale aussi la date de scellé pour cohérence
+        existing = await db.donators.find_one({"_id": oid}, {"status": 1})
+        if existing and existing.get("status") == "confirmed":
+            update["confirmed_at"] = iso
+
+    if not update:
+        raise HTTPException(status_code=400, detail="Aucun champ à modifier.")
+
+    update["updated_at"] = now_utc().isoformat()
+    r = await db.donators.update_one({"_id": oid}, {"$set": update})
+    if not r.matched_count:
+        raise HTTPException(status_code=404, detail="Bordereau introuvable.")
+    return {"ok": True, "updated": sorted(update.keys())}
+
+
 # ---------- Purge des données de test (fonctionne sur la base de PRODUCTION) ----------
 _TEST_PSEUDO_RX = re.compile(
     r"(?i)(^(test|audit|seo[-_ ]?test|ghost|dummy|fake|debug|qa[-_]|playwright|e2e|probe|smoke|fixture|lorem|edge|msgtest|peer(alpha|beta|gamma)|vraycapitaine)|testcapitaine|pirate_?test|testpirate|test\d*$)"
