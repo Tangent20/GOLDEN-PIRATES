@@ -125,11 +125,23 @@ WAX_RED_LIGHT = colors.HexColor("#B91C1C")
 COUNCIL_MAIL = "golden.pirates@outlook.fr"
 
 
+from zoneinfo import ZoneInfo
+
+# Fuseau d'affichage des factures : les horodatages sont stockés en UTC
+# en base, mais les reçus/factures montrent toujours l'heure de Paris
+# pour éviter toute confusion ("17:00 saisi, 15:00 affiché").
+PARIS_TZ = ZoneInfo("Europe/Paris")
+
+
 def _fmt_date(iso: Optional[str], fmt: str) -> str:
     if not iso:
         return ""
     try:
-        return datetime.fromisoformat(iso).strftime(fmt)
+        dt = datetime.fromisoformat(iso)
+        # Aucun tzinfo => on considère l'heure comme UTC (comportement serveur).
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+        return dt.astimezone(PARIS_TZ).strftime(fmt)
     except (TypeError, ValueError):
         return str(iso)
 

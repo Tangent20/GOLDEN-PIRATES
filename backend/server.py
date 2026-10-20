@@ -30,6 +30,12 @@ from reportlab.graphics.shapes import Drawing, Rect, String
 from pdf_fonts import ensure_pdf_fonts  # noqa: E402
 ensure_pdf_fonts()
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
+
+# Fuseau d'affichage des exports (PDF/Excel). La BDD reste en UTC —
+# on convertit uniquement à l'affichage pour que l'heure imprimée
+# corresponde exactement à celle que le Conseil voit à Paris.
+PARIS_TZ = ZoneInfo("Europe/Paris")
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent
@@ -665,7 +671,10 @@ def fmt_dt(v):
     if not v:
         return ""
     try:
-        return datetime.fromisoformat(v).strftime("%d/%m/%Y %H:%M")
+        dt = datetime.fromisoformat(v)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(PARIS_TZ).strftime("%d/%m/%Y %H:%M")
     except (TypeError, ValueError):
         return str(v)
 
@@ -679,7 +688,10 @@ def fmt_row(doc, lang="fr"):
             v = STATUS_I18N[lang].get(v, v)
         elif key == "created_at" and v:
             try:
-                v = datetime.fromisoformat(v).strftime(L["date_fmt"])
+                dt = datetime.fromisoformat(v)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                v = dt.astimezone(PARIS_TZ).strftime(L["date_fmt"])
             except (TypeError, ValueError):
                 pass
         row.append("" if v is None else str(v))
