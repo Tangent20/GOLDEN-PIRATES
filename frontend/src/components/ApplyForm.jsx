@@ -506,7 +506,7 @@ export default function ApplyForm() {
             <div data-testid="apply-mission-order" className="mb-6 border border-blood/45 bg-blood/[0.08]">
               <p
                 data-testid="migration-banner"
-                className="flex items-start gap-2.5 px-4 py-3 font-mono2 text-[9px] sm:text-[10px] leading-relaxed tracking-[0.18em] sm:tracking-[0.22em] text-bloodglow"
+                className="flex items-start gap-2.5 px-4 py-3 font-mono2 text-[9px] sm:text-[10px] leading-relaxed tracking-[0.18em] sm:tracking-[0.22em] text-bloodhot"
               >
                 <Megaphone className="w-4 h-4 shrink-0" />
                 <span>{fmtPower(s.migrationBanner)}</span>

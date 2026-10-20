@@ -29,6 +29,9 @@ module.exports = {
         golddark: '#9A7B1C',
         blood: '#B91C1C',
         bloodglow: '#DC2626',
+        /* Rouge "braise vive" utilisé sur fonds sombres pour les alertes/bandeaux
+           d'avertissement : contraste ≥ 4.5:1 sur #06090e (WCAG AA). */
+        bloodhot: '#FCA5A5',
         sea: '#0B192C',
         bone: '#E8D8C8',
         mist: '#94A3B8',
