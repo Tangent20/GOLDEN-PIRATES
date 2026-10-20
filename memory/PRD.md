@@ -198,3 +198,8 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Frontend : lib/season.js (phases pre / s2 / open). Compte à rebours (formulaire + /suivi) : « DÉBUT DE LA SAISON 2 » → « OUVERTURE DES PORTES (fin de Saison 2) » si date connue, sinon « SAISON 2 EN COURS · PORTES : FIN DE SAISON (DATE À VENIR) » → « PORTES OUVERTES ». Bandeau du héros et frise (navire, TERMINÉE / EN COURS / À VENIR, dates DÈS LE …) suivent la phase. FR/EN.
 - Espace Conseil → registre : panneau « Calendrier des saisons » (2 dates, SCELLER, DATE PAS ENCORE CONNUE) — aucun crédit nécessaire pour changer les dates.
 - Agent de test iteration_49 : 100 % (6/6 API, 19/19 UI, 4 phases). Calendrier réel restauré. En ligne après Deploy ; régler les dates sur golden-pirates.org/admin après publication.
+
+## 2026-10-20 — Logo officiel dans le SEO (correction : « GP » → étoile-boussole au visage)
+- make_og.py : render_logo() reproduit components/LogoMark.jsx (viewBox 64) ; médaillon du logo en haut à droite de l'image de partage ; bandeau « CANDIDATURES OUVERTES · APPLY NOW » (migration = fin de Saison 2).
+- Icônes favicon.ico / favicon-48 / icon-192 / icon-512 / apple-touch-icon = LogoMark sur fond d'encre ; nouveau favicon SVG exact /logo.svg ; ?v=3 sur toutes les URL (index.html, Seo.jsx, site.webmanifest) pour forcer navigateurs et Discord à recharger.
+- Agent de test iteration_50 : 100 %. En ligne après Deploy (partager https://golden-pirates.org/?v=3 sur Discord pour rafraîchir l'aperçu).

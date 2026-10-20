@@ -116,6 +116,54 @@ def wax_seal(size, text="GP"):
     out.putalpha(alpha)
     return out
 
+
+def render_logo(size, bg=None):
+    """Logo officiel du site (components/LogoMark.jsx, viewBox 64) : étoile-boussole dorée au visage.
+    Rendu PIL ×8 puis réduit (anti-crénelage). bg=None → fond transparent."""
+    SS = 8
+    S = size * SS
+    k = S / 64.0
+    im = Image.new("RGBA", (S, S), (0, 0, 0, 0) if bg is None else bg + (255,))
+    def layer(op):
+        return Image.new("RGBA", (S, S), (0, 0, 0, 0)), op
+    G = (212, 175, 55)
+    INKC = (6, 9, 14)
+    def poly(pts, alpha=1.0, col=G):
+        lay = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+        ImageDraw.Draw(lay).polygon([(x * k, y * k) for x, y in pts], fill=col + (int(255 * alpha),))
+        im.alpha_composite(lay)
+    def ring(r, w, alpha=1.0):
+        lay = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+        c = 32 * k
+        ImageDraw.Draw(lay).ellipse([c - (r + w / 2) * k, c - (r + w / 2) * k, c + (r + w / 2) * k, c + (r + w / 2) * k], outline=G + (int(255 * alpha),), width=max(1, int(round(w * k))))
+        im.alpha_composite(lay)
+    def disc(cx, cy, r, col):
+        lay = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+        ImageDraw.Draw(lay).ellipse([(cx - r) * k, (cy - r) * k, (cx + r) * k, (cy + r) * k], fill=col + (255,))
+        im.alpha_composite(lay)
+    ring(29, 2.5)
+    ring(23.5, 0.75, 0.5)
+    poly([(32, 4), (35.2, 28.8), (32, 32), (28.8, 28.8)])
+    poly([(32, 60), (28.8, 35.2), (32, 32), (35.2, 35.2)])
+    poly([(4, 32), (28.8, 28.8), (32, 32), (28.8, 35.2)], 0.75)
+    poly([(60, 32), (35.2, 35.2), (32, 32), (35.2, 28.8)], 0.75)
+    poly([(12.2, 12.2), (28.4, 26.6), (26.6, 28.4)], 0.4)
+    poly([(51.8, 12.2), (37.4, 28.4), (35.6, 26.6)], 0.4)
+    poly([(12.2, 51.8), (26.6, 35.6), (28.4, 37.4)], 0.4)
+    poly([(51.8, 51.8), (35.6, 37.4), (37.4, 35.6)], 0.4)
+    disc(32, 32, 9.5, INKC)        # liseré sombre (stroke 1)
+    disc(32, 32, 9, G)
+    disc(28.6, 30.2, 2, INKC)      # yeux
+    disc(35.4, 30.2, 2, INKC)
+    lay = Image.new("RGBA", (S, S), (0, 0, 0, 0))   # bouche (trait arrondi)
+    dd = ImageDraw.Draw(lay)
+    w = 1.4 * k
+    dd.line([(29.4 * k, 36.4 * k), (34.6 * k, 36.4 * k)], fill=INKC + (255,), width=int(w))
+    for x in (29.4, 34.6):
+        dd.ellipse([x * k - w / 2, 36.4 * k - w / 2, x * k + w / 2, 36.4 * k + w / 2], fill=INKC + (255,))
+    im.alpha_composite(lay)
+    return im.resize((size, size), Image.LANCZOS)
+
 # ---------------------------------------------------------------- OG 1200x630
 W, H = 1200, 630
 src = Image.open(PUB + "feast-pirates.png").convert("RGB")
@@ -178,7 +226,7 @@ d.text((X, 516), "pour les équipages soudés. »", font=f_tag, fill=(214, 200, 
 
 # bandeau recrutement (coin bas droit)
 f_pl = font("Cinzel.ttf", 19, 800)
-label = "RECRUTEMENT OUVERT · RECRUITING"
+label = "CANDIDATURES OUVERTES · APPLY NOW"
 pw = tracked_width(d, label, f_pl, 3) + 56
 px1, py1 = W - 60 - pw, H - 108
 px2, py2 = W - 60, H - 58
@@ -190,34 +238,31 @@ d = ImageDraw.Draw(bg)
 d.polygon([(px1 + 14, py1), (px2 - 14, py1), (px2, (py1 + py2) / 2), (px2 - 14, py2), (px1 + 14, py2), (px1, (py1 + py2) / 2)], outline=GOLD, width=2)
 tracked(d, (px1 + 28, py1 + 13), label, f_pl, GOLD_HI, 3)
 
-# sceau de cire (coin haut droit)
-seal = wax_seal(150)
-sh = Image.new("L", (W, H), 0)
-sh.paste(seal.split()[3], (W - 214 + 8, 50 + 10))
-bg.paste(Image.new("RGB", (W, H), (0, 0, 0)), (0, 0), sh.filter(ImageFilter.GaussianBlur(9)).point(lambda v: int(v * 0.8)))
-bg.paste(seal, (W - 214, 50), seal)
+# médaillon du LOGO OFFICIEL (coin haut droit) : disque d'encre + halo doré + étoile-boussole au visage
+MS = 176
+mx, my = W - 60 - MS, 44
+halo = Image.new("L", (W, H), 0)
+ImageDraw.Draw(halo).ellipse([mx - 26, my - 26, mx + MS + 26, my + MS + 26], fill=120)
+bg.paste(Image.new("RGB", (W, H), (255, 190, 80)), (0, 0), halo.filter(ImageFilter.GaussianBlur(30)))
+shd = Image.new("L", (W, H), 0)
+ImageDraw.Draw(shd).ellipse([mx + 6, my + 10, mx + MS + 6, my + MS + 10], fill=200)
+bg.paste(Image.new("RGB", (W, H), (0, 0, 0)), (0, 0), shd.filter(ImageFilter.GaussianBlur(10)))
+d = ImageDraw.Draw(bg)
+d.ellipse([mx, my, mx + MS, my + MS], fill=INK)
+logo = render_logo(MS - 12)
+bg.paste(logo, (mx + 6, my + 6), logo)
 
 bg.save(PUB + "og-golden-pirates.jpg", "JPEG", quality=90, optimize=True, progressive=True)
 print("og ok", bg.size)
 
 # ---------------------------------------------------------------- ICÔNES
 def icon(size):
-    S = size * 4
-    im = Image.new("RGB", (S, S), INK)
-    d = ImageDraw.Draw(im)
-    c = S / 2
-    d.ellipse([S * 0.04, S * 0.04, S * 0.96, S * 0.96], outline=GOLD, width=int(S * 0.045))
-    d.ellipse([S * 0.12, S * 0.12, S * 0.88, S * 0.88], outline=(150, 118, 40), width=max(int(S * 0.012), 2))
-    for k in range(4):
-        a = k * math.pi / 2 - math.pi / 2
-        diamond(d, c + S * 0.42 * math.cos(a), c + S * 0.42 * math.sin(a), S * 0.04, GOLD_HI)
-    im = im.resize((size, size), Image.LANCZOS)
-    fnt = font("PirataOne-Regular.ttf", int(size * 0.50))
-    dd = ImageDraw.Draw(im)
-    tw = dd.textlength("GP", font=fnt)
-    bb = dd.textbbox((0, 0), "GP", font=fnt)
-    gold_text(im, ((size - tw) / 2, (size - (bb[3] - bb[1])) / 2 - bb[1]), "GP", fnt, shadow=False)
-    return im
+    """Icône = logo officiel sur fond d'encre (lisible sur onglets clairs/sombres, écran d'accueil iOS/Android)."""
+    im = Image.new("RGBA", (size, size), INK + (255,))
+    pad = max(1, round(size * (0.06 if size <= 64 else 0.10)))
+    lg = render_logo(size - 2 * pad)
+    im.alpha_composite(lg, (pad, pad))
+    return im.convert("RGB")
 
 icon(180).save(PUB + "apple-touch-icon.png", optimize=True)
 icon(192).save(PUB + "icon-192.png", optimize=True)

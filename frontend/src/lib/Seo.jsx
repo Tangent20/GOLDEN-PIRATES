@@ -9,8 +9,8 @@ const BASE_TITLE_EN = "GOLDEN PIRATES — Pirate alliance of Kingdom 1023 · Cal
 const BASE_DESC_EN =
   "Raise the black flag with GOLDEN PIRATES, the sovereign alliance of Kingdom 1023 in Call of Dragons. A tight crew, coordinated KvK: apply online today.";
 const CANONICAL_BASE = "https://golden-pirates.org";
-const OG_IMAGE = "https://golden-pirates.org/og-golden-pirates.jpg";
-const OG_ALT = "GOLDEN PIRATES — l'équipage trinque autour du coffre au trésor, sceau de cire GP, recrutement ouvert du Royaume 1023";
+const OG_IMAGE = "https://golden-pirates.org/og-golden-pirates.jpg?v=3";
+const OG_ALT = "GOLDEN PIRATES — l'équipage trinque autour du coffre au trésor, logo étoile-boussole dorée, candidatures ouvertes du Royaume 1023";
 
 const ROUTES = {
   "/suivi": {
