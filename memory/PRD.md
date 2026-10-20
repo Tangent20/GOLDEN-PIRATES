@@ -236,3 +236,6 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Conditions générales → **VERSION 2.2** : données collectées mises à jour (canal de contact facultatif Discord/Telegram/WhatsApp/en jeu, expérience uniquement pour les dossiers antérieurs au 20/10/2026, clé brouillon `gp_apply_draft_v2`), mention « aucun contact obligatoire ».
 - Bloc « Expérience » affiché uniquement s'il est renseigné (anciens dossiers) dans Suivi, Admin et PDF registre ; placeholder recherche admin inclut « contact ».
 - Vérifié : /, /suivi, /donations, /conditions, /admin sans erreur console ni débordement (390 px) ; PDF registre affiche le contact alternatif.
+
+## Bandeau « Conditions mises à jour (V2.2) » (2026-10-20)
+- `components/TermsBanner.jsx` monté dans App.js : bandeau bas discret (verre obsidienne, liseré or), affiché 1,4 s après l'arrivée, une seule fois par version (`gp_terms_seen` = CONDITIONS_VERSION), jamais sur /conditions (la lecture vaut prise de connaissance), fermeture croix ou lien LIRE → /conditions. z-index 90 (sous les modales). Clé déclarée dans la section Stockage local des CGU (FR/EN).

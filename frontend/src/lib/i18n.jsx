@@ -350,6 +350,12 @@ const fr = {
       another: "ENRÔLER UN AUTRE COMPTE",
     },
   },
+  termsBanner: {
+    title: (v) => `CONDITIONS MISES À JOUR (V${v})`,
+    text: "Formulaire de recrutement sur une seule page et canal de contact facultatif (Discord ou autre). Rien d'autre ne change pour toi.",
+    read: "LIRE",
+    close: "Fermer le bandeau",
+  },
   status: {
     pending: { label: "EN EXAMEN", long: "En cours d'examen par le Conseil des Capitaines" },
     accepted: { label: "ACCEPTÉ À BORD", long: "Accepté — convocation imminente dans ta Bouteille à la Mer, prépare tes affaires" },
@@ -1140,6 +1146,12 @@ const en = {
       follow: "TRACK MY APPLICATION",
       another: "ENLIST ANOTHER ACCOUNT",
     },
+  },
+  termsBanner: {
+    title: (v) => `TERMS UPDATED (V${v})`,
+    text: "One-page recruitment form and optional contact channel (Discord or other). Nothing else changes for you.",
+    read: "READ",
+    close: "Close the banner",
   },
   status: {
     pending: { label: "UNDER REVIEW", long: "Under review by the Council of Captains" },
