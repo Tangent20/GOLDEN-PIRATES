@@ -954,8 +954,10 @@ function ButinPanel() {
   const [amount, setAmount] = useState("");
   const [email, setEmail] = useState("");
   const [messageTxt, setMessageTxt] = useState("");
-  // Date du don (datetime-local) — vide = maintenant. Permet de rattraper un don d'hier.
-  const [whenAt, setWhenAt] = useState("");
+  // Date & heure du don (séparées pour compatibilité mobile MIUI/Xiaomi).
+  // Vide = maintenant. Permet de rattraper un don reçu hier.
+  const [whenDate, setWhenDate] = useState("");
+  const [whenTime, setWhenTime] = useState("");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [goal, setGoal] = useState("");
@@ -1003,19 +1005,27 @@ function ButinPanel() {
     if (pseudo.trim().length < 2 || !(amt >= 0.5)) return;
     setBusy(true);
     try {
+      // Construit la date du don si l'admin l'a renseignée
+      let whenISO = null;
+      if (whenDate) {
+        const t = whenTime && /^\d{2}:\d{2}$/.test(whenTime) ? whenTime : "12:00";
+        const local = new Date(`${whenDate}T${t}:00`);
+        if (!isNaN(local.getTime())) whenISO = local.toISOString();
+      }
       await api.post("/admin/donators", {
         pseudo: pseudo.trim(),
         amount: amt,
         email: email.trim() || null,
         message: messageTxt.trim() || null,
         currency: "EUR",
-        created_at: whenAt ? new Date(whenAt).toISOString() : null,
+        created_at: whenISO,
       });
       setPseudo("");
       setAmount("");
       setEmail("");
       setMessageTxt("");
-      setWhenAt("");
+      setWhenDate("");
+      setWhenTime("");
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
       await load();
@@ -1227,14 +1237,28 @@ function ButinPanel() {
           <label className="block font-mono2 text-[9px] tracking-[0.25em] text-gold/80 mb-1.5">
             {lang === "en" ? "DONATION DATE & TIME (OPTIONAL — EMPTY = NOW)" : "DATE & HEURE DU DON (FACULTATIF — VIDE = MAINTENANT)"}
           </label>
-          <input
-            data-testid="butin-when-input"
-            type="datetime-local"
-            value={whenAt}
-            onChange={(e) => setWhenAt(e.target.value)}
-            max={(() => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); })()}
-            className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone focus:border-gold focus:outline-none transition-colors [color-scheme:dark]"
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <input
+              data-testid="butin-when-date-input"
+              type="date"
+              value={whenDate}
+              onChange={(e) => setWhenDate(e.target.value)}
+              max={(() => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); })()}
+              aria-label={lang === "en" ? "Date" : "Date"}
+              style={{ colorScheme: "light" }}
+              className="w-full min-h-[46px] bg-bone/95 border border-gold/40 px-4 py-2.5 font-fell text-base text-ink focus:border-gold focus:outline-none transition-colors"
+            />
+            <input
+              data-testid="butin-when-time-input"
+              type="time"
+              value={whenTime}
+              onChange={(e) => setWhenTime(e.target.value)}
+              step={60}
+              aria-label={lang === "en" ? "Time" : "Heure"}
+              style={{ colorScheme: "light" }}
+              className="w-full min-h-[46px] bg-bone/95 border border-gold/40 px-4 py-2.5 font-fell text-base text-ink focus:border-gold focus:outline-none transition-colors"
+            />
+          </div>
           <p className="mt-1 font-fell italic text-xs text-mist">
             {lang === "en"
               ? "Use this to retroactively log a donation received yesterday or earlier."
