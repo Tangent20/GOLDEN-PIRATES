@@ -1265,7 +1265,7 @@ async def butin_goal_set(data: ButinGoalIn, _=Depends(require_admin)):
 # s2_start      : début de la Saison 2 (fin octobre) → compte à rebours « DÉBUT DE LA SAISON 2 »
 # recruit_open  : ouverture des portes de migration (fin de Saison 2) — None tant que la date
 #                 n'est pas annoncée par le jeu → « date annoncée prochainement »
-SEASON_DEFAULT = {"s2_start": "2026-10-31T23:59:59+00:00", "recruit_open": None}
+SEASON_DEFAULT = {"s2_start": "2026-10-31T22:59:00+00:00", "recruit_open": None}  # 31/10 23:59 heure de Paris
 
 
 def _iso_or_none(v):

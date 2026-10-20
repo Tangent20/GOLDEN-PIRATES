@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Anchor } from "lucide-react";
+import { Hourglass, Check, Flame, Anchor } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { scrollToId } from "@/App";
 import { useNavigate } from "react-router-dom";
@@ -101,6 +101,43 @@ export default function Countdown({ variant = "hero", testid = "countdown" }) {
   const { phase, target, now } = season;
   const ms = target ? Math.max(0, target - now) : 0;
   const { d, h, m, s } = splitMs(ms);
+
+  // TICKET DE RECRUTEMENT (formulaire + Espace Recrue) : il ne parle QUE de l'ouverture des portes
+  // (fin de Saison 2) — jamais du début de la Saison 2, qui n'intéresse pas une candidature.
+  if (variant === "line") {
+    const r = k.recruit;
+    const openAt = season.recruit_open ? new Date(season.recruit_open).getTime() : null;
+    const box = "inline-flex max-w-full flex-wrap items-center gap-x-2.5 gap-y-1 border px-4 py-2 font-mono2 text-[10px] sm:text-[11px] tracking-[0.22em] sm:tracking-[0.3em]";
+    if (phase === "open" || (openAt && openAt <= now)) {
+      return (
+        <p data-testid={testid} data-phase="open" className={`${box} border-emerald-400/50 bg-emerald-500/10 text-emerald-200`}>
+          <Anchor className="w-3.5 h-3.5 shrink-0" /> <span>{k.open.line}</span>
+        </p>
+      );
+    }
+    if (openAt) {
+      const left = splitMs(openAt - now);
+      return (
+        <p data-testid={testid} data-phase={phase} data-mode="countdown" className={`${box} border-gold/30 bg-ink/50 text-gold`}>
+          <Flame className="w-3.5 h-3.5 text-bloodglow shrink-0 animate-pulse" />
+          <span>{r.gates}</span>
+          <span data-testid={`${testid}-timer`} className="whitespace-nowrap text-goldlight">
+            J-{left.d} · {String(left.h).padStart(2, "0")}H{String(left.m).padStart(2, "0")}
+          </span>
+          <span className="whitespace-nowrap text-mist">· {formatSeasonDate(season.recruit_open, lang)}</span>
+        </p>
+      );
+    }
+    return (
+      <p data-testid={testid} data-phase={phase} data-mode="tbd" title={r.hint} className={`${box} border-gold/30 bg-ink/50 text-gold`}>
+        <Hourglass className="w-3.5 h-3.5 text-gold shrink-0" />
+        <span>{r.gates} : {r.unknown}</span>
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-emerald-300">
+          <Check className="w-3.5 h-3.5" /> {r.applyNow}
+        </span>
+      </p>
+    );
+  }
 
   // Pas (ou plus) de compte à rebours : Saison 2 lancée sans date de fin annoncée, ou portes ouvertes
   if (!target || ms <= 0) {

@@ -7,7 +7,7 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 
-const FALLBACK = { s2_start: "2026-10-31T23:59:59+00:00", recruit_open: null };
+const FALLBACK = { s2_start: "2026-10-31T22:59:00+00:00", recruit_open: null }; // 31/10 23:59 heure de Paris
 let cache = null;
 let inflight = null;
 const listeners = new Set();
@@ -62,7 +62,8 @@ export default function useSeason({ tick = false } = {}) {
 export function formatSeasonDate(iso, lang = "fr") {
   if (!iso) return "";
   try {
-    return new Date(iso).toLocaleDateString(lang === "en" ? "en-GB" : "fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    // Toujours en heure de Paris : même date affichée pour tous les marins, où qu'ils soient
+    return new Date(iso).toLocaleDateString(lang === "en" ? "en-GB" : "fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
   } catch {
     return "";
   }

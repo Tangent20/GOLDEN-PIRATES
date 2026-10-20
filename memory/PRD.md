@@ -203,3 +203,9 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - make_og.py : render_logo() reproduit components/LogoMark.jsx (viewBox 64) ; médaillon du logo en haut à droite de l'image de partage ; bandeau « CANDIDATURES OUVERTES · APPLY NOW » (migration = fin de Saison 2).
 - Icônes favicon.ico / favicon-48 / icon-192 / icon-512 / apple-touch-icon = LogoMark sur fond d'encre ; nouveau favicon SVG exact /logo.svg ; ?v=3 sur toutes les URL (index.html, Seo.jsx, site.webmanifest) pour forcer navigateurs et Discord à recharger.
 - Agent de test iteration_50 : 100 %. En ligne après Deploy (partager https://golden-pirates.org/?v=3 sur Discord pour rafraîchir l'aperçu).
+
+## 2026-10-20 — Tickets de recrutement clarifiés (fin du mélange début de Saison 2 / ouverture des portes)
+- Tickets apply-countdown (formulaire) et suivi-countdown (/suivi) : ne parlent QUE de l'ouverture des portes (fin de Saison 2) → « OUVERTURE DES PORTES : DATE ANNONCÉE PROCHAINEMENT ✓ CANDIDATURES DÉJÀ OUVERTES » ; date connue → J-xx + date ; passée → « PORTES OUVERTES — LE CONSEIL EMBARQUE » (vert). Plus jamais « DÉBUT DE LA SAISON 2 » à côté du formulaire.
+- Bug de date : 31/10 23:59:59 UTC s'affichait « 1 novembre » en France → défaut s2_start = 2026-10-31T22:59:00Z (31/10 23:59 Paris) + toutes les dates de saison formatées en Europe/Paris.
+- Le compte à rebours du début de Saison 2 ne vit plus que dans la frise (« DÈS LE 31 OCTOBRE 2026 · J-11 »).
+- Agent de test iteration_51 : OK ; remarque FR/EN = faux positif (mauvais sélecteur), vérifié : EN « GATES OPEN : DATE ANNOUNCED SOON · APPLICATIONS ALREADY OPEN ». Calendrier réel restauré.

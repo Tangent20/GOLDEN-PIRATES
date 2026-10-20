@@ -18,7 +18,9 @@ export default function Timeline() {
   const L = s.statusLabels;
   const statusOf = (i) => (i < cur ? L.done : i === cur ? (i === 3 ? L.openNow : L.current) : i === 3 ? L.wait : L.next);
   const dateOf = (i) =>
-    i === 2 ? s.dateFrom(formatSeasonDate(season.s2_start, lang).toUpperCase())
+    i === 2
+      ? s.dateFrom(formatSeasonDate(season.s2_start, lang).toUpperCase()) +
+        (season.phase === "pre" ? ` · J-${Math.max(0, Math.floor((new Date(season.s2_start).getTime() - Date.now()) / 86400000))}` : "")
       : i === 3 ? (season.recruit_open ? s.dateFrom(formatSeasonDate(season.recruit_open, lang).toUpperCase()) : s.dateTbd)
         : null;
   return (
