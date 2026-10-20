@@ -6,10 +6,7 @@
 // • « Réduire les animations » activé (iOS/Android/Windows/macOS) : défilement natif instantané.
 // • Zones internes (Bouteille à la Mer, Tanière, listes, menus, fenêtres) : défilent seules,
 //   sans entraîner la page (allowNestedScroll + overscroll-behavior: contain).
-import Lenis from "lenis";
 
-const NO_SMOOTH_SELECTOR =
-  '[data-lenis-prevent],[role="dialog"],[role="listbox"],[role="menu"],[data-radix-popper-content-wrapper],[data-sonner-toaster]';
 
 const mq = (q) => (typeof window !== "undefined" && window.matchMedia ? window.matchMedia(q).matches : false);
 
@@ -18,19 +15,12 @@ export const prefersReducedMotion = () => mq("(prefers-reduced-motion: reduce)")
 /** Appareil purement tactile (aucune souris / pavé) → défilement natif. */
 export const isTouchOnly = () => mq("(pointer: coarse)") && !mq("(any-pointer: fine)");
 
+// Défilement NATIF partout (ordinateur, tablette, iOS, Android) : le lissage JavaScript (Lenis)
+// entrait en conflit avec le défilement doux intégré des navigateurs (Chrome/Edge/Windows) et
+// provoquait de petits « figements » à chaque cran de molette. Le navigateur fait mieux, seul.
+// La fonction reste en place pour garder la même API (null = natif).
 export function createLenis() {
-  if (typeof window === "undefined") return null;
-  if (prefersReducedMotion() || isTouchOnly()) return null;
-  return new Lenis({
-    lerp: 0.12, // suit la molette de près (pas de traînée d'1 s+)
-    smoothWheel: true,
-    syncTouch: false, // le tactile reste natif même sur les PC tactiles
-    wheelMultiplier: 1,
-    autoRaf: true,
-    allowNestedScroll: true,
-    stopInertiaOnNavigate: true,
-    prevent: (node) => !!(node && node.closest && node.closest(NO_SMOOTH_SELECTOR)),
-  });
+  return null;
 }
 
 /** Position de l'élément dans la page, SANS les transformations CSS (animations d'apparition). */

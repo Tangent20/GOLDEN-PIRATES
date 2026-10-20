@@ -160,8 +160,8 @@ export default function Hero() {
       onMouseMove={onMouseMove}
       className="hero-root relative min-h-[100svh] flex flex-col overflow-hidden"
     >
-      <motion.div className="absolute inset-0" style={{ y: bgY, scale: bgScale }}>
-        <img src={HERO_BG} alt={s.imgAlt} className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
+      <motion.div className="absolute inset-0 will-change-transform [backface-visibility:hidden]" style={{ y: bgY, scale: bgScale }}>
+        <img decoding="async" src={HERO_BG} alt={s.imgAlt} className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
       </motion.div>
       <div className="absolute inset-0 bg-gradient-to-b from-ink/80 via-ink/55 to-ink hero-veil" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(6,9,14,0.85)_85%)]" />

@@ -4,7 +4,7 @@ export default function Grain() {
   return (
     <div
       aria-hidden="true"
-      className="grain-layer pointer-events-none fixed inset-0 z-[90] opacity-[0.13] mix-blend-soft-light"
+      className="grain-layer pointer-events-none fixed inset-0 z-[90] opacity-[0.06]"
       style={{ backgroundImage: NOISE }}
     />
   );

@@ -3,7 +3,7 @@ import { Anchor, Compass, Swords } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 const EASE = [0.16, 1, 0.3, 1];
-const FEAST_IMG = "/feast-pirates.png";
+const FEAST_IMG = "/img/feast-pirates.jpg";
 
 const rise = {
   initial: { opacity: 0, y: 40 },
@@ -61,7 +61,7 @@ export default function Manifesto() {
           >
             <div className="relative frame-plate border border-gold/25 p-2 sm:p-3 bg-deep">
               <div className="overflow-hidden">
-                <motion.img
+                <motion.img decoding="async"
                   src={FEAST_IMG}
                   alt={s.imgAlt}
                   loading="lazy"

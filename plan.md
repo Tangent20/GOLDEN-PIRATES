@@ -1,4 +1,4 @@
-# plan.md — Golden Pirates : Correctifs post-déploiement + refonte Donations (MISE À JOUR)
+# plan.md — Golden Pirates : Correctifs post-déploiement + Donations + **Bug P0 “réinitialisation”** (MISE À JOUR)
 
 ## 1) Objectifs
 - ✅ Corriger les 3 bugs critiques post-déploiement :
@@ -8,6 +8,7 @@
 - ✅ Refaire **Donations.jsx** “de zéro” côté UI/UX : plus simple, sans doublons, mobile-first, et 100% fonctionnel.
 - ✅ Injecter et afficher le **don réel 3€** (LOHMIN RUI, 19 Oct 2026, tx `5FX6898643003571P`) pour que la jauge/le hall reflètent la réalité.
 - ✅ Valider l’ensemble via **testing_agent_v3** (backend + frontend) avant remise au Capitaine.
+- ✅ **NOUVEAU (P0)** : Corriger le bug « **tout se réinitialise au retour sur le site** » (brouillons + dashboard admin).
 
 ---
 
@@ -95,12 +96,59 @@
 
 ---
 
+### Phase 5 — **P0 Correctif “Réinitialisation au retour” (brouillons + dashboard admin)**
+**But :** supprimer l’impression de perte de données au retour sur le site :
+- côté visiteur/recrue : brouillon candidature et parcours utilisateur stable.
+- côté admin : données rechargées automatiquement au retour d’onglet/fenêtre (zéro “ancienne version”).
+
+**Constats (diagnostic)**
+- ✅ Les données backend **persistent correctement** en MongoDB (vérifié par requêtes Mongo + tests curl + flux declare/insert).
+- ✅ Les endpoints dynamiques renvoient des headers `Cache-Control: no-store, no-cache, must-revalidate`.
+- ✅ Cloudflare : `cf-cache-status: DYNAMIC` et pas de cache agressif.
+- ✅ Aucun script/cron destructeur au démarrage ; cron de rétention RGPD :
+  - déclenché via `/api/cron/keep-alive` toutes les 15 min (rate-limit 1h)
+  - ne purge que les données très anciennes :
+    - rejections > 30j, applications inactives > 365j, dons > 3 ans.
+
+**Fixes appliqués (réalisés)**
+1. ✅ **Frontend – brouillon candidature (ApplyForm)**
+   - Fichier : `/app/frontend/src/components/ApplyForm.jsx`
+   - Fix : ajout d’un garde-fou `userClearedRef`.
+   - Effet : le brouillon `localStorage` (`gp_apply_draft`) **n’est plus effacé** quand l’état passe temporairement à `EMPTY` (cas remount React/StrictMode). Effacement uniquement :
+     - quand l’utilisateur clique « effacer », ou
+     - quand le formulaire est soumis avec succès.
+
+2. ✅ **Frontend – dashboard admin (rafraîchissement “au retour”)**
+   - Fichier : `/app/frontend/src/pages/Admin.jsx`
+   - Fix : ajout de listeners `visibilitychange` + `focus` pour relancer `loadAll()`.
+   - Effet : au retour sur l’onglet/fenêtre, le Conseil voit systématiquement les données fraîches (candidatures + stats).
+
+3. ✅ **Frontend – Butin (admin) : rafraîchissement dons au retour**
+   - Fichier : `/app/frontend/src/pages/Admin.jsx` (ButinPanel)
+   - Fix : ajout de `visibilitychange` + `focus` pour relancer le `load()` du butin.
+   - Effet : la liste des dons ne “disparaît” pas au retour et reste synchronisée.
+
+**Testing (réalisé)**
+- ✅ `testing_agent_v3` exécuté : `/app/test_reports/iteration_55.json`
+  - Backend : **90.5%**
+  - Frontend : **70%** (les 2 alertes “HIGH” étaient des faux positifs/écarts de sélecteurs ou de scénario :
+    - `input-pseudo` visible seulement à l’étape 0,
+    - `admin-stats-frame` est le bon sélecteur, pas `admin-stats`).
+- ✅ Vérification manuelle Playwright :
+  - un brouillon à l’étape 3 (“MarinTest”) **survit au reload** et restaure bien l’étape (ÉTAPE 4/5 en UI).
+- ✅ DB nettoyée des données de test.
+
+**Checkpoint :** ✅ bug P0 “réinitialisation” **corrigé** (perception + robustesse).
+
+---
+
 ## 3) Next Actions
 1. ✅ Déploiement en l’état : prêt production (flux donateur clair + butin visible).
-2. 🔎 Recommandé (optionnel) :
+2. ✅ Bug P0 “réinitialisation au retour” : corrigé et retesté.
+3. 🔎 Recommandé (optionnel) :
    - Ajouter un **index unique** MongoDB sur `donators.provider_tx` (anti-doublon renforcé).
    - Ajouter dans l’admin une recherche/outil “marquer confirmé” par `provider_tx` si besoin.
-3. 📌 Action côté Capitaine (process) :
+4. 📌 Action côté Capitaine (process) :
    - Lorsqu’un don PayPal arrive, le Conseil **confirme** le bordereau dans l’admin si la déclaration a été faite, ou **ajoute** le don manuellement si le donateur ne déclare pas.
 
 ---
@@ -110,4 +158,8 @@
 - ✅ Admin : confirmation enlève le watermark ; rejet bloque la facture.
 - ✅ Public : hall/jauge reflètent au moins **3€** (don LOHMIN RUI) sans doublons.
 - ✅ Rack : codes persistants + sync périodique (60s) sans désync.
-- ✅ `testing_agent_v3` : scénarios essentiels validés ; rapport `iteration_42.json` disponible.
+- ✅ Bug P0 “réinitialisation” :
+  - brouillon candidature persistant (pas d’effacement par race condition),
+  - dashboard admin rafraîchi automatiquement au retour d’onglet.
+- ✅ Testing :
+  - `iteration_42.json` (Donations/Rack) et `iteration_55.json` (persistance/retour) disponibles.

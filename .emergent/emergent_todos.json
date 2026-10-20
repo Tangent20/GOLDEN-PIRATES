@@ -1,0 +1,42 @@
+[
+  {
+    "content": "Explorer la structure du projet et identifier les fichiers clés",
+    "status": "completed"
+  },
+  {
+    "content": "Vérifier s'il existe un cron/startup script qui purge la DB",
+    "status": "completed"
+  },
+  {
+    "content": "Inspecter ApplyForm.jsx logique de brouillon localStorage",
+    "status": "completed"
+  },
+  {
+    "content": "Vérifier les headers Cache-Control sur routes API backend (OK: no-store)",
+    "status": "completed"
+  },
+  {
+    "content": "Vérifier la config axios/fetch frontend et index.html meta (OK)",
+    "status": "completed"
+  },
+  {
+    "content": "Vérifier endpoints donations/applications pour perte de données (OK: données persistent)",
+    "status": "completed"
+  },
+  {
+    "content": "Appliquer safeguards: draft wipe-proof + admin auto-reload on focus/visibility",
+    "status": "completed"
+  },
+  {
+    "content": "Nettoyer la donation de test insérée en DB",
+    "status": "completed"
+  },
+  {
+    "content": "Tester avec testing_agent_v3 flux complets (visiteur, recrue, admin)",
+    "status": "completed"
+  },
+  {
+    "content": "Vérifier manuellement draft persistance sur reload + mobile viewport",
+    "status": "completed"
+  }
+]

@@ -63,6 +63,17 @@ function ScrollManager() {
 function App() {
   useEffect(() => {
     if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+    // Pré-décodage des grandes illustrations pendant les temps morts : quand le visiteur
+    // descend, elles sont déjà prêtes → aucun « figement » au moment où elles entrent à l'écran.
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1200));
+    idle(() => {
+      ["/img/feast-pirates.jpg", "/img/code-pieces.jpg", "/img/recit-mer.jpg", "/img/butin-tresor.jpg"].forEach((src) => {
+        const im = new Image();
+        im.decoding = "async";
+        im.src = src;
+        im.decode?.().catch(() => {});
+      });
+    });
     // Ordinateur : Lenis adouci ; tactile / « réduire les animations » : défilement natif (null)
     const lenis = createLenis();
     window.__lenis = lenis;

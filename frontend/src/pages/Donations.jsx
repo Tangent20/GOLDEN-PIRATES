@@ -350,7 +350,7 @@ export default function Donations() {
               className="relative border-2 border-gold/45 bg-deck frame-plate overflow-hidden"
             >
               <div className="relative h-40 sm:h-48 overflow-hidden">
-                <img src="/butin-tresor.png" alt="" className="w-full h-full object-cover" loading="eager" />
+                <img src="/img/butin-tresor.jpg" alt="" className="w-full h-full object-cover" loading="eager" decoding="async" width="768" height="1376" />
                 <div className="absolute inset-0 bg-gradient-to-t from-deck via-deck/40 to-transparent" />
                 <span className="absolute top-3 left-3 font-mono2 text-[9px] tracking-[0.3em] text-gold bg-ink/90 border border-gold/40 px-2.5 py-1">{t.gauge.title}</span>
               </div>

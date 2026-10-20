@@ -49,7 +49,7 @@ export default function PirateCode() {
             className="lg:col-span-4 hidden lg:block"
           >
             <div className="relative frame-plate border border-gold/25 p-2 bg-ink rotate-2 hover:rotate-0 transition-transform duration-700">
-              <img src={COINS_IMG} alt={s.imgAlt} loading="lazy" className="w-full h-52 object-cover" />
+              <img decoding="async" src={COINS_IMG} alt={s.imgAlt} loading="lazy" className="w-full h-52 object-cover" />
               <p className="font-mono2 text-[10px] tracking-[0.3em] text-mist px-2 py-3">{s.imgCaption}</p>
             </div>
           </motion.div>

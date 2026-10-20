@@ -280,19 +280,31 @@ export default function ApplyForm() {
   };
 
   // ---------- Brouillon auto (survit à un rechargement / un appel entrant) ----------
+  // Garde-fou : on n'EFFACE JAMAIS un brouillon valide tant que l'utilisateur n'a pas
+  // explicitement cliqué sur « Effacer » (clearDraft) ou envoyé le formulaire (result).
+  // Un remount React en mode strict ou un bref retour à EMPTY n'écrase donc plus les données.
+  const userClearedRef = useRef(false);
   useEffect(() => {
     if (result) return;
     const t = setTimeout(() => {
       try {
         const empty = JSON.stringify(form) === JSON.stringify(EMPTY);
-        if (empty) localStorage.removeItem(DRAFT_KEY);
-        else localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step: Math.min(step, 3), at: Date.now() }));
+        if (empty) {
+          // On n'efface le brouillon QUE si l'utilisateur l'a demandé explicitement.
+          if (userClearedRef.current) {
+            localStorage.removeItem(DRAFT_KEY);
+            userClearedRef.current = false;
+          }
+        } else {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step: Math.min(step, 3), at: Date.now() }));
+        }
       } catch {}
     }, 400);
     return () => clearTimeout(t);
   }, [form, step, result]);
 
   const clearDraft = () => {
+    userClearedRef.current = true;
     try { localStorage.removeItem(DRAFT_KEY); } catch {}
     setForm(EMPTY);
     setStep(0);
@@ -404,6 +416,7 @@ export default function ApplyForm() {
     try {
       const { data } = await api.post("/applications", payload);
       saveBottle(data.tracking_code, data.pseudo || payload.pseudo, data.status || "pending");
+      userClearedRef.current = true;
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       setResult(data);
     } catch (err) {

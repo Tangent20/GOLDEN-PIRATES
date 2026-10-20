@@ -981,6 +981,20 @@ function ButinPanel() {
 
   useEffect(() => { load(); }, []);
 
+  // L'écran du Butin se re-synchronise à chaque retour sur l'onglet / fenêtre :
+  // garantit que la liste des dons ne « disparaît » pas après un instant d'inactivité.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
+
   const add = async () => {
     if (busy) return;
     const amt = parseFloat((amount || "").replace(",", "."));
@@ -1635,6 +1649,22 @@ export default function Admin() {
         setAuthed(false);
       });
   }, [loadAll]);
+
+  // Quand l'onglet redevient visible ou que la fenêtre reprend le focus,
+  // on retire silencieusement les candidatures + stats pour voir l'état réel
+  // du serveur (anti « j'ai l'impression que tout a été réinitialisé »).
+  useEffect(() => {
+    if (!authed) return undefined;
+    const refresh = () => {
+      if (document.visibilityState === "visible") loadAll();
+    };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [authed, loadAll]);
 
   // Hub partagé — fusionne les /admin/stats + /admin/conversations avec Nav (1 seul fetch au lieu de 2),
   // pause automatique si l'onglet dort (économie batterie Mac/iPad/iPhone/Android).
