@@ -125,6 +125,9 @@ export default function Countdown({ variant = "hero", testid = "countdown" }) {
             J-{left.d} · {String(left.h).padStart(2, "0")}H{String(left.m).padStart(2, "0")}
           </span>
           <span className="whitespace-nowrap text-mist">· {formatSeasonDate(season.recruit_open, lang)}</span>
+          <span data-testid={`${testid}-status`} className="inline-flex items-center gap-1.5 whitespace-nowrap text-emerald-300">
+            <Check className="w-3.5 h-3.5" /> {r.recruitOpen}
+          </span>
         </p>
       );
     }
@@ -133,7 +136,7 @@ export default function Countdown({ variant = "hero", testid = "countdown" }) {
         <Hourglass className="w-3.5 h-3.5 text-gold shrink-0" />
         <span>{r.gates} : {r.unknown}</span>
         <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-emerald-300">
-          <Check className="w-3.5 h-3.5" /> {r.applyNow}
+          <Check className="w-3.5 h-3.5" /> <span data-testid={`${testid}-status`}>{r.applyNow}</span>
         </span>
       </p>
     );

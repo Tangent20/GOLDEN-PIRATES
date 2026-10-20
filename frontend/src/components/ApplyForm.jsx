@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { saveBottle } from "@/lib/rack";
 import useRole from "@/lib/role";
 import { smoothScrollTo, lockScroll, unlockScroll } from "@/lib/scroll";
+import useSeason from "@/lib/season";
 
 const EASE = [0.16, 1, 0.3, 1];
 const DRAFT_KEY = "gp_apply_draft";
@@ -242,6 +243,7 @@ function RolePanel({ role, latest, c, s, navigate, onOverride, stats, panelRef }
 
 export default function ApplyForm() {
   const { c, lang } = useLang();
+  const season = useSeason();
   const s = c.apply;
   const w = s.wizard;
   const navigate = useNavigate();
@@ -500,7 +502,7 @@ export default function ApplyForm() {
                 <Countdown variant="line" testid="apply-countdown" />
               </div>
             </div>
-            <p className="font-fell text-base sm:text-lg text-bone/80 leading-relaxed mb-6">{s.intro}</p>
+            <p data-testid="apply-intro" className="font-fell text-base sm:text-lg text-bone/80 leading-relaxed mb-6">{season.recruit_open ? s.introRecruit : s.intro}</p>
 
             <button
               type="button"

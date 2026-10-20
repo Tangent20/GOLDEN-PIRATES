@@ -73,7 +73,7 @@ const fr = {
   },
   pirate: {
     welcome: {
-      visitor: "UN NAVIRE EN VUE — L'ÉQUIPAGE RECRUTE",
+      visitor: "UN NAVIRE EN VUE — REJOINS L'ÉQUIPAGE",
       recruit: (p) => `BON RETOUR À BORD, ${p}`,
       council: "CAPITAINE SUR LE PONT — LE NAVIRE T'ATTEND",
     },
@@ -204,7 +204,8 @@ const fr = {
     eyebrow: "Le rôle d'équipage — 05",
     title1: "Monte à bord, ",
     titleGold: "marin",
-    intro: "Les portes du Royaume 1023 ne s'ouvrent qu'à la fin de la Saison 2 — loi de migration de Call of Dragons, aucun capitaine n'y déroge. Mais le rôle d'équipage est déjà ouvert : scelle ton serment maintenant, ta bouteille sera la première repêchée par le Conseil.",
+    intro: "Les portes du Royaume 1023 ne s'ouvrent qu'à la fin de la Saison 2 — loi de migration de Call of Dragons, aucun capitaine n'y déroge. Mais les pré-inscriptions sont déjà ouvertes : scelle ton serment maintenant, ta bouteille sera la première repêchée par le Conseil.",
+    introRecruit: "La date officielle est tombée : le recrutement est ouvert pour la fin de la Saison 2 — loi de migration de Call of Dragons. Scelle ton serment maintenant, le Conseil embarque les meilleurs marins en premier.",
     migrationBanner: "LOI DE MIGRATION : LES PORTES N'OUVRENT QU'EN FIN DE SAISON 2",
     bullets: [
       "Puissance visée : {MIN} à {MAX}+ — Article I du Code",
@@ -372,7 +373,7 @@ const fr = {
     },
     s2Unknown: {
       eyebrow: "LA SAISON 2 EST LANCÉE",
-      title: "Les portes de migration ouvriront en fin de Saison 2 — la date sera annoncée ici dès que le jeu la publie. Le rôle d'équipage reste ouvert : dépose ta candidature maintenant, elle sera traitée en priorité.",
+      title: "Les portes de migration ouvriront en fin de Saison 2 — la date sera annoncée ici dès que le jeu la publie. Les pré-inscriptions restent ouvertes : dépose ta candidature maintenant, elle sera traitée en priorité.",
       line: "SAISON 2 EN COURS · PORTES : FIN DE SAISON (DATE À VENIR)",
     },
     open: {
@@ -382,8 +383,9 @@ const fr = {
     },
     recruit: {
       gates: "OUVERTURE DES PORTES",
-      unknown: "DATE ANNONCÉE PROCHAINEMENT",
-      applyNow: "CANDIDATURES DÉJÀ OUVERTES",
+      unknown: "DATE OFFICIELLE ANNONCÉE PROCHAINEMENT",
+      applyNow: "PRÉ-INSCRIPTIONS OUVERTES",
+      recruitOpen: "RECRUTEMENT OUVERT",
       hint: "La date d'ouverture des portes (fin de Saison 2) sera affichée ici dès que le jeu l'annonce.",
     },
     openCta: "POSTULER MAINTENANT",
@@ -849,7 +851,7 @@ const en = {
   },
   pirate: {
     welcome: {
-      visitor: "SHIP AHOY — THE CREW IS RECRUITING",
+      visitor: "SHIP AHOY — JOIN THE CREW",
       recruit: (p) => `WELCOME BACK ABOARD, ${p}`,
       council: "CAPTAIN ON DECK — THE SHIP AWAITS",
     },
@@ -980,7 +982,8 @@ const en = {
     eyebrow: "The crew roll — 05",
     title1: "Come aboard, ",
     titleGold: "sailor",
-    intro: "The gates of Kingdom 1023 only open at the end of Season 2 — Call of Dragons' migration law, no captain escapes it. But the crew roll is already open: seal your oath now and your bottle will be the first the Council fishes out.",
+    intro: "The gates of Kingdom 1023 only open at the end of Season 2 — Call of Dragons' migration law, no captain escapes it. But pre-registration is already open: seal your oath now and your bottle will be the first the Council fishes out.",
+    introRecruit: "The official date is out: recruitment is open for the end of Season 2 — Call of Dragons' migration law. Seal your oath now, the Council boards the best sailors first.",
     migrationBanner: "MIGRATION LAW: THE GATES ONLY OPEN AT THE END OF SEASON 2",
     bullets: [
       "Target power: {MIN} to {MAX}+ — Article I of the Code",
@@ -1148,7 +1151,7 @@ const en = {
     },
     s2Unknown: {
       eyebrow: "SEASON 2 HAS BEGUN",
-      title: "The migration gates will open at the end of Season 2 — the date will be announced here as soon as the game publishes it. The crew roll stays open: apply now, your file will be handled first.",
+      title: "The migration gates will open at the end of Season 2 — the date will be announced here as soon as the game publishes it. Pre-registration stays open: apply now, your file will be handled first.",
       line: "SEASON 2 UNDERWAY · GATES: END OF SEASON (DATE TO COME)",
     },
     open: {
@@ -1158,8 +1161,9 @@ const en = {
     },
     recruit: {
       gates: "GATES OPEN",
-      unknown: "DATE ANNOUNCED SOON",
-      applyNow: "APPLICATIONS ALREADY OPEN",
+      unknown: "OFFICIAL DATE ANNOUNCED SOON",
+      applyNow: "PRE-REGISTRATION OPEN",
+      recruitOpen: "RECRUITMENT OPEN",
       hint: "The gates opening date (end of Season 2) will be shown here as soon as the game announces it.",
     },
     openCta: "APPLY NOW",

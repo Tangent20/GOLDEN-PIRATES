@@ -1,7 +1,7 @@
 """Génère l'image de partage (Open Graph) + les icônes GOLDEN PIRATES.
 Base : illustration du site (feast-pirates.png). Polices : celles du site (OFL)."""
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-import math, random
+import math, random, os
 
 F = "/app/scripts/og/fonts/"
 PUB = "/app/frontend/public/"
@@ -226,7 +226,7 @@ d.text((X, 516), "pour les équipages soudés. »", font=f_tag, fill=(214, 200, 
 
 # bandeau recrutement (coin bas droit)
 f_pl = font("Cinzel.ttf", 19, 800)
-label = "CANDIDATURES OUVERTES · APPLY NOW"
+label = os.environ.get("OG_LABEL", "PRÉ-INSCRIPTIONS OUVERTES · PRE-REGISTRATION OPEN")
 pw = tracked_width(d, label, f_pl, 3) + 56
 px1, py1 = W - 60 - pw, H - 108
 px2, py2 = W - 60, H - 58
@@ -252,7 +252,7 @@ d.ellipse([mx, my, mx + MS, my + MS], fill=INK)
 logo = render_logo(MS - 12)
 bg.paste(logo, (mx + 6, my + 6), logo)
 
-bg.save(PUB + "og-golden-pirates.jpg", "JPEG", quality=90, optimize=True, progressive=True)
+bg.save(PUB + os.environ.get("OG_OUT", "og-golden-pirates.jpg"), "JPEG", quality=90, optimize=True, progressive=True)
 print("og ok", bg.size)
 
 # ---------------------------------------------------------------- ICÔNES

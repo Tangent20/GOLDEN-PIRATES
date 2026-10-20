@@ -1308,6 +1308,19 @@ async def season_set(data: SeasonIn, _=Depends(require_admin)):
     return {"ok": True, "s2_start": s2, "recruit_open": ro}
 
 
+# Image de partage (Discord, WhatsApp, Facebook…) qui suit le calendrier du Conseil :
+# date officielle de fin de Saison 2 scellée → « RECRUTEMENT OUVERT », sinon « PRÉ-INSCRIPTIONS OUVERTES ».
+_OG_DIR = Path(__file__).parent / "static" / "og"
+
+
+@api_router.get("/og-image.jpg")
+async def og_image():
+    from fastapi.responses import FileResponse
+    season = await get_season()
+    name = "og-recrutement.jpg" if season.get("recruit_open") else "og-preinscription.jpg"
+    return FileResponse(_OG_DIR / name, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=1800"})
+
+
 # ---------- Factures de don (parchemin pirate PDF / Excel, FR/EN) ----------
 from donations_invoice import (
     generate_invoice_pdf,

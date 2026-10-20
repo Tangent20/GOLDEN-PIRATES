@@ -209,3 +209,9 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Bug de date : 31/10 23:59:59 UTC s'affichait « 1 novembre » en France → défaut s2_start = 2026-10-31T22:59:00Z (31/10 23:59 Paris) + toutes les dates de saison formatées en Europe/Paris.
 - Le compte à rebours du début de Saison 2 ne vit plus que dans la frise (« DÈS LE 31 OCTOBRE 2026 · J-11 »).
 - Agent de test iteration_51 : OK ; remarque FR/EN = faux positif (mauvais sélecteur), vérifié : EN « GATES OPEN : DATE ANNOUNCED SOON · APPLICATIONS ALREADY OPEN ». Calendrier réel restauré.
+
+## 2026-10-20 — « PRÉ-INSCRIPTIONS OUVERTES » → « RECRUTEMENT OUVERT » automatique
+- Règle : tant que la date officielle de fin de Saison 2 (recruit_open) n'est pas scellée dans le Calendrier des saisons → « PRÉ-INSCRIPTIONS OUVERTES » ; dès qu'elle l'est → « RECRUTEMENT OUVERT » (ticket formulaire + /suivi, intro du formulaire apply-intro / introRecruit, plaque Saison 2, FR/EN).
+- Bandeau visiteur neutre « UN NAVIRE EN VUE — REJOINS L'ÉQUIPAGE ».
+- Image de partage dynamique : GET /api/og-image.jpg sert backend/static/og/og-preinscription.jpg ou og-recrutement.jpg selon le calendrier ; og:image / twitter:image / Seo.jsx = /api/og-image.jpg?v=4 ; make_og.py paramétrable (OG_LABEL, OG_OUT).
+- Agent de test iteration_52 : 100 %. Calendrier réel restauré (s2 31/10 23:59 Paris, fin S2 non annoncée).
