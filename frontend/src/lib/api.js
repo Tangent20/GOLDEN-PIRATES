@@ -20,4 +20,17 @@ export function formatApiError(e) {
   return String(detail);
 }
 
+/**
+ * Fuseau IANA du navigateur, à passer aux endpoints PDF/XLSX pour que
+ * chaque reçu/export affiche l'heure dans le fuseau du téléchargeur.
+ * Retombe sur "Europe/Paris" si l'API Intl est indisponible.
+ */
+export function getBrowserTz() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Paris";
+  } catch {
+    return "Europe/Paris";
+  }
+}
+
 export default api;

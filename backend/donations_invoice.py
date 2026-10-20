@@ -125,32 +125,45 @@ WAX_RED_LIGHT = colors.HexColor("#B91C1C")
 COUNCIL_MAIL = "golden.pirates@outlook.fr"
 
 
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-# Fuseau d'affichage des factures : les horodatages sont stockés en UTC
-# en base, mais les reçus/factures montrent toujours l'heure de Paris
-# pour éviter toute confusion ("17:00 saisi, 15:00 affiché").
-PARIS_TZ = ZoneInfo("Europe/Paris")
+# Fuseau d'affichage par défaut des factures : Paris. Les appelants peuvent
+# fournir n'importe quel fuseau IANA (`tz_name`) pour imprimer dans l'heure
+# locale du destinataire — chaque reçu reflète alors l'heure de son pays.
+DEFAULT_TZ = ZoneInfo("Europe/Paris")
 
 
-def _fmt_date(iso: Optional[str], fmt: str) -> str:
+def _resolve_tz(tz_name: Optional[str]):
+    """Transforme un nom IANA en ZoneInfo. Retombe sur Paris si inconnu/invalide
+    (évite tout crash côté PDF/Excel pour un fuseau mal saisi côté client)."""
+    if not tz_name:
+        return DEFAULT_TZ
+    try:
+        return ZoneInfo(tz_name)
+    except (ZoneInfoNotFoundError, Exception):
+        return DEFAULT_TZ
+
+
+def _fmt_date(iso: Optional[str], fmt: str, tz=None) -> str:
     if not iso:
         return ""
     try:
         dt = datetime.fromisoformat(iso)
-        # Aucun tzinfo => on considère l'heure comme UTC (comportement serveur).
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=ZoneInfo("UTC"))
-        return dt.astimezone(PARIS_TZ).strftime(fmt)
+        target = tz or DEFAULT_TZ
+        return dt.astimezone(target).strftime(fmt)
     except (TypeError, ValueError):
         return str(iso)
 
 
 # --------------------- PDF (parchemin pirate) ---------------------
-def generate_invoice_pdf(donator: dict, lang: str = "fr", pending: bool = False) -> bytes:
+def generate_invoice_pdf(donator: dict, lang: str = "fr", pending: bool = False, tz_name: Optional[str] = None) -> bytes:
     """Génère la facture PDF 100% pirate pour un donateur enrichi.
-    Si pending=True, ajoute un bandeau rouge "EN ATTENTE" et un filigrane rouge supplémentaire."""
+    Si pending=True, ajoute un bandeau rouge "EN ATTENTE" et un filigrane rouge supplémentaire.
+    tz_name : fuseau IANA pour imprimer la date (ex. "America/New_York"). Défaut : Europe/Paris."""
     L = INVOICE_I18N["fr" if lang not in ("fr", "en") else lang]
+    _tz = _resolve_tz(tz_name)
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
     W, H = A4
@@ -274,7 +287,7 @@ def generate_invoice_pdf(donator: dict, lang: str = "fr", pending: bool = False)
 
     # ---- Numéro bordereau + date, en haut à droite dans un cartouche ----
     rid = str(donator.get("receipt_id", "GPD-?"))
-    created = _fmt_date(donator.get("created_at"), L["date_fmt"])
+    created = _fmt_date(donator.get("created_at"), L["date_fmt"], _tz)
     # Décalage vertical si bandeau pending présent (évite le chevauchement)
     cart_offset = -8 * mm if pending else 0
     cart_x, cart_y, cart_w, cart_h = W - 90 * mm, H - 64 * mm + cart_offset, 70 * mm, 14 * mm
@@ -455,10 +468,12 @@ def _draw_curved_label(c, cx, cy, r, text):
 
 
 # --------------------- Excel (feuille parchemin) ---------------------
-def generate_invoice_xlsx(donator: dict, lang: str = "fr", pending: bool = False) -> bytes:
+def generate_invoice_xlsx(donator: dict, lang: str = "fr", pending: bool = False, tz_name: Optional[str] = None) -> bytes:
     """Génère la facture Excel pirate pour un donateur enrichi.
-    Si pending=True, ajoute une ligne rouge "EN ATTENTE" sous le titre."""
+    Si pending=True, ajoute une ligne rouge "EN ATTENTE" sous le titre.
+    tz_name : fuseau IANA (ex. "Asia/Tokyo"). Défaut : Europe/Paris."""
     L = INVOICE_I18N["fr" if lang not in ("fr", "en") else lang]
+    _tz = _resolve_tz(tz_name)
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = L["title"][:31]
@@ -512,7 +527,7 @@ def generate_invoice_xlsx(donator: dict, lang: str = "fr", pending: bool = False
 
     # Bordereau + date
     rid = str(donator.get("receipt_id", "GPD-?"))
-    created = _fmt_date(donator.get("created_at"), L["date_fmt"])
+    created = _fmt_date(donator.get("created_at"), L["date_fmt"], _tz)
     ws["B6"] = L["bordereau"]
     ws["C6"] = rid
     ws["D6"] = L["date"]
@@ -637,9 +652,11 @@ def _xlsx_kv(ws, row, col, k, v, bold=False, size=10):
 
 
 # --------------------- Récapitulatif global des dons (XLSX) ---------------------
-def generate_donations_summary_xlsx(donators: list, total: float, goal: float, lang: str = "fr") -> bytes:
-    """Récapitulatif Excel pirate de l'ensemble des dons reçus."""
+def generate_donations_summary_xlsx(donators: list, total: float, goal: float, lang: str = "fr", tz_name: Optional[str] = None) -> bytes:
+    """Récapitulatif Excel pirate de l'ensemble des dons reçus.
+    tz_name : fuseau IANA (ex. "Europe/London"). Défaut : Europe/Paris."""
     L = INVOICE_I18N["fr" if lang not in ("fr", "en") else lang]
+    _tz = _resolve_tz(tz_name)
     FR = lang == "fr"
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -694,7 +711,7 @@ def generate_donations_summary_xlsx(donators: list, total: float, goal: float, l
             if key == "amount":
                 values.append(float(d.get("amount", 0)))
             elif key == "created_at":
-                values.append(_fmt_date(d.get(key), L["date_fmt"]))
+                values.append(_fmt_date(d.get(key), L["date_fmt"], _tz))
             else:
                 values.append(d.get(key, "") or "")
         for i, v in enumerate(values, 1):

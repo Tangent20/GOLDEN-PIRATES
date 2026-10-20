@@ -667,20 +667,32 @@ STATUS_HEX = {  # textes colorés
 }
 
 
-def fmt_dt(v):
+def _resolve_tz(tz_name: str | None):
+    """Convertit un nom IANA en ZoneInfo. Retombe sur Paris si inconnu/invalide."""
+    if not tz_name:
+        return PARIS_TZ
+    try:
+        from zoneinfo import ZoneInfoNotFoundError  # local import
+        return ZoneInfo(tz_name)
+    except Exception:
+        return PARIS_TZ
+
+
+def fmt_dt(v, tz=None):
     if not v:
         return ""
     try:
         dt = datetime.fromisoformat(v)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(PARIS_TZ).strftime("%d/%m/%Y %H:%M")
+        return dt.astimezone(tz or PARIS_TZ).strftime("%d/%m/%Y %H:%M")
     except (TypeError, ValueError):
         return str(v)
 
 
-def fmt_row(doc, lang="fr"):
+def fmt_row(doc, lang="fr", tz=None):
     L = EXPORT_I18N[lang]
+    _tz = tz or PARIS_TZ
     row = []
     for key, _ in EXPORT_COLUMNS:
         v = doc.get(key, "")
@@ -691,7 +703,7 @@ def fmt_row(doc, lang="fr"):
                 dt = datetime.fromisoformat(v)
                 if dt.tzinfo is None:
                     dt = dt.replace(tzinfo=timezone.utc)
-                v = dt.astimezone(PARIS_TZ).strftime(L["date_fmt"])
+                v = dt.astimezone(_tz).strftime(L["date_fmt"])
             except (TypeError, ValueError):
                 pass
         row.append("" if v is None else str(v))
@@ -699,10 +711,12 @@ def fmt_row(doc, lang="fr"):
 
 
 @api_router.get("/admin/export/xlsx")
-async def export_xlsx(lang: str = "fr", _: str = Depends(require_admin)):
+async def export_xlsx(lang: str = "fr", tz: str | None = None, _: str = Depends(require_admin)):
     """Registre Excel — thème parchemin pirate (3 feuilles : Synthèse, Bios, Registre complet).
-    Palette or/encre/parchemin cohérente avec le PDF et les factures."""
+    Palette or/encre/parchemin cohérente avec le PDF et les factures.
+    tz : fuseau IANA (ex. "America/Los_Angeles"). Défaut : Europe/Paris."""
     L = EXPORT_I18N[lang if lang in ("fr", "en") else "fr"]
+    _tz = _resolve_tz(tz)
     docs = await db.applications.find({}).sort("created_at", -1).to_list(2000)
 
     # ===== Palette pirate (hex sans #) =====
@@ -759,7 +773,7 @@ async def export_xlsx(lang: str = "fr", _: str = Depends(require_admin)):
     # Édité le ... italique
     ws.merge_cells("A3:F3")
     c = ws["A3"]
-    c.value = f"{L['edited_on']} {fmt_dt(now_utc().isoformat())} · {len(docs)} {L['in_register']}"
+    c.value = f"{L['edited_on']} {fmt_dt(now_utc().isoformat(), _tz)} · {len(docs)} {L['in_register']}"
     c.font = Font(color=INK, italic=True, size=9)
     c.alignment = Alignment(horizontal="center", vertical="center")
     for col in "ABCDEF":
@@ -821,7 +835,7 @@ async def export_xlsx(lang: str = "fr", _: str = Depends(require_admin)):
     wsB.merge_cells("A2:E2")
     bios_count = sum(1 for d in docs if (d.get("peer_note") or "").strip())
     c = wsB["A2"]
-    c.value = f"{len(docs)} {L['recrues']} · {bios_count} {L['notes_mer']} · {L['edited_on']} {fmt_dt(now_utc().isoformat())}"
+    c.value = f"{len(docs)} {L['recrues']} · {bios_count} {L['notes_mer']} · {L['edited_on']} {fmt_dt(now_utc().isoformat(), _tz)}"
     c.font = Font(color=INK, italic=True, size=9.5)
     c.alignment = Alignment(horizontal="center", vertical="center")
     for col in "ABCDE":
@@ -842,7 +856,7 @@ async def export_xlsx(lang: str = "fr", _: str = Depends(require_admin)):
             d.get("power", ""),
             STATUS_I18N[lang if lang in ("fr", "en") else "fr"].get(d.get("status"), d.get("status", "")),
             (d.get("peer_note") or "").strip() or "—",
-            fmt_dt(d.get("created_at")) or "—",
+            fmt_dt(d.get("created_at"), _tz) or "—",
         ]
         rn = 4 + n
         # Print-friendly : lignes blanches (pas de parchemin alterné)
@@ -900,7 +914,7 @@ async def export_xlsx(lang: str = "fr", _: str = Depends(require_admin)):
     for n, d in enumerate(docs_ordered):
         rn = hdr_row + 1 + n
         # Print-friendly : lignes blanches (pas de parchemin alterné)
-        for i, v in enumerate(fmt_row(d, lang), 1):
+        for i, v in enumerate(fmt_row(d, lang, _tz), 1):
             cell = ws2.cell(row=rn, column=i, value=v)
             cell.border = border
             cell.alignment = Alignment(vertical="top", wrap_text=i in wrap_idx)
@@ -1496,15 +1510,15 @@ async def _fetch_donator_by_receipt(receipt_id: str) -> dict:
     return doc
 
 
-def _invoice_response(donator: dict, fmt: str, lang: str):
+def _invoice_response(donator: dict, fmt: str, lang: str, tz_name: str | None = None):
     lang = _normalize_lang(lang)
     rid = str(donator.get("receipt_id") or "GPD-UNKNOWN")
     pending = _don_status(donator) == "pending"
     if fmt == "pdf":
-        payload = generate_invoice_pdf(donator, lang=lang, pending=pending)
+        payload = generate_invoice_pdf(donator, lang=lang, pending=pending, tz_name=tz_name)
         media = "application/pdf"
     else:
-        payload = generate_invoice_xlsx(donator, lang=lang, pending=pending)
+        payload = generate_invoice_xlsx(donator, lang=lang, pending=pending, tz_name=tz_name)
         media = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     filename = invoice_filenames(rid, fmt, lang)
     headers = {
@@ -1515,8 +1529,8 @@ def _invoice_response(donator: dict, fmt: str, lang: str):
 
 
 @api_router.get("/admin/donators/export/xlsx")
-async def admin_donators_summary_xlsx(lang: str = "fr", _=Depends(require_admin)):
-    """Récapitulatif Excel complet (admin)."""
+async def admin_donators_summary_xlsx(lang: str = "fr", tz: str | None = None, _=Depends(require_admin)):
+    """Récapitulatif Excel complet (admin). tz : fuseau IANA, défaut Paris."""
     lang = _normalize_lang(lang)
     docs = await db.donators.find(CONFIRMED_DON).sort("created_at", -1).to_list(1000)
     enriched = []
@@ -1534,7 +1548,7 @@ async def admin_donators_summary_xlsx(lang: str = "fr", _=Depends(require_admin)
         })
     total = round(sum(float(x.get("amount", 0)) for x in enriched), 2)
     goal = await get_butin_goal()
-    payload = generate_donations_summary_xlsx(enriched, total, goal, lang=lang)
+    payload = generate_donations_summary_xlsx(enriched, total, goal, lang=lang, tz_name=tz)
     stamp = now_utc().strftime("%Y-%m-%d")
     fname = f"GOLDEN-PIRATES-BUTIN-COMPLET-{stamp}-{lang.upper()}.xlsx"
     return StreamingResponse(
@@ -1545,15 +1559,15 @@ async def admin_donators_summary_xlsx(lang: str = "fr", _=Depends(require_admin)
 
 
 @api_router.get("/admin/donators/{donator_id}/invoice/pdf")
-async def admin_donator_invoice_pdf(donator_id: str, lang: str = "fr", _=Depends(require_admin)):
+async def admin_donator_invoice_pdf(donator_id: str, lang: str = "fr", tz: str | None = None, _=Depends(require_admin)):
     donator = await _fetch_donator_by_id(donator_id)
-    return _invoice_response(donator, "pdf", lang)
+    return _invoice_response(donator, "pdf", lang, tz)
 
 
 @api_router.get("/admin/donators/{donator_id}/invoice/xlsx")
-async def admin_donator_invoice_xlsx(donator_id: str, lang: str = "fr", _=Depends(require_admin)):
+async def admin_donator_invoice_xlsx(donator_id: str, lang: str = "fr", tz: str | None = None, _=Depends(require_admin)):
     donator = await _fetch_donator_by_id(donator_id)
-    return _invoice_response(donator, "xlsx", lang)
+    return _invoice_response(donator, "xlsx", lang, tz)
 
 
 def _require_not_rejected(donator: dict):
@@ -1564,28 +1578,31 @@ def _require_not_rejected(donator: dict):
 
 
 @api_router.get("/donations/invoice/pdf")
-async def public_donator_invoice_pdf(receipt_id: str, lang: str = "fr"):
+async def public_donator_invoice_pdf(receipt_id: str, lang: str = "fr", tz: str | None = None):
     """Récupération publique de la facture via bordereau receipt_id.
     - pending : facture provisoire marquée "EN ATTENTE" (filigrane rouge)
     - confirmed : facture définitive
-    - rejected : bloqué (409)"""
+    - rejected : bloqué (409)
+    tz : fuseau IANA (ex. "America/New_York"). Défaut : Europe/Paris."""
     donator = await _fetch_donator_by_receipt(receipt_id)
     _require_not_rejected(donator)
-    return _invoice_response(donator, "pdf", lang)
+    return _invoice_response(donator, "pdf", lang, tz)
 
 
 @api_router.get("/donations/invoice/xlsx")
-async def public_donator_invoice_xlsx(receipt_id: str, lang: str = "fr"):
+async def public_donator_invoice_xlsx(receipt_id: str, lang: str = "fr", tz: str | None = None):
     donator = await _fetch_donator_by_receipt(receipt_id)
     _require_not_rejected(donator)
-    return _invoice_response(donator, "xlsx", lang)
+    return _invoice_response(donator, "xlsx", lang, tz)
 
 
 @api_router.get("/admin/export/pdf")
-async def export_pdf(lang: str = "fr", _: str = Depends(require_admin)):
+async def export_pdf(lang: str = "fr", tz: str | None = None, _: str = Depends(require_admin)):
     """Registre PDF — parchemin pirate (100% immersif, en-tête sur chaque page, cadre or).
-    Dimensions pensées pour une impression A4 propre + lecture mobile/tablette/iOS."""
+    Dimensions pensées pour une impression A4 propre + lecture mobile/tablette/iOS.
+    tz : fuseau IANA (ex. "Asia/Tokyo"). Défaut : Europe/Paris."""
     L = EXPORT_I18N[lang if lang in ("fr", "en") else "fr"]
+    _tz = _resolve_tz(tz)
     docs = await db.applications.find({}).sort("created_at", -1).to_list(2000)
 
     # ===== Couleurs parchemin (identiques aux factures) =====
@@ -1673,7 +1690,7 @@ async def export_pdf(lang: str = "fr", _: str = Depends(require_admin)):
         canv.setFont("GPSans-Italic", 7.3)
         canv.drawCentredString(
             Wp / 2, Hp - TOP_M + 6.5 * mm,
-            f"{L['edited_on']} {fmt_dt(now_utc().isoformat())}  ·  {len(docs)} {L['in_register']}",
+            f"{L['edited_on']} {fmt_dt(now_utc().isoformat(), _tz)}  ·  {len(docs)} {L['in_register']}",
         )
         # Ancre décorative (ligne or à ras du bandeau)
         canv.setStrokeColor(GOLD)
@@ -1788,7 +1805,7 @@ async def export_pdf(lang: str = "fr", _: str = Depends(require_admin)):
              Paragraph(L["labels"]["troops"], lab), Paragraph(escape(d.get("troops", "")) or "—", val)],
             [Paragraph(L["labels"]["activity"], lab), Paragraph(escape(d.get("activity", "")) or "—", val),
              Paragraph(L["labels"]["discord"], lab), Paragraph(escape(d.get("discord", "")) or "—", val)],
-            [Paragraph(L["labels"]["filed"], lab), Paragraph(fmt_dt(d.get("created_at")) or "—", val), "", ""],
+            [Paragraph(L["labels"]["filed"], lab), Paragraph(fmt_dt(d.get("created_at"), _tz) or "—", val), "", ""],
             [Paragraph(L["labels"]["exp"], lab), Paragraph(escape(d.get("experience", "")) or L["no_exp"], val_italic), "", ""],
             [Paragraph(L["labels"]["msg"], lab), Paragraph(escape(d.get("message", "")) or "—", val), "", ""],
         ]

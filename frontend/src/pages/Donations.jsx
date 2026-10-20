@@ -15,7 +15,7 @@ import { DONATIONS_COPY } from "@/lib/donationsCopy";
 import Seo from "@/lib/Seo";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import api from "@/lib/api";
+import api, { getBrowserTz } from "@/lib/api";
 import { smoothScrollTo } from "@/lib/scroll";
 import DonorProfileSheet from "@/components/DonorProfileSheet";
 
@@ -246,7 +246,7 @@ export default function Donations() {
     setDlBusy(`${rid}-${fmt}`);
     try {
       const { data, headers } = await api.get(`/donations/invoice/${fmt}`, {
-        params: { receipt_id: rid, lang }, responseType: "blob", timeout: 120000,
+        params: { receipt_id: rid, lang, tz: getBrowserTz() }, responseType: "blob", timeout: 120000,
       });
       const m = /filename="?([^";]+)"?/.exec(headers?.["content-disposition"] || "");
       const url = URL.createObjectURL(data);

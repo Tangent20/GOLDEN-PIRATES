@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import StatusBadge from "@/components/StatusBadge";
 import ChatBox from "@/components/ChatBox";
 import { ShipWheel } from "@/components/NavIcons";
-import api, { formatApiError } from "@/lib/api";
+import api, { formatApiError, getBrowserTz } from "@/lib/api";
 import { useLang } from "@/lib/i18n";
 import { useAdminNotif } from "@/lib/notifHub";
 import { lockScroll, unlockScroll } from "@/lib/scroll";
@@ -1152,7 +1152,7 @@ function ButinPanel() {
     setSealing(fmt);
     try {
       await downloadBlob(
-        `/admin/donators/${sealTarget.id}/invoice/${fmt}?lang=${pickLang}`,
+        `/admin/donators/${sealTarget.id}/invoice/${fmt}?lang=${pickLang}&tz=${encodeURIComponent(getBrowserTz())}`,
         `GOLDEN-PIRATES-RECU-${sealTarget.receipt_id}.${fmt}`,
       );
       toast.success(a.exportDone);
@@ -1175,7 +1175,7 @@ function ButinPanel() {
   const exportAll = async (pickLang) => {
     try {
       await downloadBlob(
-        `/admin/donators/export/xlsx?lang=${pickLang}`,
+        `/admin/donators/export/xlsx?lang=${pickLang}&tz=${encodeURIComponent(getBrowserTz())}`,
         `GOLDEN-PIRATES-BUTIN-COMPLET-${pickLang.toUpperCase()}.xlsx`,
       );
       toast.success(a.exportDone);
@@ -2053,7 +2053,7 @@ export default function Admin() {
     // (plus de « sa me met noir » : avant, on fermait le modal avant même le téléchargement).
     try {
       // Délai étendu : un gros registre sur réseau lent ne doit pas casser l'export
-      const { data, headers } = await api.get(`/admin/export/${fmt}`, { params: { lang }, responseType: "blob", timeout: 120000 });
+      const { data, headers } = await api.get(`/admin/export/${fmt}`, { params: { lang, tz: getBrowserTz() }, responseType: "blob", timeout: 120000 });
       const m = /filename="?([^";]+)"?/.exec(headers?.["content-disposition"] || "");
       const url = URL.createObjectURL(data);
       const link = document.createElement("a");
