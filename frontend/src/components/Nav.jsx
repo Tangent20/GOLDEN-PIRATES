@@ -593,7 +593,7 @@ export default function Nav() {
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div
-          className="relative max-w-[1440px] mx-auto h-16 md:h-20 flex items-center justify-between gap-2 sm:gap-3"
+          className="relative max-w-[1440px] mx-auto h-16 md:h-20 flex items-center justify-between gap-2 sm:gap-3 overflow-x-clip"
           style={{
             paddingLeft: "max(1rem, env(safe-area-inset-left))",
             paddingRight: "max(1rem, env(safe-area-inset-right))",
@@ -605,12 +605,12 @@ export default function Nav() {
             data-testid="nav-logo"
             onClick={goHome}
             aria-label={n.home}
-            className="group flex items-center gap-2.5 md:gap-3 min-w-0 shrink-0 lg:px-2"
+            className="group flex items-center gap-2.5 md:gap-3 min-w-0 shrink lg:px-2"
           >
             <span className="brass-porthole relative grid place-items-center w-9 h-9 md:w-11 md:h-11 shrink-0 bg-ink">
               <LogoMark className="w-7 h-7 md:w-9 md:h-9 transition-transform duration-700 group-hover:rotate-[135deg]" />
             </span>
-            <span className="text-left leading-none min-w-0">
+            <span className="text-left leading-none min-w-0 overflow-hidden">
               <span className="block font-display text-[17px] min-[400px]:text-lg sm:text-xl md:text-2xl text-gold tracking-wide whitespace-nowrap text-glow-gold">
                 GOLDEN PIRATES
               </span>

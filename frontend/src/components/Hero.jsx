@@ -35,7 +35,7 @@ function CompassRose({ className = "" }) {
       ].map(([x1, y1, x2, y2], i) => (
         <path key={i} d={`M${x1} ${y1} L${x2} ${y2} L${x2} ${y1} Z`} fill="#D4AF37" opacity="0.35" />
       ))}
-      <text x="100" y="30" textAnchor="middle" fill="#D4AF37" fontSize="12" fontFamily="Cinzel Decorative, serif" opacity="0.8">N</text>
+      <text x="100" y="30" textAnchor="middle" fill="#D4AF37" fontSize="12" fontFamily="Pirata One, serif" opacity="0.8">N</text>
       <circle cx="100" cy="100" r="14" fill="#06090E" stroke="#D4AF37" strokeWidth="1.5" />
       <circle cx="100" cy="100" r="4" fill="#B91C1C" />
     </svg>

@@ -241,3 +241,8 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - `components/TermsBanner.jsx` monté dans App.js : bandeau bas discret (verre obsidienne, liseré or), affiché 1,4 s après l'arrivée, une seule fois par version (`gp_terms_seen` = CONDITIONS_VERSION), jamais sur /conditions (la lecture vaut prise de connaissance), fermeture croix ou lien LIRE → /conditions. z-index 90 (sous les modales). Clé déclarée dans la section Stockage local des CGU (FR/EN).
 
 - 2026-10-20 : bandeau « Conditions mises à jour » RETIRÉ à la demande de l'utilisateur (composant, i18n et mention CGU supprimés).
+
+## Correctif header « qui s'étire au chargement » (2026-10-20)
+- CAUSE : polices @fontsource en `font-display: swap` → le header s'affichait d'abord en police de secours (Cinzel Decorative / serif, bien plus larges : POSTULER 114 px au lieu de 85, logo 182 au lieu de 156) puis Pirata One arrivait → redimensionnement visible.
+- FIX : polices copiées dans `public/fonts` et déclarées inline dans `public/index.html` (preload des 3 critiques, `font-display: block` pour Pirata One + JetBrains Mono) ; polices de secours à métriques ajustées (`Pirata Fallback` 63 %, `Mono Fallback` 103 %, `Fell Fallback` 108 %, avec local() iOS/Android/Windows/Linux) ; header masqué (`html.gp-fonts-loading`) jusqu'à `document.fonts.ready` (max 1,2 s) ; Cinzel Decorative supprimée (imports, tailwind, CSS, Hero SVG, CGU) ; header `overflow-x-clip`, logo `shrink` + `overflow-hidden`.
+- Vérifié (polices ralenties 3 s) : hauteur header 64/80 px constante, écarts résiduels ≤ 5 px ; réseau normal : header invisible ~100 ms puis stable. Mobile 390, pliable 344, tablette 768, desktop 1920.

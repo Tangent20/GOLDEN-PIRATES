@@ -14,10 +14,10 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)'
       },
       fontFamily: {
-        display: ['"Pirata One"', '"Cinzel Decorative"', 'serif'],
-        decor: ['"Cinzel Decorative"', 'serif'],
-        fell: ['"IM Fell English"', 'Georgia', 'serif'],
-        mono2: ['"JetBrains Mono"', 'monospace']
+        display: ['"Pirata One"', '"Pirata Fallback"', 'serif'],
+        decor: ['"Pirata One"', '"Pirata Fallback"', 'serif'],
+        fell: ['"IM Fell English"', '"Fell Fallback"', 'Georgia', 'serif'],
+        mono2: ['"JetBrains Mono"', '"Mono Fallback"', 'monospace']
       },
       colors: {
         ink: '#06090E',

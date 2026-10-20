@@ -129,7 +129,7 @@ const fr = {
       title: "10 · Propriété intellectuelle",
       paras: [
         "Les textes, le logo, la mise en page, le code et les illustrations originales du Site appartiennent à son éditeur. Toute reproduction ou réutilisation sans autorisation écrite est interdite (articles L.122-4 et L.335-2 du Code de la propriété intellectuelle).",
-        "« Call of Dragons » et ses marques, logos et contenus appartiennent à Farlight Games ; le Site ne les revendique pas. Certaines illustrations sont des créations originales générées par intelligence artificielle pour le Site. Les photographies proviennent des banques libres de droits Pexels et Unsplash, sous leurs licences respectives. Les polices (Pirata One, Cinzel Decorative, IM Fell English, JetBrains Mono, Liberation) sont distribuées sous licence libre SIL Open Font License.",
+        "« Call of Dragons » et ses marques, logos et contenus appartiennent à Farlight Games ; le Site ne les revendique pas. Certaines illustrations sont des créations originales générées par intelligence artificielle pour le Site. Les photographies proviennent des banques libres de droits Pexels et Unsplash, sous leurs licences respectives. Les polices (Pirata One, IM Fell English, JetBrains Mono, Liberation) sont distribuées sous licence libre SIL Open Font License.",
       ],
     },
     {
@@ -313,7 +313,7 @@ const en = {
       title: "10 · Intellectual property",
       paras: [
         "The Site's texts, logo, layout, code and original illustrations belong to its editor. Any reproduction or reuse without written permission is prohibited (Articles L.122-4 and L.335-2 of the French Intellectual Property Code).",
-        "“Call of Dragons” and its trademarks, logos and content belong to Farlight Games; the Site claims none of them. Some illustrations are original AI-generated creations made for the Site. Photographs come from the royalty-free libraries Pexels and Unsplash, under their respective licences. The fonts (Pirata One, Cinzel Decorative, IM Fell English, JetBrains Mono, Liberation) are distributed under the free SIL Open Font License.",
+        "“Call of Dragons” and its trademarks, logos and content belong to Farlight Games; the Site claims none of them. Some illustrations are original AI-generated creations made for the Site. Photographs come from the royalty-free libraries Pexels and Unsplash, under their respective licences. The fonts (Pirata One, IM Fell English, JetBrains Mono, Liberation) are distributed under the free SIL Open Font License.",
       ],
     },
     {

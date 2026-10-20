@@ -39,7 +39,7 @@
     margin: 0;
     background-color: #06090e;
     color: #e8d8c8;
-    font-family: "IM Fell English", Georgia, serif;
+    font-family: "IM Fell English", "Fell Fallback", Georgia, serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -50,7 +50,7 @@
   }
 
   h1, h2, h3, .display {
-    font-family: "Pirata One", "Cinzel Decorative", serif;
+    font-family: "Pirata One", "Pirata Fallback", serif;
     font-weight: 400;
   }
 
