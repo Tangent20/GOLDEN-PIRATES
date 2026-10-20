@@ -1030,6 +1030,73 @@ async def donators_list():
     }
 
 
+@api_router.get("/donators/profile/{pseudo}")
+async def donator_profile(pseudo: str):
+    """
+    Fiche publique d'un donateur, cliquable depuis le Hall.
+    - Agrège TOUS ses dons CONFIRMÉS (jamais les pending/rejected).
+    - Si le pseudo correspond aussi à une candidature ACCEPTÉE (membre d'équipage),
+      on expose quelques stats de jeu (NON privées) pour prouver que c'est un vrai joueur.
+    - Jamais d'email, de code de suivi, de téléphone, de Discord brut, etc. (RGPD).
+    """
+    key = (pseudo or "").strip()
+    if len(key) < 2 or len(key) > 60:
+        raise HTTPException(status_code=404, detail="Pseudo introuvable.")
+
+    # Recherche insensible à la casse mais exacte (évite les faux positifs)
+    pseudo_rx = {"$regex": f"^{re.escape(key)}$", "$options": "i"}
+    docs = await db.donators.find({**CONFIRMED_DON, "pseudo": pseudo_rx}).sort("created_at", -1).to_list(100)
+    if not docs:
+        raise HTTPException(status_code=404, detail="Aucun don confirmé pour ce pseudo.")
+
+    # Si TOUS les dons sont anonymes → on ne révèle rien au public (respect du vœu du donateur)
+    if all(d.get("anonymous") for d in docs):
+        raise HTTPException(status_code=404, detail="Profil masqué par le donateur.")
+
+    total = round(sum(float(d.get("amount", 0)) for d in docs), 2)
+    count = len(docs)
+    first_at = docs[-1].get("created_at")
+    last_at = docs[0].get("created_at")
+
+    gifts = []
+    for d in docs:
+        if d.get("anonymous"):
+            continue  # on cache les dons spécifiquement marqués anonymes
+        gifts.append({
+            "amount": d.get("amount", 0),
+            "currency": (d.get("currency") or "EUR").upper(),
+            "created_at": d.get("created_at"),
+            # Message volontairement limité à 160 chars côté public (le reste reste privé Conseil)
+            "message": (d.get("message") or "")[:160] or None,
+        })
+
+    # Lien éventuel avec un marin accepté — on expose uniquement des données publiques.
+    recruit = None
+    app = await db.applications.find_one({"pseudo": pseudo_rx, "status": "accepted"})
+    if app:
+        recruit = {
+            "status": "crew",
+            "troops": app.get("troops") or None,
+            "troop_level": app.get("troop_level") or None,
+            "power": app.get("power") or None,  # ex: "80M" (déjà saisi en bande publique)
+            "experience": app.get("experience") or None,
+            "activity": app.get("activity") or None,
+            "joined_at": app.get("status_changed_at") or app.get("created_at"),
+        }
+
+    canonical = next((d.get("pseudo") for d in docs if not d.get("anonymous")), key)
+    return {
+        "pseudo": canonical,
+        "total": total,
+        "count": count,
+        "currency": gifts[0]["currency"] if gifts else "EUR",
+        "first_at": first_at,
+        "last_at": last_at,
+        "gifts": gifts,
+        "recruit": recruit,
+    }
+
+
 @api_router.get("/admin/donators")
 async def donators_list_admin(_=Depends(require_admin)):
     """Pont de commandement — vue complète (email, message, devise, statut) + rétro-fit receipt_id."""

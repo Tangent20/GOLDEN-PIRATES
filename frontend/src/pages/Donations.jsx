@@ -17,6 +17,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import api from "@/lib/api";
 import { smoothScrollTo } from "@/lib/scroll";
+import DonorProfileSheet from "@/components/DonorProfileSheet";
 
 const EASE = [0.22, 1, 0.36, 1];
 const WHY_ICONS = { ship: Ship, growth: TrendingUp, fest: Beer, free: Lock };
@@ -101,6 +102,9 @@ export default function Donations() {
 
   // Hall + jauge
   const [hall, setHall] = useState({ items: [], total: 0, goal: 0, count: 0, configured: true, loaded: false });
+
+  // Profil public du donateur (feuille modale ouverte au clic sur un item du Hall)
+  const [profilePseudo, setProfilePseudo] = useState(null);
 
   // Assistant de don (brouillon persistant : rien ne se perd si on quitte la page)
   const draft0 = useMemo(() => readJSON(DRAFT_KEY, {}), []);
@@ -729,24 +733,45 @@ export default function Donations() {
           <SectionHead icon={Skull} eyebrow={t.hall.eyebrow} title={t.hall.title} sub={t.hall.sub} testId="hall-title" />
           {hall.items.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {hall.items.map((it, i) => (
-                <motion.div
-                  key={it.id}
-                  initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }}
-                  transition={{ delay: Math.min(i * 0.03, 0.3), duration: 0.35, ease: EASE }}
-                  data-testid="hall-item"
-                  className="flex items-center gap-3.5 border border-gold/35 bg-deck p-4 min-w-0"
-                >
-                  <span className="wax-seal w-11 h-11 shrink-0 grid place-items-center font-display text-lg text-goldlight">
-                    {it.anonymous ? <Skull className="w-5 h-5" /> : (it.pseudo || "?").trim().charAt(0).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`font-display text-lg truncate ${it.anonymous ? "text-mist italic" : "text-bone"}`}>{it.anonymous ? t.hall.anon : it.pseudo}</p>
-                    <p className="font-mono2 text-[9px] tracking-[0.18em] text-gold/80 truncate">{dateFmt(it.created_at)}</p>
-                  </div>
-                  <span className="font-display text-xl text-gold shrink-0">{fmtAmt(it.amount)} €</span>
-                </motion.div>
-              ))}
+              {hall.items.map((it, i) => {
+                const clickable = !it.anonymous && (it.pseudo || "").trim().length >= 2;
+                const inner = (
+                  <>
+                    <span className="wax-seal w-11 h-11 shrink-0 grid place-items-center font-display text-lg text-goldlight">
+                      {it.anonymous ? <Skull className="w-5 h-5" /> : (it.pseudo || "?").trim().charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1 text-left">
+                      <p className={`font-display text-lg truncate ${it.anonymous ? "text-mist italic" : "text-bone"}`}>{it.anonymous ? t.hall.anon : it.pseudo}</p>
+                      <p className="font-mono2 text-[9px] tracking-[0.18em] text-gold/80 truncate">{dateFmt(it.created_at)}</p>
+                    </div>
+                    <span className="font-display text-xl text-gold shrink-0">{fmtAmt(it.amount)} €</span>
+                  </>
+                );
+                return (
+                  <motion.div
+                    key={it.id}
+                    initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }}
+                    transition={{ delay: Math.min(i * 0.03, 0.3), duration: 0.35, ease: EASE }}
+                    data-testid="hall-item"
+                  >
+                    {clickable ? (
+                      <button
+                        type="button"
+                        onClick={() => setProfilePseudo(it.pseudo)}
+                        aria-label={`${t.hall.openProfile || "Voir le profil"} — ${it.pseudo}`}
+                        data-testid="hall-item-btn"
+                        className="w-full flex items-center gap-3.5 border border-gold/35 bg-deck p-4 min-w-0 min-h-[72px] text-left hover:border-gold hover:bg-ink/40 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/60 active:bg-ink/60 transition-colors cursor-pointer"
+                      >
+                        {inner}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-3.5 border border-gold/35 bg-deck p-4 min-w-0 min-h-[72px]">
+                        {inner}
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
             </div>
           ) : (
             <div data-testid="hall-empty" className="text-center border border-gold/25 bg-deck px-5 py-10">
@@ -830,6 +855,14 @@ export default function Donations() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DonorProfileSheet
+        open={!!profilePseudo}
+        pseudo={profilePseudo}
+        lang={lang}
+        t={t.hall}
+        onClose={() => setProfilePseudo(null)}
+      />
 
       <Footer />
     </div>
