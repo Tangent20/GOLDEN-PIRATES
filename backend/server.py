@@ -447,7 +447,16 @@ async def admin_login(data: LoginInput, request: Request, response: Response):
 
 @api_router.post("/auth/logout")
 async def logout(response: Response):
-    response.delete_cookie("access_token", path="/")
+    # Les attributs doivent correspondre EXACTEMENT à ceux du set_cookie
+    # (secure + samesite=none), sinon le navigateur ignore la suppression.
+    response.delete_cookie(
+        "access_token", path="/", secure=True, httponly=True, samesite="none",
+    )
+    # Ceinture et bretelles : écrase aussi la valeur avec une expiration passée.
+    response.set_cookie(
+        key="access_token", value="", httponly=True, secure=True,
+        samesite="none", max_age=0, expires=0, path="/",
+    )
     return {"ok": True}
 
 

@@ -221,3 +221,6 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Bloquant 2 corrigé : CORS_ORIGINS='*' → allow_origins ['*'] + credentials (Starlette renvoie l'origine exacte).
 - /api/admin/applications : projection {"ip": 0} (IP jamais envoyée au navigateur).
 - deployment_agent : PASS ; agent de test iteration_53 : 100 % ; pytest 79/79 sur base propre.
+
+## Correctif final (pré-publication)
+- Déconnexion admin : le cookie `access_token` est désormais supprimé avec les mêmes attributs que lors de sa création (`Secure`, `SameSite=None`, `HttpOnly`, `Max-Age=0`). Vérifié : après logout, `/api/auth/me` → `authed:false` et routes admin → 401. Aucun bug connu restant.
