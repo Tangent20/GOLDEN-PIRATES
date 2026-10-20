@@ -954,6 +954,8 @@ function ButinPanel() {
   const [amount, setAmount] = useState("");
   const [email, setEmail] = useState("");
   const [messageTxt, setMessageTxt] = useState("");
+  // Date du don (datetime-local) — vide = maintenant. Permet de rattraper un don d'hier.
+  const [whenAt, setWhenAt] = useState("");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [goal, setGoal] = useState("");
@@ -1007,11 +1009,13 @@ function ButinPanel() {
         email: email.trim() || null,
         message: messageTxt.trim() || null,
         currency: "EUR",
+        created_at: whenAt ? new Date(whenAt).toISOString() : null,
       });
       setPseudo("");
       setAmount("");
       setEmail("");
       setMessageTxt("");
+      setWhenAt("");
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
       await load();
@@ -1218,6 +1222,24 @@ function ButinPanel() {
             rows={2}
             className="w-full bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone placeholder:text-bone/40 focus:border-gold focus:outline-none transition-colors resize-none"
           />
+        </div>
+        <div>
+          <label className="block font-mono2 text-[9px] tracking-[0.25em] text-gold/80 mb-1.5">
+            {lang === "en" ? "DONATION DATE & TIME (OPTIONAL — EMPTY = NOW)" : "DATE & HEURE DU DON (FACULTATIF — VIDE = MAINTENANT)"}
+          </label>
+          <input
+            data-testid="butin-when-input"
+            type="datetime-local"
+            value={whenAt}
+            onChange={(e) => setWhenAt(e.target.value)}
+            max={(() => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); })()}
+            className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone focus:border-gold focus:outline-none transition-colors [color-scheme:dark]"
+          />
+          <p className="mt-1 font-fell italic text-xs text-mist">
+            {lang === "en"
+              ? "Use this to retroactively log a donation received yesterday or earlier."
+              : "Utilise ce champ pour rattraper un don reçu hier ou un autre jour."}
+          </p>
         </div>
         <button
           type="button"

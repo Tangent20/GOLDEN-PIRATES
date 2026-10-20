@@ -960,6 +960,9 @@ class DonatorIn(BaseModel):
     currency: Optional[str] = Field(default="EUR", max_length=6)
     message: Optional[str] = Field(default=None, max_length=400)
     anonymous: bool = False
+    # Date du don (ISO) — permet au Conseil de rattraper un don reçu hier/avant-hier
+    # (ex. don disparu, saisie en retard). Vide = maintenant.
+    created_at: Optional[str] = Field(default=None, max_length=40)
 
 
 class ButinGoalIn(BaseModel):
@@ -1227,6 +1230,9 @@ async def donators_add(data: DonatorIn, _=Depends(require_admin)):
     email = (data.email or "").strip().lower()[:120] or None
     currency = (data.currency or "EUR").strip().upper()[:6]
     message = safe_text((data.message or "").strip())[:400] or None
+    # Date du don : saisie du Conseil (ex. don d'hier à rattraper) ou maintenant
+    chosen_at = _iso_or_none(data.created_at) if getattr(data, "created_at", None) else None
+    created_iso = chosen_at or now_utc().isoformat()
     doc = {
         "pseudo": safe_text(data.pseudo.strip())[:40],
         "amount": round(float(data.amount), 2),
@@ -1237,8 +1243,8 @@ async def donators_add(data: DonatorIn, _=Depends(require_admin)):
         "receipt_id": receipt_id,
         "status": "confirmed",
         "anonymous": bool(data.anonymous),
-        "confirmed_at": now_utc().isoformat(),
-        "created_at": now_utc().isoformat(),
+        "confirmed_at": created_iso,
+        "created_at": created_iso,
     }
     await db.donators.insert_one(doc)
     return {"ok": True, "receipt_id": receipt_id}
