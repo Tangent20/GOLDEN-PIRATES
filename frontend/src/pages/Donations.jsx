@@ -16,6 +16,7 @@ import Seo from "@/lib/Seo";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import api from "@/lib/api";
+import { smoothScrollTo } from "@/lib/scroll";
 
 const EASE = [0.22, 1, 0.36, 1];
 const WHY_ICONS = { ship: Ship, growth: TrendingUp, fest: Beer, free: Lock };
@@ -192,8 +193,7 @@ export default function Donations() {
   const remaining = Math.max(0, Math.round((hall.goal - hall.total) * 100) / 100);
 
   const goCoffre = () => {
-    const el = document.getElementById("coffre");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    smoothScrollTo("coffre");
   };
 
   // ----- Actions -----

@@ -3,6 +3,7 @@ import { Compass, ShieldCheck, Lock, Anchor, Map, Scroll, Crown } from "lucide-r
 import LogoMark from "./LogoMark";
 import { useLang } from "@/lib/i18n";
 import useRole from "@/lib/role";
+import { smoothScrollTo, scrollToTop } from "@/lib/scroll";
 
 const colTitle = "font-mono2 text-[10px] tracking-[0.35em] text-gold mb-5";
 const label = "font-mono2 text-[9px] tracking-[0.25em] text-mist mb-1.5";
@@ -50,16 +51,12 @@ export default function Footer() {
   }[variant];
 
   const backToTop = () => {
-    const lenis = window.__lenis;
-    if (lenis) lenis.scrollTo(0, { duration: 1.4 });
-    else window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
   };
   const goTo = (id) => {
     if (window.location.pathname !== "/") navigate("/#" + id);
     else
-      window.__lenis
-        ? window.__lenis.scrollTo("#" + id, { offset: -76 })
-        : document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      smoothScrollTo(id);
   };
 
   // Titre + icône de la 2e colonne selon rôle.

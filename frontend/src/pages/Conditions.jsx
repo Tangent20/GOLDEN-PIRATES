@@ -6,21 +6,14 @@ import Seo from "@/lib/Seo";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { ScrollText, ShieldCheck, Lock, Feather, Mail, Anchor, ArrowUp } from "lucide-react";
+import { smoothScrollTo, scrollToTop } from "@/lib/scroll";
 
 const EASE = [0.22, 1, 0.36, 1];
 const BADGE_ICONS = { free: ShieldCheck, shield: Lock, hand: Feather };
 
-const jump = (id) => {
-  const lenis = window.__lenis;
-  if (lenis) lenis.scrollTo(`#${id}`, { offset: -90, duration: 1.1 });
-  else document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-};
+const jump = (id) => smoothScrollTo(id);
 
-const toTop = () => {
-  const lenis = window.__lenis;
-  if (lenis) lenis.scrollTo(0, { duration: 1.2 });
-  else window.scrollTo({ top: 0, behavior: "smooth" });
-};
+const toTop = () => scrollToTop();
 
 function Toc({ d, variant }) {
   return (

@@ -13,6 +13,7 @@ import Countdown from "@/components/Countdown";
 import { Checkbox } from "@/components/ui/checkbox";
 import { saveBottle } from "@/lib/rack";
 import useRole from "@/lib/role";
+import { smoothScrollTo, lockScroll, unlockScroll } from "@/lib/scroll";
 
 const EASE = [0.16, 1, 0.3, 1];
 const DRAFT_KEY = "gp_apply_draft";
@@ -61,11 +62,8 @@ const readDraft = () => {
 
 const scrollToEl = (el, force = false) => {
   if (!el) return;
-  const top = el.getBoundingClientRect().top + window.scrollY - 96;
   if (!force && el.getBoundingClientRect().top > 70 && el.getBoundingClientRect().top < window.innerHeight * 0.4) return;
-  const lenis = window.__lenis;
-  if (lenis?.scrollTo) lenis.scrollTo(top, { duration: 0.8 });
-  else window.scrollTo({ top, behavior: "smooth" });
+  smoothScrollTo(el);
 };
 
 const copyText = async (text) => {
@@ -437,18 +435,14 @@ export default function ApplyForm() {
 
   useEffect(() => {
     if (!result) return;
-    const lenis = window.__lenis;
-    lenis?.stop?.();
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockScroll();
     const t = setTimeout(() => closeRef.current?.focus({ preventScroll: true }), 120);
     const onKey = (e) => { if (e.key === "Escape") closeResult(); };
     window.addEventListener("keydown", onKey);
     return () => {
       clearTimeout(t);
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-      lenis?.start?.();
+      unlockScroll();
     };
   }, [result, closeResult]);
 

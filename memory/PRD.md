@@ -183,3 +183,11 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Cookies/traceurs : liste exacte des clés locales ; polices auto-hébergées (@fontsource) et images dans /public/img → plus aucun appel Google Fonts / Pexels / Unsplash.
 - Dons : « reçu de don non fiscal » (PDF « REÇU DE BUTIN », fichiers GOLDEN-PIRATES-RECU-…, libellés REÇU/RECEIPT), mention + lien conditions à l'étape II du coffre.
 - Tests : pytest 79/79 ; agent de test : tout OK (FR/EN, 5 tailles d'écran, aucune requête externe). En ligne après Deploy.
+
+## 2026-10-20 — Stratégie de défilement (« swipe ») unifiée — lib/scroll.js
+- Ordinateur (souris/pavé) : Lenis 1.3 réactif (lerp 0.12 au lieu de duration 1.15 s « flottant »), autoRaf, allowNestedScroll, prevent sur fenêtres/menus/listes/toasts ; CSS officielle Lenis ajoutée (lenis-stopped, scroll-behavior).
+- Tactile pur (iPhone, iPad, Android) et « réduire les animations » : AUCUN Lenis → défilement natif (inertie/rebond iOS), plus de boucle d'animation permanente → zéro lag, batterie préservée.
+- smoothScrollTo() unique (App, Nav, Footer, ApplyForm, Suivi, Conditions, Donations) : arrivée pile sous la barre (hauteur réelle + 12 px), position calculée hors animations d'apparition + correction d'arrivée ; changement de page → haut instantané ; scrollRestoration manuel.
+- lockScroll/unlockScroll à compteur (html.gp-scroll-locked) : menu mobile, fenêtre de candidature, fenêtres Conseil (reçu de don, langue d'export) — avant, la page défilait derrière les fenêtres admin à la molette.
+- Zones internes (Bouteille, Tanière, tiroir, listes) : overscroll-behavior contain ; touch-action manipulation ; grain sans mix-blend sur tactile/mobile ; flou des onglets collants /suivi réservé ≥ md.
+- Mesures : nav desktop 92 px (80+12), mobile 76 px (64+12), Conditions TOC 92 px ; 53 i/s en émulation mobile ; agent de test iteration_48 : 98 % (2 remarques = limites d'émulation, vérifiées manuellement en tactile CDP : Lenis null + barre collante OK).

@@ -27,6 +27,7 @@ import api from "@/lib/api";
 import { useRecruitNotif, useAdminNotif, readLastSeen } from "@/lib/notifHub";
 import { scrollToId } from "@/App";
 import { useLang } from "@/lib/i18n";
+import { scrollToTop, lockScroll, unlockScroll } from "@/lib/scroll";
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -368,19 +369,15 @@ export default function Nav() {
 
   // ---- verrou du pont quand la carte est ouverte (iOS compris) ----
   useEffect(() => {
-    const lenis = window.__lenis;
-    const html = document.documentElement;
     if (open) {
-      lenis?.stop?.();
-      document.body.style.overflow = "hidden";
-      html.style.overflow = "hidden";
+      lockScroll();
       wasOpen.current = true;
       const t = setTimeout(() => closeRef.current?.focus({ preventScroll: true }), 60);
-      return () => clearTimeout(t);
+      return () => {
+        clearTimeout(t);
+        unlockScroll();
+      };
     }
-    document.body.style.overflow = "";
-    html.style.overflow = "";
-    lenis?.start?.();
     if (wasOpen.current) {
       wasOpen.current = false;
       toggleRef.current?.focus({ preventScroll: true });
@@ -388,14 +385,6 @@ export default function Nav() {
     return undefined;
   }, [open]);
 
-  useEffect(
-    () => () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-      window.__lenis?.start?.();
-    },
-    []
-  );
 
   // Échap ferme, Tab reste prisonnier de la carte (accessibilité clavier)
   useEffect(() => {
@@ -450,8 +439,7 @@ export default function Nav() {
     (path, hash) => {
       setOpen(false);
       if (pathname === path && !hash) {
-        const lenis = window.__lenis;
-        setTimeout(() => (lenis ? lenis.scrollTo(0, { duration: 1 }) : window.scrollTo({ top: 0, behavior: "smooth" })), 90);
+        setTimeout(() => scrollToTop(), 90);
         return;
       }
       navigate(hash ? `${path}#${hash}` : path, { state: { navTs: Date.now() } });
@@ -462,8 +450,7 @@ export default function Nav() {
   const goHome = () => {
     setOpen(false);
     if (onHome) {
-      const lenis = window.__lenis;
-      setTimeout(() => (lenis ? lenis.scrollTo(0, { duration: 1.1 }) : window.scrollTo({ top: 0, behavior: "smooth" })), 60);
+      setTimeout(() => scrollToTop(), 60);
     } else navigate("/");
   };
 

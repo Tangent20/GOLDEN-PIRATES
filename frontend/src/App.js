@@ -1,7 +1,7 @@
 import { useEffect, Component } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import Lenis from "lenis";
+import { createLenis, smoothScrollTo } from "@/lib/scroll";
 import { Toaster } from "@/components/ui/sonner";
 import { LangProvider } from "@/lib/i18n";
 import Seo from "@/lib/Seo";
@@ -13,9 +13,7 @@ import Admin from "@/pages/Admin";
 import Conditions from "@/pages/Conditions";
 
 export function scrollToId(id) {
-  const lenis = typeof window !== "undefined" ? window.__lenis : null;
-  if (lenis) lenis.scrollTo(`#${id}`, { offset: -76, duration: 1.2 });
-  else document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  smoothScrollTo(id);
 }
 
 class ErrorBoundary extends Component {
@@ -56,24 +54,20 @@ function ScrollManager() {
         clearTimeout(t2);
       };
     }
-    window.scrollTo(0, 0);
+    // Nouvelle page : on repart du haut instantanément (Lenis compris, sans « retour élastique »)
+    smoothScrollTo(0, { immediate: true });
   }, [pathname, hash]);
   return null;
 }
 
 function App() {
   useEffect(() => {
-    const lenis = new Lenis({ duration: 1.15, smoothWheel: true });
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+    // Ordinateur : Lenis adouci ; tactile / « réduire les animations » : défilement natif (null)
+    const lenis = createLenis();
     window.__lenis = lenis;
-    let raf;
-    const loop = (t) => {
-      lenis.raf(t);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
     return () => {
-      cancelAnimationFrame(raf);
-      lenis.destroy();
+      lenis?.destroy();
       window.__lenis = null;
     };
   }, []);

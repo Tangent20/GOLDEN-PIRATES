@@ -319,3 +319,27 @@ button.bg-gold:disabled { filter: grayscale(0.35) brightness(0.85); }
   .hero-root .hero-sub { font-size: 1.05rem; line-height: 1.4rem; }
   .hero-root .hero-ctas { margin-top: 1.25rem; }
 }
+
+
+/* ===================== DÉFILEMENT — stratégie unique (lib/scroll.js) ===================== */
+/* Règles officielles Lenis (ordinateur) */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+/* Verrou des fenêtres / menu mobile (iOS compris), sans saut de mise en page */
+html.gp-scroll-locked, html.gp-scroll-locked body { overflow: hidden; overscroll-behavior: none; }
+/* Zones internes : défilent seules, sans entraîner la page à la fin de la liste */
+.overflow-y-auto, .overflow-auto, .overflow-y-scroll, [data-lenis-prevent] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.overflow-x-auto { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+/* Tactile : pas de délai au toucher, pas de surbrillance grise iOS */
+a, button, [role="button"], label, summary { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+/* Mobile / tablette / « réduire les animations » : grain sans mélange de calques (fluidité 60 i/s) */
+.grain-layer { transform: translateZ(0); }
+@media (hover: none), (pointer: coarse), (max-width: 1023px), (prefers-reduced-motion: reduce) {
+  .grain-layer { mix-blend-mode: normal !important; opacity: 0.05 !important; }
+}

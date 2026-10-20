@@ -11,6 +11,7 @@ import { ShipWheel } from "@/components/NavIcons";
 import api, { formatApiError } from "@/lib/api";
 import { useLang } from "@/lib/i18n";
 import { useAdminNotif } from "@/lib/notifHub";
+import { lockScroll, unlockScroll } from "@/lib/scroll";
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -856,6 +857,15 @@ function ConvList({ onOpen }) {
   );
 }
 
+/** Verrouille le défilement de la page tant qu'une fenêtre du Conseil est ouverte. */
+function useScrollLock(active) {
+  useEffect(() => {
+    if (!active) return undefined;
+    lockScroll();
+    return () => unlockScroll();
+  }, [active]);
+}
+
 function ButinPanel() {
   const { c, lang } = useLang();
   const a = c.admin.dash;
@@ -873,6 +883,7 @@ function ButinPanel() {
   const [copiedId, setCopiedId] = useState(null);
   // modal « Sceller la facture »
   const [sealTarget, setSealTarget] = useState(null); // { id, pseudo, amount, email, receipt_id }
+  useScrollLock(!!sealTarget);
   const [sealing, setSealing] = useState(null); // "pdf" | "xlsx" | null
 
   const [pendingInfo, setPendingInfo] = useState({ n: 0, total: 0 });
@@ -1484,6 +1495,7 @@ export default function Admin() {
   const [badges, setBadges] = useState({ unread: 0, pending: 0, donations: 0 });
   const [exporting, setExporting] = useState(null);
   const [langAsk, setLangAsk] = useState(null);
+  useScrollLock(!!langAsk);
   const [exportLangChoice, setExportLangChoice] = useState(null);
   const [exportError, setExportError] = useState(null);
 

@@ -16,6 +16,7 @@ import { useLang } from "@/lib/i18n";
 import { useRack, saveBottle, removeBottle } from "@/lib/rack";
 import { useRecruitNotif, useLastSeen, useBellRing } from "@/lib/notifHub";
 import Countdown from "@/components/Countdown";
+import { smoothScrollTo } from "@/lib/scroll";
 
 const DISCORD_URL = "https://discord.gg/dSzGk7PYUW";
 
@@ -333,16 +334,14 @@ export default function Suivi() {
     setError("");
     setNotFound(false);
     setTimeout(() => document.getElementById("track-code")?.focus({ preventScroll: true }), 50);
-    document.getElementById("suivi-form")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    smoothScrollTo("suivi-form");
   };
 
   const scrollToHub = () =>
     setTimeout(() => {
       const el = document.querySelector('[data-testid="suivi-tabs-hub"]') || document.getElementById("suivi-form");
       if (!el) return;
-      const lenis = window.__lenis;
-      if (lenis) lenis.scrollTo(el, { offset: -96, duration: 1 });
-      else window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 96, behavior: "smooth" });
+      smoothScrollTo(el);
     }, 250);
 
   const viewRackCode = (tcode) => {
@@ -445,7 +444,7 @@ export default function Suivi() {
       });
     } else {
       document.getElementById("track-code")?.focus({ preventScroll: true });
-      document.getElementById("suivi-form")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      smoothScrollTo("suivi-form");
     }
   };
 
@@ -835,7 +834,7 @@ export default function Suivi() {
                   role="tablist"
                   aria-label={s.tabs.aria}
                   data-testid="suivi-tablist"
-                  className="sticky top-16 md:top-20 z-30 mt-6 grid grid-cols-4 gap-1.5 sm:gap-2 bg-ink/95 backdrop-blur py-2 border-b border-gold/20"
+                  className="sticky top-16 md:top-20 z-30 mt-6 grid grid-cols-4 gap-1.5 sm:gap-2 bg-ink/95 md:backdrop-blur py-2 border-b border-gold/20"
                 >
                   {TABS.map((t) => {
                     const Icon = TAB_ICONS[t.id];
