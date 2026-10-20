@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Golden Pirates Backend API Testing
-Tests all donation flows, admin operations, and rack-check functionality
+GOLDEN PIRATES — Backend API Test Suite (Iteration 57)
+Verifies P0 fixes: /api/auth/me always returns 200, frontend auth check reads r.data.authed
 """
 import requests
 import sys
@@ -22,290 +22,301 @@ class APITester:
     def __init__(self):
         self.tests_run = 0
         self.tests_passed = 0
-        self.token = None
         self.session = requests.Session()
         self.session.headers.update({'Content-Type': 'application/json'})
 
     def log(self, msg, color=Colors.RESET):
         print(f"{color}{msg}{Colors.RESET}")
 
-    def test(self, name, method, endpoint, expected_status, data=None, params=None, check_fn=None, is_blob=False):
+    def test(self, name, method, endpoint, expected_status=None, data=None, check_fn=None, cookies=None):
         """Run a single API test"""
-        url = f"{BASE_URL}{endpoint}"
+        url = f"{BASE_URL}/{endpoint}"
         self.tests_run += 1
-        
-        print(f"\n{Colors.BLUE}🔍 Test {self.tests_run}: {name}{Colors.RESET}")
+        self.log(f"\n🔍 Test #{self.tests_run}: {name}", Colors.BLUE)
         
         try:
-            headers = {'Content-Type': 'application/json'}
-            if self.token:
-                headers['Authorization'] = f'Bearer {self.token}'
-            
-            kwargs = {'headers': headers}
-            if data:
-                kwargs['json'] = data
-            if params:
-                kwargs['params'] = params
-            if is_blob:
-                kwargs['timeout'] = 30
-            
             if method == 'GET':
-                response = self.session.get(url, **kwargs)
+                response = self.session.get(url, cookies=cookies)
             elif method == 'POST':
-                response = self.session.post(url, **kwargs)
+                response = self.session.post(url, json=data, cookies=cookies)
             elif method == 'PATCH':
-                response = self.session.patch(url, **kwargs)
+                response = self.session.patch(url, json=data, cookies=cookies)
             elif method == 'DELETE':
-                response = self.session.delete(url, **kwargs)
+                response = self.session.delete(url, cookies=cookies)
             else:
                 raise ValueError(f"Unsupported method: {method}")
-            
-            # Check status code
-            if response.status_code != expected_status:
-                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}", Colors.RED)
-                try:
-                    self.log(f"   Response: {response.text[:200]}", Colors.YELLOW)
-                except:
-                    pass
-                return False, None
-            
-            # Parse response
-            result = None
-            if not is_blob:
-                try:
-                    result = response.json()
-                except:
-                    result = response.text
-            else:
-                result = response.content
-            
+
+            # Check status code if expected
+            if expected_status is not None:
+                if response.status_code != expected_status:
+                    self.log(f"❌ FAILED - Expected status {expected_status}, got {response.status_code}", Colors.RED)
+                    self.log(f"   Response: {response.text[:200]}", Colors.RED)
+                    return False, None
+
             # Run custom check function
             if check_fn:
-                check_result = check_fn(result, response)
-                if not check_result:
-                    self.log(f"❌ FAILED - Custom check failed", Colors.RED)
-                    return False, result
-            
+                try:
+                    result = check_fn(response)
+                    if not result:
+                        self.log(f"❌ FAILED - Custom check failed", Colors.RED)
+                        return False, None
+                except Exception as e:
+                    self.log(f"❌ FAILED - Check function error: {str(e)}", Colors.RED)
+                    return False, None
+
             self.tests_passed += 1
             self.log(f"✅ PASSED - Status: {response.status_code}", Colors.GREEN)
-            return True, result
-            
+            return True, response
+
         except Exception as e:
             self.log(f"❌ FAILED - Error: {str(e)}", Colors.RED)
             return False, None
 
-    def run_all_tests(self):
-        """Run all backend tests"""
-        print(f"\n{Colors.BLUE}{'='*60}")
-        print(f"GOLDEN PIRATES BACKEND API TESTS")
-        print(f"{'='*60}{Colors.RESET}\n")
-        
-        # Test 1: Public donators endpoint - should show LOHMIN RUI 3€
-        success, data = self.test(
-            "GET /api/donators - Public list with LOHMIN RUI",
-            "GET", "/donators", 200,
-            check_fn=lambda d, r: (
-                d.get('total') == 3.0 and
-                len(d.get('items', [])) == 1 and
-                d['items'][0].get('pseudo') == 'LOHMIN RUI' and
-                d['items'][0].get('amount') == 3.0
-            )
-        )
-        if success:
-            self.log(f"   ✓ Total: {data.get('total')} €", Colors.GREEN)
-            self.log(f"   ✓ Donators: {len(data.get('items', []))}", Colors.GREEN)
-            if data.get('items'):
-                self.log(f"   ✓ First donator: {data['items'][0].get('pseudo')} - {data['items'][0].get('amount')} €", Colors.GREEN)
-        
-        # Test 2: Admin login
-        success, data = self.test(
-            "POST /api/admin/login - Admin authentication",
-            "POST", "/admin/login", 200,
-            data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
-            check_fn=lambda d, r: d.get('email') == ADMIN_EMAIL
-        )
-        if success:
-            # Extract token from cookies
-            self.token = self.session.cookies.get('access_token')
-            self.log(f"   ✓ Logged in as: {data.get('email')}", Colors.GREEN)
-        
-        # Test 3: Admin donators list
-        success, data = self.test(
-            "GET /api/admin/donators - Admin view with LOHMIN RUI",
-            "GET", "/admin/donators", 200,
-            check_fn=lambda d, r: (
-                len(d.get('items', [])) >= 1 and
-                any(item.get('pseudo') == 'LOHMIN RUI' and item.get('amount') == 3.0 for item in d.get('items', []))
-            )
-        )
-        if success:
-            self.log(f"   ✓ Total donators: {len(data.get('items', []))}", Colors.GREEN)
-            self.log(f"   ✓ Total amount: {data.get('total')} €", Colors.GREEN)
-            lohmin = next((item for item in data.get('items', []) if item.get('pseudo') == 'LOHMIN RUI'), None)
-            if lohmin:
-                self.log(f"   ✓ LOHMIN RUI found: {lohmin.get('amount')} €, status={lohmin.get('status')}, receipt_id={lohmin.get('receipt_id')}", Colors.GREEN)
-        
-        # Test 4: Declare a donation (pending status)
-        test_pseudo = f"TestDonor{datetime.now().strftime('%H%M%S')}"
-        success, data = self.test(
-            "POST /api/donations/declare - Donor declares donation",
-            "POST", "/donations/declare", 200,
-            data={"pseudo": test_pseudo, "amount": 5.0, "email": "test@example.com", "message": "Test donation"},
-            check_fn=lambda d, r: (
-                d.get('ok') == True and
-                d.get('status') == 'pending' and
-                d.get('receipt_id', '').startswith('GPD-1023-') and
-                d.get('pseudo') == test_pseudo and
-                d.get('amount') == 5.0
-            )
-        )
-        test_receipt_id = None
-        if success:
-            test_receipt_id = data.get('receipt_id')
-            self.log(f"   ✓ Receipt ID: {test_receipt_id}", Colors.GREEN)
-            self.log(f"   ✓ Status: {data.get('status')}", Colors.GREEN)
-            self.log(f"   ✓ Amount: {data.get('amount')} €", Colors.GREEN)
-        
-        # Test 5: Check donation status
-        if test_receipt_id:
-            success, data = self.test(
-                f"GET /api/donations/status/{test_receipt_id} - Check pending status",
-                "GET", f"/donations/status/{test_receipt_id}", 200,
-                check_fn=lambda d, r: (
-                    d.get('receipt_id') == test_receipt_id and
-                    d.get('status') == 'pending' and
-                    d.get('pseudo') == test_pseudo
-                )
-            )
-            if success:
-                self.log(f"   ✓ Status: {data.get('status')}", Colors.GREEN)
-        
-        # Test 6: Download PDF invoice for PENDING donation (NEW BEHAVIOR - should return 200)
-        if test_receipt_id:
-            success, data = self.test(
-                f"GET /api/donations/invoice/pdf (pending) - Should return 200 with watermark",
-                "GET", f"/donations/invoice/pdf", 200,
-                params={"receipt_id": test_receipt_id, "lang": "fr"},
-                is_blob=True,
-                check_fn=lambda d, r: (
-                    len(d) > 1000 and  # PDF should be substantial
-                    d[:4] == b'%PDF' and  # Valid PDF header
-                    'content-disposition' in r.headers.get('Content-Disposition', '').lower()
-                )
-            )
-            if success:
-                self.log(f"   ✓ PDF size: {len(data)} bytes", Colors.GREEN)
-                self.log(f"   ✓ Valid PDF header: {data[:4]}", Colors.GREEN)
-        
-        # Test 7: Download XLSX invoice for PENDING donation (NEW BEHAVIOR - should return 200)
-        if test_receipt_id:
-            success, data = self.test(
-                f"GET /api/donations/invoice/xlsx (pending) - Should return 200",
-                "GET", f"/donations/invoice/xlsx", 200,
-                params={"receipt_id": test_receipt_id, "lang": "fr"},
-                is_blob=True,
-                check_fn=lambda d, r: (
-                    len(d) > 1000 and  # XLSX should be substantial
-                    'content-disposition' in r.headers.get('Content-Disposition', '').lower()
-                )
-            )
-            if success:
-                self.log(f"   ✓ XLSX size: {len(data)} bytes", Colors.GREEN)
-        
-        # Test 8: Confirm donation (admin)
-        if test_receipt_id:
-            # Get donator ID from admin list
-            success, data = self.test(
-                "GET /api/admin/donators - Get test donator ID",
-                "GET", "/admin/donators", 200
-            )
-            if success:
-                test_donator = next((item for item in data.get('items', []) if item.get('receipt_id') == test_receipt_id), None)
-                if test_donator:
-                    donator_id = test_donator.get('id')
-                    success, data = self.test(
-                        f"POST /api/admin/donators/{donator_id}/confirm - Confirm donation",
-                        "POST", f"/admin/donators/{donator_id}/confirm", 200,
-                        check_fn=lambda d, r: d.get('ok') == True
-                    )
-        
-        # Test 9: Check confirmed status
-        if test_receipt_id:
-            success, data = self.test(
-                f"GET /api/donations/status/{test_receipt_id} - Check confirmed status",
-                "GET", f"/donations/status/{test_receipt_id}", 200,
-                check_fn=lambda d, r: d.get('status') == 'confirmed'
-            )
-            if success:
-                self.log(f"   ✓ Status changed to: {data.get('status')}", Colors.GREEN)
-        
-        # Test 10: Reject a donation and verify 409 on invoice download
-        test_pseudo2 = f"TestReject{datetime.now().strftime('%H%M%S')}"
-        success, data = self.test(
-            "POST /api/donations/declare - Create donation to reject",
-            "POST", "/donations/declare", 200,
-            data={"pseudo": test_pseudo2, "amount": 2.0}
-        )
-        reject_receipt_id = None
-        if success:
-            reject_receipt_id = data.get('receipt_id')
-            # Get donator ID and reject
-            success, data = self.test(
-                "GET /api/admin/donators - Get reject donator ID",
-                "GET", "/admin/donators", 200
-            )
-            if success:
-                reject_donator = next((item for item in data.get('items', []) if item.get('receipt_id') == reject_receipt_id), None)
-                if reject_donator:
-                    donator_id = reject_donator.get('id')
-                    success, data = self.test(
-                        f"POST /api/admin/donators/{donator_id}/reject - Reject donation",
-                        "POST", f"/admin/donators/{donator_id}/reject", 200
-                    )
-        
-        # Test 11: Try to download invoice for REJECTED donation (should return 409)
-        if reject_receipt_id:
-            success, data = self.test(
-                f"GET /api/donations/invoice/pdf (rejected) - Should return 409",
-                "GET", f"/donations/invoice/pdf", 409,
-                params={"receipt_id": reject_receipt_id, "lang": "fr"},
-                check_fn=lambda d, r: d.get('detail', {}).get('code') == 'rejected'
-            )
-            if success:
-                self.log(f"   ✓ Correctly blocked rejected donation invoice", Colors.GREEN)
-        
-        # Test 12: Rack check endpoint
-        success, data = self.test(
-            "POST /api/applications/rack-check - Check tracking codes",
-            "POST", "/applications/rack-check", 200,
-            data={"codes": ["GP-1023-TEST", "GP-1023-FAKE"]},
-            check_fn=lambda d, r: 'items' in d
-        )
-        if success:
-            self.log(f"   ✓ Rack check returned items dict", Colors.GREEN)
-        
-        # Test 13: Check DB cleanliness - only admin user
-        success, data = self.test(
-            "GET /api/admin/applications - Should be empty (no fake profiles)",
-            "GET", "/admin/applications", 200,
-            check_fn=lambda d, r: isinstance(d, list)
-        )
-        if success:
-            self.log(f"   ✓ Applications count: {len(data)}", Colors.GREEN)
-        
-        # Print summary
-        print(f"\n{Colors.BLUE}{'='*60}")
-        print(f"TEST SUMMARY")
-        print(f"{'='*60}{Colors.RESET}")
-        print(f"{Colors.GREEN}✅ Passed: {self.tests_passed}/{self.tests_run}{Colors.RESET}")
-        if self.tests_passed < self.tests_run:
-            print(f"{Colors.RED}❌ Failed: {self.tests_run - self.tests_passed}/{self.tests_run}{Colors.RESET}")
-        
+    def print_summary(self):
+        self.log(f"\n{'='*60}", Colors.BLUE)
+        self.log(f"📊 TEST SUMMARY", Colors.BLUE)
+        self.log(f"{'='*60}", Colors.BLUE)
+        self.log(f"Total tests: {self.tests_run}")
+        self.log(f"Passed: {self.tests_passed}", Colors.GREEN)
+        self.log(f"Failed: {self.tests_run - self.tests_passed}", Colors.RED if self.tests_run > self.tests_passed else Colors.GREEN)
         success_rate = (self.tests_passed / self.tests_run * 100) if self.tests_run > 0 else 0
-        print(f"\n{Colors.BLUE}Success Rate: {success_rate:.1f}%{Colors.RESET}\n")
-        
-        return 0 if self.tests_passed == self.tests_run else 1
+        self.log(f"Success rate: {success_rate:.1f}%", Colors.GREEN if success_rate == 100 else Colors.YELLOW)
+        self.log(f"{'='*60}\n", Colors.BLUE)
+
+
+def main():
+    tester = APITester()
+    tester.log("="*60, Colors.BLUE)
+    tester.log("🏴‍☠️ GOLDEN PIRATES — Backend API Test Suite", Colors.BLUE)
+    tester.log("="*60, Colors.BLUE)
+    tester.log(f"Base URL: {BASE_URL}", Colors.BLUE)
+    tester.log(f"Test started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", Colors.BLUE)
+    tester.log("="*60 + "\n", Colors.BLUE)
+
+    # ========================================
+    # P0 FIX #1: /api/auth/me ALWAYS returns 200
+    # ========================================
+    tester.log("\n" + "="*60, Colors.YELLOW)
+    tester.log("P0 FIX #1: /api/auth/me endpoint behavior", Colors.YELLOW)
+    tester.log("="*60, Colors.YELLOW)
+
+    # Test 1: /auth/me without cookie should return 200 with {authed: false}
+    def check_unauthed(resp):
+        if resp.status_code != 200:
+            tester.log(f"   Expected status 200, got {resp.status_code}", Colors.RED)
+            return False
+        data = resp.json()
+        if data.get('authed') is not False:
+            tester.log(f"   Expected authed=false, got {data}", Colors.RED)
+            return False
+        tester.log(f"   ✓ Response: {data}", Colors.GREEN)
+        return True
+
+    tester.test(
+        "/auth/me without cookie → 200 + {authed: false}",
+        "GET",
+        "auth/me",
+        check_fn=check_unauthed
+    )
+
+    # Test 2: Login as admin
+    def check_login(resp):
+        if resp.status_code != 200:
+            tester.log(f"   Expected status 200, got {resp.status_code}", Colors.RED)
+            return False
+        data = resp.json()
+        if not data.get('email') or not data.get('role'):
+            tester.log(f"   Expected email and role in response, got {data}", Colors.RED)
+            return False
+        tester.log(f"   ✓ Logged in as: {data.get('email')}", Colors.GREEN)
+        return True
+
+    success, login_resp = tester.test(
+        "Admin login",
+        "POST",
+        "admin/login",
+        data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+        check_fn=check_login
+    )
+
+    if not success:
+        tester.log("\n❌ Cannot proceed without admin login", Colors.RED)
+        tester.print_summary()
+        return 1
+
+    # Extract cookies from login response
+    admin_cookies = login_resp.cookies
+
+    # Test 3: /auth/me with valid cookie should return 200 with {authed: true, email, role}
+    def check_authed(resp):
+        if resp.status_code != 200:
+            tester.log(f"   Expected status 200, got {resp.status_code}", Colors.RED)
+            return False
+        data = resp.json()
+        if data.get('authed') is not True:
+            tester.log(f"   Expected authed=true, got {data}", Colors.RED)
+            return False
+        if not data.get('email') or not data.get('role'):
+            tester.log(f"   Expected email and role, got {data}", Colors.RED)
+            return False
+        tester.log(f"   ✓ Response: {data}", Colors.GREEN)
+        return True
+
+    tester.test(
+        "/auth/me with valid cookie → 200 + {authed: true, email, role}",
+        "GET",
+        "auth/me",
+        cookies=admin_cookies,
+        check_fn=check_authed
+    )
+
+    # Test 4: /auth/me with invalid cookie should return 200 with {authed: false}
+    invalid_cookies = {'access_token': 'invalid_token_12345'}
+    tester.test(
+        "/auth/me with invalid cookie → 200 + {authed: false}",
+        "GET",
+        "auth/me",
+        cookies=invalid_cookies,
+        check_fn=check_unauthed
+    )
+
+    # ========================================
+    # P2: REGRESSION CHECK - Core endpoints
+    # ========================================
+    tester.log("\n" + "="*60, Colors.YELLOW)
+    tester.log("P2: REGRESSION CHECK - Core endpoints", Colors.YELLOW)
+    tester.log("="*60, Colors.YELLOW)
+
+    # Test 5: GET /admin/applications
+    def check_apps(resp):
+        if resp.status_code != 200:
+            return False
+        data = resp.json()
+        if not isinstance(data, list):
+            tester.log(f"   Expected list, got {type(data)}", Colors.RED)
+            return False
+        tester.log(f"   ✓ Found {len(data)} applications", Colors.GREEN)
+        return True
+
+    tester.test(
+        "GET /admin/applications",
+        "GET",
+        "admin/applications",
+        cookies=admin_cookies,
+        check_fn=check_apps
+    )
+
+    # Test 6: GET /admin/stats
+    def check_stats(resp):
+        if resp.status_code != 200:
+            return False
+        data = resp.json()
+        required_keys = ['total', 'pending', 'accepted', 'reserve', 'rejected', 'donations_pending']
+        for key in required_keys:
+            if key not in data:
+                tester.log(f"   Missing key: {key}", Colors.RED)
+                return False
+        tester.log(f"   ✓ Stats: total={data['total']}, pending={data['pending']}, accepted={data['accepted']}", Colors.GREEN)
+        return True
+
+    tester.test(
+        "GET /admin/stats",
+        "GET",
+        "admin/stats",
+        cookies=admin_cookies,
+        check_fn=check_stats
+    )
+
+    # Test 7: GET /admin/donators
+    def check_donators(resp):
+        if resp.status_code != 200:
+            return False
+        data = resp.json()
+        if 'items' not in data or 'total' not in data:
+            tester.log(f"   Missing required keys in response", Colors.RED)
+            return False
+        tester.log(f"   ✓ Found {len(data['items'])} donations, total: {data['total']} EUR", Colors.GREEN)
+        return True
+
+    tester.test(
+        "GET /admin/donators",
+        "GET",
+        "admin/donators",
+        cookies=admin_cookies,
+        check_fn=check_donators
+    )
+
+    # Test 8: GET /donators (public endpoint)
+    def check_public_donators(resp):
+        if resp.status_code != 200:
+            return False
+        data = resp.json()
+        required_keys = ['total', 'goal', 'count', 'configured', 'items']
+        for key in required_keys:
+            if key not in data:
+                tester.log(f"   Missing key: {key}", Colors.RED)
+                return False
+        tester.log(f"   ✓ Public donations: {data['count']} items, total: {data['total']} EUR, goal: {data['goal']} EUR", Colors.GREEN)
+        return True
+
+    tester.test(
+        "GET /donators (public)",
+        "GET",
+        "donators",
+        check_fn=check_public_donators
+    )
+
+    # Test 9: Check pseudo availability
+    def check_pseudo(resp):
+        if resp.status_code != 200:
+            return False
+        data = resp.json()
+        if 'state' not in data:
+            tester.log(f"   Missing 'state' in response", Colors.RED)
+            return False
+        tester.log(f"   ✓ Pseudo check state: {data['state']}", Colors.GREEN)
+        return True
+
+    tester.test(
+        "GET /applications/check-pseudo",
+        "GET",
+        "applications/check-pseudo?pseudo=TestPseudo123",
+        check_fn=check_pseudo
+    )
+
+    # Test 10: Logout
+    def check_logout(resp):
+        if resp.status_code != 200:
+            return False
+        data = resp.json()
+        if not data.get('ok'):
+            tester.log(f"   Expected ok=true, got {data}", Colors.RED)
+            return False
+        tester.log(f"   ✓ Logged out successfully", Colors.GREEN)
+        return True
+
+    tester.test(
+        "POST /auth/logout",
+        "POST",
+        "auth/logout",
+        cookies=admin_cookies,
+        check_fn=check_logout
+    )
+
+    # Test 11: Verify /auth/me after logout returns {authed: false}
+    tester.test(
+        "/auth/me after logout → 200 + {authed: false}",
+        "GET",
+        "auth/me",
+        cookies=admin_cookies,
+        check_fn=check_unauthed
+    )
+
+    # Print summary
+    tester.print_summary()
+    
+    return 0 if tester.tests_passed == tester.tests_run else 1
+
 
 if __name__ == "__main__":
-    tester = APITester()
-    sys.exit(tester.run_all_tests())
+    sys.exit(main())

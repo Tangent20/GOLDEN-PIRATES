@@ -452,8 +452,28 @@ async def logout(response: Response):
 
 
 @api_router.get("/auth/me")
-async def me(email: str = Depends(require_admin)):
-    return {"email": email, "role": "admin"}
+async def me(request: Request):
+    """Sonde silencieuse d'authentification.
+    Retourne TOUJOURS 200 (jamais 401) pour éviter de polluer la console des
+    visiteurs non connectés avec de faux "Failed to load resource".
+    - { authed: false } → non connecté (OK, c'est l'état par défaut d'un visiteur)
+    - { authed: true, email, role } → session en cours
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if not token:
+        return {"authed": False}
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+        return {"authed": False}
+    email = (payload.get("sub") or "").strip().lower()
+    if not email:
+        return {"authed": False}
+    return {"authed": True, "email": email, "role": "admin"}
 
 
 @api_router.get("/admin/applications")

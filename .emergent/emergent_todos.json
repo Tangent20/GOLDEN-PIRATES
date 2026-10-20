@@ -1,34 +1,26 @@
 [
   {
-    "content": "Audit index.html : viewport, safe-area, theme-color",
-    "status": "completed"
+    "content": "Catalogue : lister TOUTES les routes + boutons principaux + modales + formulaires",
+    "status": "in_progress"
   },
   {
-    "content": "Refonte CSS globale : safe-area-insets, dvh, no-zoom iOS inputs, scrolling momentum, prefers-reduced-motion",
-    "status": "completed"
+    "content": "Balayage automatisé : chaque route à 5 viewports (280/390/820/1440/2560), capture overflow + erreurs console + 404s",
+    "status": "pending"
   },
   {
-    "content": "GPU acceleration (will-change) sur classes animées récurrentes",
-    "status": "completed"
+    "content": "Test de chaque interaction : clic sur tous boutons primaires, ouverture/fermeture modales, soumission formulaires",
+    "status": "pending"
   },
   {
-    "content": "100dvh sur les hero sections (vs 100vh) via @supports override",
-    "status": "completed"
+    "content": "Audit backend : smoke test de chaque endpoint API",
+    "status": "pending"
   },
   {
-    "content": "loading=lazy + decoding=async sur toutes les images",
-    "status": "completed"
+    "content": "Corriger tout ce qui est détecté",
+    "status": "pending"
   },
   {
-    "content": "Debounce/throttle sur scroll+resize listeners (rAF)",
-    "status": "completed"
-  },
-  {
-    "content": "Smantique HTML : main/section/article landmarks déjà en place",
-    "status": "completed"
-  },
-  {
-    "content": "Vérification compile + screenshots desktop 1920 + 4K 2560 + mobile 390 + fold 280 : tous OK",
-    "status": "completed"
+    "content": "Appeler testing_agent_v3 pour validation finale",
+    "status": "pending"
   }
 ]

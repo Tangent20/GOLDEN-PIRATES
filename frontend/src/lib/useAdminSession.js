@@ -14,9 +14,10 @@ export function refreshAdminSession() {
   // doubles montages (StrictMode Nav + Footer) partagent UNE SEULE requête.
   if (inFlight) return inFlight;
   checkedOnce = true;
+  // Le backend retourne TOUJOURS 200 avec { authed: bool } — jamais de 401 bruyant.
   inFlight = api
     .get("/auth/me")
-    .then(() => { isAdminCached = true; })
+    .then((r) => { isAdminCached = !!r?.data?.authed; })
     .catch(() => { isAdminCached = false; })
     .finally(() => {
       inFlight = null;

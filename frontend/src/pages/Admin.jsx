@@ -1100,6 +1100,19 @@ function ButinPanel() {
     }
   };
 
+  // Accessibilité clavier : Escape referme toute modal ouverte (sceau ou édition)
+  // tant qu'aucune opération longue (téléchargement de reçu, sauvegarde) n'est en cours.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      if (sealing || editBusy) return;
+      if (editTarget) setEditTarget(null);
+      else if (sealTarget) setSealTarget(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sealTarget, editTarget, sealing, editBusy]);
+
   const saveGoal = async () => {
     if (goalBusy) return;
     const g = parseFloat((goal || "").replace(",", "."));
@@ -1600,6 +1613,15 @@ function EditDonatorModal({ target, lang, busy, copy, onClose, onSave }) {
   const [dateStr, setDateStr] = useState(initial.dateStr);
   const [timeStr, setTimeStr] = useState(initial.timeStr);
 
+  // Accessibilité clavier : Escape ferme la fiche d'édition (sauf si une sauvegarde est en cours).
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape" && !busy) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [busy, onClose]);
+
   const onDateChange = (v) => {
     const raw = v.replace(/\D/g, "").slice(0, 8);
     let out = raw;
@@ -1972,9 +1994,17 @@ export default function Admin() {
     if (!cachedAuth) return; // formulaire instantané — rien à vérifier
     // Confirmation silencieuse : si le secret du coffre a expiré, on retombe
     // sur le formulaire sans jamais afficher de chargement.
+    // Le backend renvoie TOUJOURS 200 avec { authed: bool }.
     api
       .get("/auth/me")
-      .then(() => loadAll())
+      .then((r) => {
+        if (r?.data?.authed) {
+          loadAll();
+        } else {
+          try { sessionStorage.removeItem(AUTH_FLAG); } catch {}
+          setAuthed(false);
+        }
+      })
       .catch(() => {
         try { sessionStorage.removeItem(AUTH_FLAG); } catch {}
         setAuthed(false);
