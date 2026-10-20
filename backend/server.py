@@ -1261,6 +1261,53 @@ async def butin_goal_set(data: ButinGoalIn, _=Depends(require_admin)):
     return {"ok": True, "goal": goal}
 
 
+# ---------- Calendrier des saisons (réglé par le Conseil, sans redéploiement) ----------
+# s2_start      : début de la Saison 2 (fin octobre) → compte à rebours « DÉBUT DE LA SAISON 2 »
+# recruit_open  : ouverture des portes de migration (fin de Saison 2) — None tant que la date
+#                 n'est pas annoncée par le jeu → « date annoncée prochainement »
+SEASON_DEFAULT = {"s2_start": "2026-10-31T23:59:59+00:00", "recruit_open": None}
+
+
+def _iso_or_none(v):
+    if v in (None, ""):
+        return None
+    try:
+        d = datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Date invalide.")
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=timezone.utc)
+    return d.astimezone(timezone.utc).isoformat()
+
+
+async def get_season():
+    doc = await db.site_settings.find_one({"_id": "season"}) or {}
+    return {
+        "s2_start": doc.get("s2_start", SEASON_DEFAULT["s2_start"]) or SEASON_DEFAULT["s2_start"],
+        "recruit_open": doc.get("recruit_open", SEASON_DEFAULT["recruit_open"]),
+    }
+
+
+class SeasonIn(BaseModel):
+    s2_start: Optional[str] = None
+    recruit_open: Optional[str] = None
+
+
+@api_router.get("/season")
+async def season_public():
+    return {**(await get_season()), "now": now_utc().isoformat()}
+
+
+@api_router.put("/admin/season")
+async def season_set(data: SeasonIn, _=Depends(require_admin)):
+    s2 = _iso_or_none(data.s2_start) or SEASON_DEFAULT["s2_start"]
+    ro = _iso_or_none(data.recruit_open)
+    if ro and ro <= s2:
+        raise HTTPException(status_code=422, detail="L'ouverture des portes (fin de Saison 2) doit être après le début de la Saison 2.")
+    await db.site_settings.update_one({"_id": "season"}, {"$set": {"s2_start": s2, "recruit_open": ro}}, upsert=True)
+    return {"ok": True, "s2_start": s2, "recruit_open": ro}
+
+
 # ---------- Factures de don (parchemin pirate PDF / Excel, FR/EN) ----------
 from donations_invoice import (
     generate_invoice_pdf,

@@ -12,6 +12,7 @@ import api, { formatApiError } from "@/lib/api";
 import { useLang } from "@/lib/i18n";
 import { useAdminNotif } from "@/lib/notifHub";
 import { lockScroll, unlockScroll } from "@/lib/scroll";
+import useSeason, { refreshSeason, formatSeasonDate } from "@/lib/season";
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -853,6 +854,84 @@ function ConvList({ onOpen }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Calendrier des saisons — le Conseil règle les dates, tout le site suit (compte à rebours, frise, bandeau). */
+const toLocalInput = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+function SeasonPanel() {
+  const { lang } = useLang();
+  const en = lang === "en";
+  const season = useSeason();
+  const [s2, setS2] = useState("");
+  const [open, setOpen] = useState("");
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    setS2(toLocalInput(season.s2_start));
+    setOpen(toLocalInput(season.recruit_open));
+  }, [season.s2_start, season.recruit_open]);
+  const phaseTxt = {
+    pre: en ? "BEFORE SEASON 2 — countdown to the START of Season 2" : "AVANT LA SAISON 2 — compte à rebours vers le DÉBUT de la Saison 2",
+    s2: season.recruit_open
+      ? (en ? "SEASON 2 UNDERWAY — countdown to the GATES OPENING (end of Season 2)" : "SAISON 2 EN COURS — compte à rebours vers l'OUVERTURE DES PORTES (fin de Saison 2)")
+      : (en ? "SEASON 2 UNDERWAY — gates opening date not announced yet" : "SAISON 2 EN COURS — date d'ouverture des portes pas encore annoncée"),
+    open: en ? "END OF SEASON 2 — the gates are OPEN" : "FIN DE SAISON 2 — les portes sont OUVERTES",
+  }[season.phase];
+  const save = async () => {
+    if (!s2) return toast.error(en ? "Season 2 start date is required." : "La date de début de la Saison 2 est obligatoire.");
+    setSaving(true);
+    try {
+      await api.put("/admin/season", {
+        s2_start: new Date(s2).toISOString(),
+        recruit_open: open ? new Date(open).toISOString() : null,
+      });
+      await refreshSeason();
+      toast.success(en ? "Calendar sealed — the whole site follows." : "Calendrier scellé — tout le site suit le cap.");
+    } catch (err) {
+      toast.error(formatApiError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+  const inputCls = "w-full bg-ink border border-gold/30 focus:border-gold outline-none px-3 py-2.5 font-mono2 text-sm text-bone [color-scheme:dark]";
+  return (
+    <div data-testid="season-panel">
+      <p data-testid="season-phase" data-phase={season.phase} className="mb-4 inline-flex items-center gap-2 border-l-4 border-gold bg-gold/10 px-3 py-2 font-mono2 text-[10px] tracking-[0.2em] text-gold">
+        <Compass className="w-4 h-4 shrink-0" /> {phaseTxt}
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <span className="block font-mono2 text-[9px] tracking-[0.25em] text-goldlight mb-1.5">{en ? "SEASON 2 START" : "DÉBUT DE LA SAISON 2"}</span>
+          <input type="datetime-local" data-testid="season-s2-input" value={s2} onChange={(e) => setS2(e.target.value)} className={inputCls} />
+          <span className="block font-fell italic text-xs text-mist mt-1">{formatSeasonDate(season.s2_start, lang)}</span>
+        </label>
+        <label className="block">
+          <span className="block font-mono2 text-[9px] tracking-[0.25em] text-goldlight mb-1.5">{en ? "GATES OPEN — END OF SEASON 2 (optional)" : "OUVERTURE DES PORTES — FIN DE SAISON 2 (facultatif)"}</span>
+          <input type="datetime-local" data-testid="season-open-input" value={open} onChange={(e) => setOpen(e.target.value)} className={inputCls} />
+          <span className="block font-fell italic text-xs text-mist mt-1">
+            {season.recruit_open ? formatSeasonDate(season.recruit_open, lang) : (en ? "Empty = “date announced soon” on the site" : "Vide = « date annoncée prochainement » sur le site")}
+          </span>
+        </label>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button type="button" data-testid="season-save" onClick={save} disabled={saving}
+          className="inline-flex items-center gap-2 bg-gold text-ink font-mono2 text-[10px] tracking-[0.2em] px-5 min-h-[44px] disabled:opacity-60">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Stamp className="w-4 h-4" />} {en ? "SEAL THE CALENDAR" : "SCELLER LE CALENDRIER"}
+        </button>
+        {open && (
+          <button type="button" data-testid="season-clear-open" onClick={() => setOpen("")} disabled={saving}
+            className="inline-flex items-center gap-2 border border-gold/40 text-gold font-mono2 text-[10px] tracking-[0.2em] px-4 min-h-[44px] hover:bg-gold/10">
+            <X className="w-4 h-4" /> {en ? "DATE NOT KNOWN YET" : "DATE PAS ENCORE CONNUE"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -1788,6 +1867,16 @@ export default function Admin() {
                 )
               ) : (
                 <>
+                  {/* CALENDRIER DES SAISONS — réglé par le Conseil */}
+                  <SectionFrame
+                    title={lang === "en" ? "Season calendar" : "Calendrier des saisons"}
+                    subtitle={lang === "en" ? "Season 2 start and gates opening (end of Season 2): the countdown, timeline and banner follow these dates." : "Début de la Saison 2 et ouverture des portes (fin de Saison 2) : le compte à rebours, la frise et le bandeau suivent ces dates."}
+                    icon={MapIcon}
+                    testId="admin-season-frame"
+                  >
+                    <SeasonPanel />
+                  </SectionFrame>
+
                   {/* TABLEAU DE COMMANDE — stats enrichies */}
                   <SectionFrame
                     title={a.dash.statsTitle}

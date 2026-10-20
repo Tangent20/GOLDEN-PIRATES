@@ -191,3 +191,10 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - lockScroll/unlockScroll à compteur (html.gp-scroll-locked) : menu mobile, fenêtre de candidature, fenêtres Conseil (reçu de don, langue d'export) — avant, la page défilait derrière les fenêtres admin à la molette.
 - Zones internes (Bouteille, Tanière, tiroir, listes) : overscroll-behavior contain ; touch-action manipulation ; grain sans mix-blend sur tactile/mobile ; flou des onglets collants /suivi réservé ≥ md.
 - Mesures : nav desktop 92 px (80+12), mobile 76 px (64+12), Conditions TOC 92 px ; 53 i/s en émulation mobile ; agent de test iteration_48 : 98 % (2 remarques = limites d'émulation, vérifiées manuellement en tactile CDP : Lenis null + barre collante OK).
+
+## 2026-10-20 — Calendrier des saisons (correction « ouverture des portes » ≠ début de Saison 2)
+- Cause : le compte à rebours « OUVERTURE DES PORTES » visait le 31/10 (= DÉBUT de la Saison 2) alors que les portes de migration n'ouvrent qu'en FIN de Saison 2 ; message final « portes ouvertes » erroné ; frise figée sur Pré-KvK.
+- Backend : GET /api/season (public) + PUT /api/admin/season (Conseil) — s2_start (défaut 31/10/2026 23:59:59 UTC), recruit_open (None = non annoncée), validation ordre des dates. Stocké site_settings {_id:"season"}.
+- Frontend : lib/season.js (phases pre / s2 / open). Compte à rebours (formulaire + /suivi) : « DÉBUT DE LA SAISON 2 » → « OUVERTURE DES PORTES (fin de Saison 2) » si date connue, sinon « SAISON 2 EN COURS · PORTES : FIN DE SAISON (DATE À VENIR) » → « PORTES OUVERTES ». Bandeau du héros et frise (navire, TERMINÉE / EN COURS / À VENIR, dates DÈS LE …) suivent la phase. FR/EN.
+- Espace Conseil → registre : panneau « Calendrier des saisons » (2 dates, SCELLER, DATE PAS ENCORE CONNUE) — aucun crédit nécessaire pour changer les dates.
+- Agent de test iteration_49 : 100 % (6/6 API, 19/19 UI, 4 phases). Calendrier réel restauré. En ligne après Deploy ; régler les dates sur golden-pirates.org/admin après publication.

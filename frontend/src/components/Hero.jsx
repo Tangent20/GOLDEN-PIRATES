@@ -5,6 +5,7 @@ import { ChevronDown, Swords, Telescope, MessagesSquare, Skull, ScrollText } fro
 import { scrollToId } from "@/App";
 import { useLang } from "@/lib/i18n";
 import useRole from "@/lib/role";
+import useSeason from "@/lib/season";
 
 const EASE = [0.16, 1, 0.3, 1];
 const HERO_BG =
@@ -86,6 +87,7 @@ const Corner = () => (
 export default function Hero() {
   const { c } = useLang();
   const s = c.hero;
+  const { phase } = useSeason();
   const p = c.pirate;
   const navigate = useNavigate();
   const { role, latest } = useRole();
@@ -221,7 +223,7 @@ export default function Hero() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-bloodglow opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blood" />
               </span>
-              {s.ribbon}
+              <span data-testid="hero-ribbon-text">{phase === "open" ? s.ribbonOpen : phase === "s2" ? s.ribbonS2 : s.ribbon}</span>
             </span>
           </div>
         </RevealLine>

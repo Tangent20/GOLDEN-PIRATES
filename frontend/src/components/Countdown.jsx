@@ -1,23 +1,16 @@
-import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Anchor } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { scrollToId } from "@/App";
 import { useNavigate } from "react-router-dom";
 import useRole from "@/lib/role";
+import useSeason, { formatSeasonDate } from "@/lib/season";
 
-// Date d'ouverture de la saison — SOURCE UNIQUE, ajustable ici uniquement.
-export const OPENING_AT = new Date("2026-10-31T23:59:59Z");
-// La mèche se consume sur 30 jours avant l'ouverture.
-const FUSE_START = OPENING_AT.getTime() - 30 * 86400000;
+// Calendrier : SOURCE UNIQUE = réglage du Conseil (/api/season, onglet « Calendrier » de l'Espace Conseil).
+// La mèche se consume sur les 30 derniers jours avant l'échéance affichée.
+const FUSE_DAYS = 30;
 
-function useRemaining() {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const ms = Math.max(0, OPENING_AT.getTime() - now);
+function splitMs(ms) {
   return {
     ms,
     d: Math.floor(ms / 86400000),
@@ -66,7 +59,7 @@ function Embers() {
   );
 }
 
-function OpenPlate({ k }) {
+function OpenPlate({ k, plate }) {
   const navigate = useNavigate();
   const { role, latest } = useRole();
   const isRecruit = role === "recruit" && !!latest;
@@ -85,9 +78,9 @@ function OpenPlate({ k }) {
       <Embers />
       <div className="relative z-10">
         <p className="flex items-center gap-2 font-mono2 text-[9px] sm:text-[10px] tracking-[0.3em] text-gold mb-3">
-          <Anchor className="w-4 h-4" /> {k.openEyebrow}
+          <Anchor className="w-4 h-4" /> {plate.eyebrow}
         </p>
-        <p className="font-fell italic text-base sm:text-lg text-bone/90 leading-relaxed mb-5">{k.openTitle}</p>
+        <p className="font-fell italic text-base sm:text-lg text-bone/90 leading-relaxed mb-5">{plate.title}</p>
         <button
           data-testid="countdown-open-cta"
           data-role={role}
@@ -102,35 +95,47 @@ function OpenPlate({ k }) {
 }
 
 export default function Countdown({ variant = "hero", testid = "countdown" }) {
-  const { c } = useLang();
+  const { c, lang } = useLang();
   const k = c.countdown;
-  const { ms, d, h, m, s } = useRemaining();
+  const season = useSeason({ tick: true });
+  const { phase, target, now } = season;
+  const ms = target ? Math.max(0, target - now) : 0;
+  const { d, h, m, s } = splitMs(ms);
 
-  if (ms <= 0) {
-    if (variant === "hero") return <div data-testid={testid}><OpenPlate k={k} /></div>;
+  // Pas (ou plus) de compte à rebours : Saison 2 lancée sans date de fin annoncée, ou portes ouvertes
+  if (!target || ms <= 0) {
+    const plate = phase === "open" ? k.open : k.s2Unknown;
+    if (variant === "hero") return <div data-testid={testid} data-phase={phase}><OpenPlate k={k} plate={plate} /></div>;
     return (
-      <p data-testid={testid} className="inline-flex items-center gap-2 border border-gold/30 bg-ink/50 px-4 py-2 font-mono2 text-[10px] sm:text-[11px] tracking-[0.3em] text-gold">
-        <Flame className="w-3.5 h-3.5 text-bloodglow shrink-0" /> {k.open}
+      <p data-testid={testid} data-phase={phase} className="inline-flex max-w-full flex-wrap items-center gap-2 border border-gold/30 bg-ink/50 px-4 py-2 font-mono2 text-[10px] sm:text-[11px] tracking-[0.22em] sm:tracking-[0.3em] text-gold">
+        <Flame className="w-3.5 h-3.5 text-bloodglow shrink-0" /> <span>{plate.line}</span>
       </p>
     );
   }
+
+  const step = phase === "pre" ? k.pre : k.s2;
+  const dateTxt = formatSeasonDate(phase === "pre" ? season.s2_start : season.recruit_open, lang);
 
   if (variant === "line") {
     return (
       <p
         data-testid={testid}
+        data-phase={phase}
+        title={step.note(dateTxt)}
         className="inline-flex max-w-full flex-wrap items-center gap-x-2.5 gap-y-1 border border-gold/30 bg-ink/50 px-4 py-2 font-mono2 text-[10px] sm:text-[11px] tracking-[0.22em] sm:tracking-[0.3em] text-gold"
       >
         <Flame className="w-3.5 h-3.5 text-bloodglow shrink-0 animate-pulse" />
-        <span>{k.lineLabel}</span>
+        <span>{step.line}</span>
         <span className="whitespace-nowrap text-goldlight">
           J-{d} · {String(h).padStart(2, "0")}H{String(m).padStart(2, "0")}
         </span>
+        <span className="whitespace-nowrap text-mist">· {dateTxt}</span>
       </p>
     );
   }
 
-  const burned = Math.min(100, Math.max(0, 100 - (ms / (OPENING_AT.getTime() - FUSE_START)) * 100));
+  const total = FUSE_DAYS * 86400000;
+  const burned = Math.min(100, Math.max(0, 100 - (ms / total) * 100));
   const cells = [
     [d, k.days],
     [h, k.hours],
@@ -138,18 +143,19 @@ export default function Countdown({ variant = "hero", testid = "countdown" }) {
     [s, k.seconds],
   ];
   return (
-    <div data-testid={testid} className="relative overflow-hidden border border-gold/40 bg-deck/80 backdrop-blur p-5 sm:p-6">
+    <div data-testid={testid} data-phase={phase} className="relative overflow-hidden border border-gold/40 bg-deck/80 backdrop-blur p-5 sm:p-6">
       <Embers />
       <div className="relative z-10">
         <p className="flex items-center gap-2 font-mono2 text-[9px] sm:text-[10px] tracking-[0.3em] text-gold mb-3">
-          <Flame className="w-4 h-4 text-bloodglow shrink-0 animate-pulse" /> {k.label}
+          <Flame className="w-4 h-4 text-bloodglow shrink-0 animate-pulse" /> {step.label}
         </p>
         <div className="inline-flex items-stretch border border-gold/25 bg-ink/70 divide-x divide-gold/20">
           {cells.map(([v, label]) => (
             <Digit key={label} value={v} label={label} />
           ))}
         </div>
-        <div className="relative h-1.5 mt-5 bg-ink border border-gold/20">
+        <p className="font-fell italic text-sm text-mist mt-3">{step.note(dateTxt)}</p>
+        <div className="relative h-1.5 mt-4 bg-ink border border-gold/20">
           <div className="absolute inset-y-0 left-0 bg-bloodglow/30" style={{ width: `${burned}%` }} />
           <div className="absolute inset-y-0 right-0 bg-gold" style={{ width: `${100 - burned}%` }} />
           <Flame
