@@ -4,7 +4,7 @@ import { useLang } from "@/lib/i18n";
 
 const EASE = [0.16, 1, 0.3, 1];
 const COMPASS_IMG =
-  "https://images.pexels.com/photos/14436272/pexels-photo-14436272.jpeg?auto=compress&cs=tinysrgb&w=1000";
+  "/img/recit-mer.jpg";
 
 const STEP_TIDS = ["timeline-step-s1", "timeline-step-prekvk", "timeline-step-s2", "timeline-step-s2end"];
 

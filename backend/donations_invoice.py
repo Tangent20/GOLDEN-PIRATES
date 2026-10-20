@@ -33,7 +33,7 @@ ensure_pdf_fonts()
 # --------------------- i18n facture ---------------------
 INVOICE_I18N = {
     "fr": {
-        "title": "FACTURE DE BUTIN",
+        "title": "REÇU DE BUTIN",
         "subtitle": "GOLDEN PIRATES — ROYAUME 1023",
         "ribbon": "PARCHEMIN SCELLÉ PAR LE CONSEIL",
         "bordereau": "BORDEREAU N°",
@@ -57,9 +57,10 @@ INVOICE_I18N = {
         ),
         "legal_title": "MENTIONS DU PONT",
         "legal_body": (
-            "Ce parchemin atteste d'un don volontaire reçu via PayPal. Il ne constitue pas une "
-            "facture commerciale. GOLDEN PIRATES est une alliance communautaire de fans de Call "
-            "of Dragons, sans but lucratif ; aucun bien ni service n'a été fourni en contrepartie."
+            "Reçu de don non fiscal : ce parchemin atteste d'un don volontaire reçu via PayPal. Ce "
+            "n'est pas une facture et il n'ouvre droit à aucune réduction d'impôt (art. 200 et "
+            "238 bis du CGI non applicables). GOLDEN PIRATES est une alliance communautaire de fans "
+            "de Call of Dragons, sans but lucratif ; aucun bien ni service n'a été fourni en contrepartie."
         ),
         "contact": "COURRIEL DU CONSEIL",
         "footer_note": "FABRIQUÉ AU CREUX DE LA HUNE — SITE COMMUNAUTAIRE NON AFFILIÉ À CALL OF DRAGONS",
@@ -70,7 +71,7 @@ INVOICE_I18N = {
         "pending_note": "Le Conseil vérifie encore l'arrivée de ton don sur PayPal — ce parchemin provisoire sera scellé définitivement dès confirmation.",
         "date_fmt": "%d/%m/%Y %H:%M",
         "amount_fmt": lambda a, c: f"{a:,.2f} {c}".replace(",", " ").replace(".", ","),
-        "filename": lambda rid: f"GOLDEN-PIRATES-FACTURE-{rid}-FR",
+        "filename": lambda rid: f"GOLDEN-PIRATES-RECU-{rid}-FR",
     },
     "en": {
         "title": "TREASURE RECEIPT",

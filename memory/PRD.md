@@ -175,3 +175,11 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Notifications recrue OK : après un refus, /notifications signale nouveau statut + nouvelle note (pastilles Nav / onglet / « nouveau »), effacées après lecture ; /suivi affiche REFUSÉ, la note du Conseil et la date de re-postulation (refus + 30 j), bouton re-postuler verrouillé.
 - Contournements fermés : le sanctuaire des refus stocke pseudo_norm (sans accents/casse/ponctuation/espaces) et discord_key (sans casse/@/espaces/#0) ; le délai bloque le même pseudo, ses variantes (« Jéan.Pirate » = « jean_pirate » = « JEAN PIRATE ») ET le même tag Discord sous un autre pseudo. Survit au brûlage d'un dossier refusé ; pardon (repasser en examen/réserve/accepté) lève le délai. Index pseudo_norm/discord_key + rattrapage au démarrage pour les anciens refus.
 - Tests : pytest 79/79 ; agent de test iteration_47 : 12/12 API + 5/5 UI (FR/EN). Base purgée. En ligne après Deploy.
+
+## 2026-10-19 — Conditions générales & mentions légales v2.0 (conformité droit français)
+- Texte unique lib/conditionsCopy.js (FR+EN, 17 articles, VERSION 2.0 du 19/10/2026) ; anciennes sections retirées de i18n.jsx ; liens profonds /conditions#id.
+- LCEN : éditeur + hébergeur Emergent Labs Inc. (255 California St, Suite 550, San Francisco) + réseau Cloudflare ; téléphone hébergeur NON publié par Emergent (à demander à support@emergent.sh).
+- RGPD : tableau traitements/base légale/durées ; purge automatique run_retention() (IP 48 h, refus 30 j, dossiers+messages 12 mois après dernière décision, dons 3 ans, journal connexion 30 j) au démarrage + cron keep-alive (1×/h).
+- Cookies/traceurs : liste exacte des clés locales ; polices auto-hébergées (@fontsource) et images dans /public/img → plus aucun appel Google Fonts / Pexels / Unsplash.
+- Dons : « reçu de don non fiscal » (PDF « REÇU DE BUTIN », fichiers GOLDEN-PIRATES-RECU-…, libellés REÇU/RECEIPT), mention + lien conditions à l'étape II du coffre.
+- Tests : pytest 79/79 ; agent de test : tout OK (FR/EN, 5 tailles d'écran, aucune requête externe). En ligne après Deploy.

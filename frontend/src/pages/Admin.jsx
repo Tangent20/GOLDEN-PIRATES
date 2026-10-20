@@ -997,7 +997,7 @@ function ButinPanel() {
     try {
       await downloadBlob(
         `/admin/donators/${sealTarget.id}/invoice/${fmt}?lang=${pickLang}`,
-        `GOLDEN-PIRATES-FACTURE-${sealTarget.receipt_id}.${fmt}`,
+        `GOLDEN-PIRATES-RECU-${sealTarget.receipt_id}.${fmt}`,
       );
       toast.success(a.exportDone);
       setSealTarget(null);

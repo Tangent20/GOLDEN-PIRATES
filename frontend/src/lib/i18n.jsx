@@ -569,7 +569,7 @@ const fr = {
         { key: "butin", label: "LE BUTIN" },
       ],
       butin: {
-        sub: "Après chaque don PayPal reçu, grave le marin ici : il apparaît au hall doré de la page Butin, et le Conseil scelle automatiquement un bordereau de facture.",
+        sub: "Après chaque don PayPal reçu, grave le marin ici : il apparaît au hall doré de la page Butin, et le Conseil scelle automatiquement un bordereau et son reçu de don.",
         pseudoLabel: "PSEUDO DU DONATEUR",
         amountLabel: "MONTANT (€)",
         emailLabel: "COURRIEL DU MARIN (facultatif)",
@@ -591,7 +591,7 @@ const fr = {
         receiptLabel: "BORDEREAU",
         copyReceipt: "COPIER",
         copied: "COPIÉ ✓",
-        sealInvoice: "SCELLER LA FACTURE",
+        sealInvoice: "SCELLER LE REÇU",
         sendInvoice: "EXPÉDIER PAR COURRIEL",
         noEmailToSend: "Aucun courriel enregistré pour ce marin.",
         exportAll: "EXPORTER TOUT LE BUTIN",
@@ -600,7 +600,7 @@ const fr = {
         declaredByDonor: "DÉCLARÉ PAR LE DONATEUR",
         confirm: "CONFIRMER",
         reject: "REFUSER",
-        confirmedToast: "Don confirmé — le marin peut télécharger sa facture.",
+        confirmedToast: "Don confirmé — le marin peut télécharger son reçu.",
         rejectedToast: "Don refusé — il n'apparaît plus au hall.",
         pendingCount: (n) => `${n} don(s) déclaré(s) à vérifier sur PayPal`,
         purgeBtn: "PURGER LES PROFILS DE TEST",
@@ -612,7 +612,7 @@ const fr = {
         formatPdf: "PARCHEMIN PDF",
         formatXlsx: "GRIMOIRE EXCEL",
         mailSubject: (rid) => `Golden Pirates — Bordereau ${rid}`,
-        mailBody: (rid, pseudo, amount) => `Ohé, ${pseudo} !\n\nLe Conseil te scelle ton bordereau n°${rid} pour ton don de ${amount}.\nTu trouveras ta facture pirate en pièce jointe (PDF et/ou Excel).\n\nPour la retélécharger à tout moment, rends-toi dans l'écuyer /donations et saisis ton bordereau ${rid}.\n\nQue les vents te soient toujours favorables.\nLe Conseil des Capitaines — Golden Pirates`,
+        mailBody: (rid, pseudo, amount) => `Ohé, ${pseudo} !\n\nLe Conseil te scelle ton bordereau n°${rid} pour ton don de ${amount}.\nTu trouveras ton reçu de don pirate en pièce jointe (PDF et/ou Excel).\n\nPour la retélécharger à tout moment, rends-toi dans l'écuyer /donations et saisis ton bordereau ${rid}.\n\nQue les vents te soient toujours favorables.\nLe Conseil des Capitaines — Golden Pirates`,
       },
       convEmpty: "Aucune conversation — les recrues n'ont pas encore lancé de bouteille.",
       convSearch: "Rechercher une recrue…",
@@ -721,7 +721,7 @@ const fr = {
     eyebrow: "LE PARCHEMIN DE CONFIANCE",
     title1: "Conditions générales",
     titleGold: " & mentions légales",
-    updated: "EN VIGUEUR DEPUIS LE 18 OCTOBRE 2026",
+    updated: "VERSION 2.0 — EN VIGUEUR DEPUIS LE 19 OCTOBRE 2026",
     intro: "La confiance d'un équipage se gagne à voix haute. Ce parchemin dit tout, sans langue de bois : qui édite ce site, ce que nous faisons de tes informations, et les règles du bord.",
     badges: [
       { key: "free", text: "SITE 100 % GRATUIT — JAMAIS DE PAIEMENT EXIGÉ" },
@@ -731,7 +731,7 @@ const fr = {
     summaryTitle: "LE SOMMAIRE",
     summaryHint: "TAPES SUR UN ARTICLE POUR Y ALLER",
     backTop: "REMONTER",
-    contactTitle: "UNE QUESTION, UN DOUBT, UNE RÉCLAMATION ?",
+    contactTitle: "UNE QUESTION, UN DOUTE, UNE RÉCLAMATION ?",
     contactText: "Le Capitaine répond personnellement à chaque courriel — c'est la promesse d'un petit navire.",
     contactBtn: "ÉCRIRE AU CAPITAINE",
     applyNote: { before: "EN SCELLANT TA CANDIDATURE, TU ACCEPTES LES", link: "CONDITIONS GÉNÉRALES DU SITE" },
@@ -749,164 +749,6 @@ const fr = {
       badge1: "SITE 100 % GRATUIT",
       badge2: "DONNÉES JAMAIS VENDUES",
     },
-    sections: [
-      {
-        id: "editeur", toc: "L'éditeur du site",
-        title: "1 · Mentions légales — l'éditeur du site",
-        paras: ["Le présent site (ci-après « le Site »), consacré à l'alliance GOLDEN PIRATES du Royaume 1023 sur Call of Dragons, est édité à titre personnel et non professionnel par :"],
-        card: [
-          "Éditeur & directeur de la publication : M. Charly Soudan",
-          "Adresse : 36 avenue du parc — 93290 Tremblay-en-France, France",
-          "Courriel dédié au Site : golden.pirates@outlook.fr",
-          "Nature : site communautaire de fans, édité par une personne physique à titre non professionnel",
-        ],
-      },
-      {
-        id: "hebergeur", toc: "L'hébergement",
-        title: "2 · L'hébergement",
-        paras: [
-          "Le Site est hébergé sur une infrastructure cloud sécurisée (plateforme Emergent). Les coordonnées complètes de l'hébergeur (dénomination sociale, adresse et numéro de téléphone) sont communiquées sur simple demande écrite à golden.pirates@outlook.fr, conformément à la loi pour la confiance dans l'économie numérique (LCEN).",
-        ],
-      },
-      {
-        id: "objet", toc: "Objet & acceptation",
-        title: "3 · Objet & acceptation des présentes conditions",
-        paras: [
-          "Les présentes Conditions Générales d'Utilisation (les « Conditions ») fixent les règles d'accès et d'usage du Site et de ses espaces : site public, Espace Recrue (suivi de dossier, Bouteille à la Mer, Tanière des Recrues), Espace Conseil et page Butin.",
-          "En naviguant sur le Site, en déposant une candidature ou en utilisant le moindre de ses espaces, tu acceptes les présentes Conditions sans réserve. Si une ligne cloche, écris-nous — mais n'embarque pas sans les avoir lues.",
-        ],
-      },
-      {
-        id: "description", toc: "Un site de fans, 100 % gratuit",
-        title: "4 · Un site de fans — 100 % gratuit, non affilié au jeu",
-        paras: [
-          "Le Site est un site communautaire de fans du jeu Call of Dragons. Il n'est ni édité, ni affilié, ni sponsorisé, ni approuvé par l'éditeur du jeu ; les marques, logos et contenus du jeu appartiennent à leurs détenteurs respectifs.",
-          "L'accès au Site et à toutes ses fonctions est totalement gratuit : aucune inscription payante, aucun abonnement, aucune vente, aucune publicité. Personne ne te demandera jamais d'argent pour postuler, être recruté, obtenir un statut ou rester à bord.",
-        ],
-      },
-      {
-        id: "espaces", toc: "Les espaces du site",
-        title: "5 · Les espaces du Site",
-        bullets: [
-          "Le site public — la présentation de l'alliance, le Code des Pirates, le récit des saisons et le formulaire de candidature.",
-          "L'Espace Recrue — le suivi de ton dossier grâce à ton code de suivi (GP-1023-XXXX), la Bouteille à la Mer (tes messages au Conseil) et la Tanière des Recrues (les échanges entre recrues).",
-          "L'Espace Conseil — l'espace privé des administrateurs de l'alliance, protégé par identifiants ; les tentatives d'intrusion sont journalisées.",
-          "La page Butin — tout sur les dons volontaires et le hall des donateurs.",
-        ],
-      },
-      {
-        id: "recrutement", toc: "Recrutement & candidatures",
-        title: "6 · Recrutement & candidatures",
-        paras: [
-          "Les informations déclarées dans le formulaire (pseudo, puissance, troupes, activité, Discord facultatif, expérience, message) servent exclusivement à l'examen de ta candidature par le Conseil des Capitaines.",
-          "Le dépôt d'une candidature ne crée aucun droit à l'admission : chaque dossier est étudié avec soin, mais la décision du Conseil reste souveraine et les refus ne sont pas systématiquement motivés. Aucune indemnité ne peut être réclamée au titre d'un refus ou d'une mise en réserve.",
-          "Le recrutement dans le royaume s'effectue en fin de Saison 2, conformément aux règles de migration du jeu. Les échéances affichées (saisons, KvK, compte à rebours) sont indicatives : seules les annonces officielles de l'éditeur du jeu font foi.",
-        ],
-      },
-      {
-        id: "dons", toc: "Les dons volontaires",
-        title: "7 · Les dons volontaires (PayPal)",
-        paras: [
-          "Le Site peut recevoir des dons volontaires par PayPal. Un don est un cadeau libre : il n'ouvre aucun droit, aucun avantage ni aucun rang, et n'influence jamais l'examen d'une candidature — donateur ou non, la place à bord est exactement la même.",
-          "Un don peut être remboursé sur simple demande écrite dans les 14 jours suivant le paiement, à golden.pirates@outlook.fr, sans justification. Passé ce délai, le don est définitif. Les dons financent exclusivement le Site (serveur, domaine) et la vie de l'alliance.",
-          "Le hall des donateurs n'affiche que le pseudo et le palier — jamais un montant précis, jamais une adresse électronique.",
-        ],
-      },
-      {
-        id: "donnees", toc: "Données personnelles (RGPD)",
-        title: "8 · Protection des données personnelles (RGPD)",
-        paras: [
-          "Responsable du traitement : M. Charly Soudan, joignable uniquement à golden.pirates@outlook.fr. Le Site ne collecte que le strict nécessaire pour faire vivre le recrutement et les échanges :",
-        ],
-        bullets: [
-          "Formulaire de candidature — pseudo, puissance, troupes, activité quotidienne, Discord (facultatif), expérience, message.",
-          "Échanges — messages de la Bouteille à la Mer et de la Tanière, notes de mer, candidatures et décisions du Conseil.",
-          "Sécurité — protection anti-abus (limitation d'envois par appareil) et journalisation des tentatives d'intrusion sur l'Espace Conseil.",
-        ],
-        paras2: [
-          "Finalités : la gestion des candidatures, la communication avec les recrues, la modération et la sécurité du Site. Bases légales : ton consentement au moment de l'envoi, et l'intérêt légitime au bon fonctionnement du Site.",
-          "Durées de conservation : candidatures et messages sont gardés le temps de la saison en cours puis supprimés ou anonymisés ; en cas de refus, seul pseudo + date sont conservés 30 jours pour empêcher les repostages abusifs.",
-          "Destinataires : uniquement le Conseil des Capitaines. Tes données ne sont jamais vendues, louées ni transmises à des tiers à des fins commerciales ou publicitaires.",
-          "Tes droits : accès, rectification, effacement, limitation, opposition et portabilité — une lettre à golden.pirates@outlook.fr suffit, réponse sous 30 jours. Tu peux également saisir la CNIL (www.cnil.fr).",
-          "Mineurs : le Site s'adresse aux joueurs du jeu. Tout marin de moins de 15 ans doit embarquer avec l'accord d'un parent ou tuteur légal, qui peut demander la suppression du dossier à tout moment.",
-        ],
-      },
-      {
-        id: "cookies", toc: "Stockage local & cookies",
-        title: "9 · Stockage local & cookies",
-        paras: ["Le Site n'utilise ni cookie publicitaire ni traceur tiers. Seuls des éléments techniques nécessaires sont déposés sur ton appareil :"],
-        bullets: [
-          "gp_lang — ta langue préférée (français ou anglais) ;",
-          "gp_bottles — tes codes de suivi gardés en local, pour consulter ton dossier sans les retaper ;",
-          "un cookie de session sécurisé, réservé à l'Espace Conseil (authentification).",
-        ],
-        paras2: [
-          "Tu peux effacer ces éléments à tout moment depuis les réglages de ton navigateur : seul le confort s'efface, aucune fonction ne t'en verra refusée.",
-        ],
-      },
-      {
-        id: "propriete", toc: "Propriété intellectuelle",
-        title: "10 · Propriété intellectuelle",
-        paras: [
-          "L'ensemble du Site — textes, logo, illustrations, mise en page et code — est la propriété de son éditeur, hors éléments appartenant au jeu. Toute reproduction ou réutilisation sans autorisation écrite est interdite.",
-          "« Call of Dragons », ses marques, logos, visuels et contenus sont la propriété exclusive de leur éditeur (Farlight Games) ; le Site n'en revendique aucun et respecte la propriété de chacun. Certaines illustrations du Site sont des créations originales générées par intelligence artificielle, réalisées pour le Site.",
-        ],
-      },
-      {
-        id: "conduite", toc: "Règles de conduite",
-        title: "11 · Les règles de conduite à bord",
-        paras: [
-          "La Tanière et la Bouteille à la Mer sont des espaces de respect mutuel. Sont interdits : insultes, harcèlement, propos haineux, discriminatoires, à caractère sexuel ou violents, spam et publicité, contenus illégaux, triche, virus et codes malveillants, usurpation d'identité, et toute collecte des données d'autres marins.",
-        ],
-      },
-      {
-        id: "moderation", toc: "Modération",
-        title: "12 · Modération",
-        paras: [
-          "Le Conseil peut retirer tout message contraire aux présentes Conditions, suspendre l'accès d'un marin indélicat à la Tanière, et refuser ou clore toute candidature en cas d'abus — sans préjudice d'éventuelles actions légales.",
-          "Signale tout abus à golden.pirates@outlook.fr : chaque signalement est lu et examiné.",
-        ],
-      },
-      {
-        id: "responsabilite", toc: "Responsabilité",
-        title: "13 · Responsabilité",
-        paras: [
-          "Le Site est fourni « en l'état ». Des interruptions pour maintenance ou évolution sont possibles, sans garantie de disponibilité ininterrompue. L'éditeur ne répond ni des décisions de jeu et pertes virtuelles, ni des litiges entre joueurs, ni du contenu des sites tiers.",
-          "Les informations de jeu affichées (dates de saison, règles de migration, échéances) sont indicatives : seules les annonces officielles de l'éditeur du jeu font foi.",
-        ],
-      },
-      {
-        id: "liens", toc: "Liens externes",
-        title: "14 · Liens externes",
-        paras: [
-          "Le Site peut renvoyer vers des services tiers (Discord, PayPal, le jeu). L'éditeur n'exerce aucun contrôle sur ces sites et décline toute responsabilité quant à leurs contenus et pratiques ; leur usage est régi par leurs propres conditions.",
-        ],
-      },
-      {
-        id: "modification", toc: "Modification des conditions",
-        title: "15 · Modification des conditions",
-        paras: [
-          "Les présentes Conditions peuvent être amendées à tout moment pour suivre l'évolution du Site ou de la loi. La version en vigueur est celle affichée sur cette page, avec sa date d'entrée en vigueur. Continuer à utiliser le Site après publication vaut acceptation.",
-        ],
-      },
-      {
-        id: "droit", toc: "Droit applicable & litiges",
-        title: "16 · Droit applicable & litiges",
-        paras: [
-          "Les présentes Conditions sont régies par le droit français. En cas de désaccord, écris d'abord à golden.pirates@outlook.fr : on règle toujours un différend de marins de vive voix. À défaut d'accord amiable, les litiges relèvent des tribunaux français compétents.",
-        ],
-      },
-      {
-        id: "contact", toc: "Nous écrire",
-        title: "17 · Nous écrire",
-        paras: ["Pour toute question sur ces Conditions, sur tes données ou sur le Site :"],
-        card: [
-          "Charly Soudan — GOLDEN PIRATES, Royaume 1023",
-          "36 avenue du parc — 93290 Tremblay-en-France, France",
-          "golden.pirates@outlook.fr",
-        ],
-      },
-    ],
   },
 
 };
@@ -1627,7 +1469,7 @@ const en = {
     eyebrow: "THE TRUST SCROLL",
     title1: "Terms & conditions",
     titleGold: " & legal notice",
-    updated: "IN EFFECT SINCE 18 OCTOBER 2026",
+    updated: "VERSION 2.0 — IN EFFECT SINCE 19 OCTOBER 2026",
     intro: "A crew's trust is earned out loud. This scroll tells everything, in plain words: who runs this site, what we do with your information, and the ship's rules.",
     badges: [
       { key: "free", text: "100% FREE SITE — NO PAYMENT EVER REQUIRED" },
@@ -1655,164 +1497,6 @@ const en = {
       badge1: "100% FREE SITE",
       badge2: "DATA NEVER SOLD",
     },
-    sections: [
-      {
-        id: "editeur", toc: "The site editor",
-        title: "1 · Legal notice — the site editor",
-        paras: ["This website (the “Site”), home of the GOLDEN PIRATES alliance of Kingdom 1023 in Call of Dragons, is published on a personal, non-professional basis by:"],
-        card: [
-          "Editor & publishing director: Mr Charly Soudan",
-          "Address: 36 avenue du parc — 93290 Tremblay-en-France, France",
-          "Site's dedicated email: golden.pirates@outlook.fr",
-          "Nature: fan-made community site, published by a private individual on a non-professional basis",
-        ],
-      },
-      {
-        id: "hebergeur", toc: "Hosting",
-        title: "2 · Hosting",
-        paras: [
-          "The Site is hosted on secure cloud infrastructure (the Emergent platform). The host's full contact details (company name, address and telephone number) are provided on written request to golden.pirates@outlook.fr, in accordance with the French law for confidence in the digital economy (LCEN).",
-        ],
-      },
-      {
-        id: "objet", toc: "Purpose & acceptance",
-        title: "3 · Purpose & acceptance of these terms",
-        paras: [
-          "These Terms of Use (the “Terms”) set the rules for accessing and using the Site and its spaces: the public site, the Recruit Space (file tracking, Bottle to the Sea, Crew's Den), the Council Space and the Treasure page.",
-          "By browsing the Site, submitting an application or using any of its spaces, you accept these Terms without reserve. If a line sounds off, write to us — but don't board without reading them.",
-        ],
-      },
-      {
-        id: "description", toc: "A fan site, 100% free",
-        title: "4 · A fan site — 100% free, not affiliated with the game",
-        paras: [
-          "The Site is a fan-made community site for the game Call of Dragons. It is neither published by, affiliated with, sponsored by, nor endorsed by the game's publisher; the game's trademarks, logos and content belong to their respective owners.",
-          "Access to the Site and all of its features is completely free: no paid sign-up, no subscription, no sales, no advertising. Nobody will ever ask you for money to apply, get recruited, earn a status or stay aboard.",
-        ],
-      },
-      {
-        id: "espaces", toc: "The Site's spaces",
-        title: "5 · The Site's spaces",
-        bullets: [
-          "The public site — the alliance presentation, the Pirates' Code, the saga of seasons and the application form.",
-          "The Recruit Space — tracking your file with your tracking code (GP-1023-XXXX), the Bottle to the Sea (your messages to the Council) and the Crew's Den (recruit-to-recruit exchanges).",
-          "The Council Space — the alliance administrators' private area, protected by credentials; intrusion attempts are logged.",
-          "The Treasure page — everything about voluntary donations and the donators' hall.",
-        ],
-      },
-      {
-        id: "recrutement", toc: "Recruitment & applications",
-        title: "6 · Recruitment & applications",
-        paras: [
-          "The information declared in the form (username, power, troops, activity, optional Discord, experience, message) is used exclusively for the review of your application by the Council of Captains.",
-          "Submitting an application grants no right to admission: every file is reviewed with care, but the Council's decision remains final and refusals are not systematically explained. No compensation can be claimed for a refusal or a reserve status.",
-          "Kingdom recruitment takes place at the end of Season 2, in accordance with the game's migration rules. Displayed timelines (seasons, KvK, countdown) are indicative only: the game publisher's official announcements prevail.",
-        ],
-      },
-      {
-        id: "dons", toc: "Voluntary donations",
-        title: "7 · Voluntary donations (PayPal)",
-        paras: [
-          "The Site may receive voluntary donations via PayPal. A donation is a free gift: it grants no right, advantage or rank, and never influences an application's review — donor or not, your place aboard is exactly the same.",
-          "A donation can be refunded on written request within 14 days of payment, at golden.pirates@outlook.fr, no explanation needed. After that, the donation is final. Donations fund the Site (server, domain) and the alliance's life exclusively.",
-          "The donators' hall only displays a pseudo and a tier — never an exact amount, never an email address.",
-        ],
-      },
-      {
-        id: "donnees", toc: "Personal data (GDPR)",
-        title: "8 · Personal data protection (GDPR)",
-        paras: [
-          "Data controller: Mr Charly Soudan, reachable only at golden.pirates@outlook.fr. The Site collects only what's strictly necessary to run recruitment and exchanges:",
-        ],
-        bullets: [
-          "Application form — username, power, troops, daily activity, Discord (optional), experience, message.",
-          "Exchanges — Bottle to the Sea and Crew's Den messages, sea notes, applications and Council decisions.",
-          "Security — anti-abuse protection (per-device sending limits) and logging of intrusion attempts on the Council Space.",
-        ],
-        paras2: [
-          "Purposes: managing applications, communicating with recruits, moderation and Site security. Legal bases: your consent when submitting, and the legitimate interest of running the Site.",
-          "Retention: applications and messages are kept for the current season, then deleted or anonymised; when a file is refused, only pseudo + date are kept for 30 days to prevent abusive re-applications.",
-          "Recipients: the Council of Captains only. Your data is never sold, rented or passed on to third parties for commercial or advertising purposes.",
-          "Your rights: access, rectification, erasure, restriction, objection and portability — one email to golden.pirates@outlook.fr is enough, answered within 30 days. You may also lodge a complaint with the CNIL (www.cnil.fr).",
-          "Minors: the Site is aimed at the game's players. Any sailor under 15 must board with a parent's or guardian's consent, who may ask for the file's deletion at any time.",
-        ],
-      },
-      {
-        id: "cookies", toc: "Local storage & cookies",
-        title: "9 · Local storage & cookies",
-        paras: ["The Site uses no advertising cookies and no third-party trackers. Only necessary technical items are stored on your device:"],
-        bullets: [
-          "gp_lang — your preferred language (French or English);",
-          "gp_bottles — your tracking codes kept locally, so you can check your file without retyping them;",
-          "a secure session cookie, reserved for the Council Space (authentication).",
-        ],
-        paras2: [
-          "You can clear these at any time from your browser settings: only comfort is erased, no feature will ever be denied to you.",
-        ],
-      },
-      {
-        id: "propriete", toc: "Intellectual property",
-        title: "10 · Intellectual property",
-        paras: [
-          "The entire Site — texts, logo, illustrations, layout and code — is the property of its editor, excluding elements belonging to the game. Any reproduction or reuse without written authorisation is prohibited.",
-          "“Call of Dragons”, its trademarks, logos, visuals and content are the exclusive property of their publisher (Farlight Games); the Site claims none of them and respects everyone's property. Some of the Site's illustrations are original creations generated by artificial intelligence, made for the Site.",
-        ],
-      },
-      {
-        id: "conduite", toc: "Rules of conduct",
-        title: "11 · The ship's rules of conduct",
-        paras: [
-          "The Crew's Den and the Bottle to the Sea are spaces of mutual respect. Forbidden: insults, harassment, hateful, discriminatory, sexual or violent content, spam and advertising, illegal content, cheating, viruses and malicious code, identity theft, and collecting other sailors' data.",
-        ],
-      },
-      {
-        id: "moderation", toc: "Moderation",
-        title: "12 · Moderation",
-        paras: [
-          "The Council may remove any message contrary to these Terms, suspend a misbehaving sailor's access to the Den, and refuse or close any application in case of abuse — without prejudice to possible legal action.",
-          "Report any abuse to golden.pirates@outlook.fr: every report is read and reviewed.",
-        ],
-      },
-      {
-        id: "responsabilite", toc: "Liability",
-        title: "13 · Liability",
-        paras: [
-          "The Site is provided “as is”. Interruptions for maintenance or upgrades may occur, with no guarantee of uninterrupted availability. The editor is not liable for in-game decisions and virtual losses, disputes between players, or third-party websites' content.",
-          "Displayed game information (season dates, migration rules, deadlines) is indicative: the game publisher's official announcements prevail.",
-        ],
-      },
-      {
-        id: "liens", toc: "External links",
-        title: "14 · External links",
-        paras: [
-          "The Site may link to third-party services (Discord, PayPal, the game). The editor has no control over these sites and accepts no liability for their content or practices; their use is governed by their own terms.",
-        ],
-      },
-      {
-        id: "modification", toc: "Changes to these terms",
-        title: "15 · Changes to these terms",
-        paras: [
-          "These Terms may be amended at any time to follow the Site's evolution or the law. The current version is the one displayed on this page, with its effective date. Continuing to use the Site after publication means acceptance.",
-        ],
-      },
-      {
-        id: "droit", toc: "Applicable law & disputes",
-        title: "16 · Applicable law & disputes",
-        paras: [
-          "These Terms are governed by French law. In case of disagreement, write first to golden.pirates@outlook.fr: sailors always settle a dispute face to face. Failing an amicable agreement, disputes fall under the competent French courts.",
-        ],
-      },
-      {
-        id: "contact", toc: "Write to us",
-        title: "17 · Write to us",
-        paras: ["For any question about these Terms, your data or the Site:"],
-        card: [
-          "Charly Soudan — GOLDEN PIRATES, Kingdom 1023",
-          "36 avenue du parc — 93290 Tremblay-en-France, France",
-          "golden.pirates@outlook.fr",
-        ],
-      },
-    ],
   },
 };
 

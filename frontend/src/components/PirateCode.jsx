@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useLang, fmtPower } from "@/lib/i18n";
 
 const EASE = [0.16, 1, 0.3, 1];
-const COINS_IMG = "https://images.unsplash.com/photo-1599038988300-2e3f04d87f8b?q=85&w=900";
+const COINS_IMG = "/img/code-pieces.jpg";
 
 export default function PirateCode() {
   const { c } = useLang();

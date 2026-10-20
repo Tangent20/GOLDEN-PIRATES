@@ -8,7 +8,7 @@ import useRole from "@/lib/role";
 
 const EASE = [0.16, 1, 0.3, 1];
 const HERO_BG =
-  "https://images.pexels.com/photos/38427508/pexels-photo-38427508.jpeg?auto=compress&cs=tinysrgb&w=1800";
+  "/img/hero-navire.jpg";
 
 // Poussière d'or qui monte des cales — positions fixes (aucun saut entre deux rendus)
 const EMBERS = Array.from({ length: 22 }, (_, i) => ({

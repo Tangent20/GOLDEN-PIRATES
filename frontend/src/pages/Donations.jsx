@@ -536,6 +536,11 @@ export default function Donations() {
                           <span className="leading-tight">{sealing ? t.s2.sealing : t.s2.seal}</span>
                         </button>
                       </div>
+                      <p data-testid="donate-legal-note" className="mt-4 font-fell text-sm text-mist leading-relaxed">
+                        {t.s2.legalBefore}{" "}
+                        <a href="/conditions#dons" data-testid="donate-legal-link" className="text-gold underline underline-offset-4 hover:text-goldlight">{t.s2.legalLink}</a>
+                        {t.s2.legalAfter}
+                      </p>
                     </motion.div>
                   )}
 

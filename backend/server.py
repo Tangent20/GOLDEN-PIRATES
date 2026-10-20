@@ -33,6 +33,8 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent
+import logging  # noqa: E402
+logger = logging.getLogger("golden_pirates")
 load_dotenv(ROOT_DIR / '.env')
 
 MONGO_URL = os.environ['MONGO_URL']
@@ -155,8 +157,53 @@ async def cron_keep_alive(request: Request):
     auth = request.headers.get("authorization", "")
     if not secret or not secrets.compare_digest(auth, f"Bearer {secret}"):
         raise HTTPException(status_code=401, detail="Unauthorized")
-    # Aucun travail à faire : ce ping maintient l'app en éveil (anti « réveiller le serveur »).
-    return {"ok": True, "ts": now_utc().isoformat()}
+    # Ce ping maintient l'app en éveil ET applique les durées de conservation RGPD (1×/heure max).
+    purged = await run_retention()
+    return {"ok": True, "ts": now_utc().isoformat(), "retention": purged}
+
+
+# ---------------- Durées de conservation (RGPD art. 5-1-e) ----------------
+# Ces durées sont celles annoncées dans les Conditions générales (/conditions) — les garder alignées.
+RETENTION_IP_DAYS = 2            # IP technique anti-abus : effacée après 48 h
+RETENTION_APPLICATION_DAYS = 365 # dossier + messages : 12 mois après la dernière décision
+RETENTION_DONATION_DAYS = 3 * 365  # bordereaux de dons : 3 ans (preuve, remboursement, litige)
+_RETENTION_STATE = {"at": None}
+
+
+async def run_retention(force: bool = False):
+    now = now_utc()
+    last = _RETENTION_STATE["at"]
+    if not force and last and (now - last) < timedelta(hours=1):
+        return None
+    _RETENTION_STATE["at"] = now
+    res = {}
+    ip_limit = (now - timedelta(days=RETENTION_IP_DAYS)).isoformat()
+    r = await db.applications.update_many({"ip": {"$exists": True}, "created_at": {"$lt": ip_limit}}, {"$unset": {"ip": ""}})
+    res["application_ips"] = r.modified_count
+    r = await db.donators.update_many({"ip": {"$exists": True}, "created_at": {"$lt": ip_limit}}, {"$unset": {"ip": ""}})
+    res["donation_ips"] = r.modified_count
+    # Sanctuaire des refus : inutile au-delà du délai de 30 jours → supprimé
+    rej_limit = (now - timedelta(days=REAPPLY_COOLDOWN_DAYS)).isoformat()
+    r = await db.rejections.delete_many({"rejected_at": {"$lt": rej_limit}})
+    res["rejections"] = r.deleted_count
+    # Dossiers sans décision ni mouvement depuis 12 mois → supprimés avec leurs messages
+    app_limit = (now - timedelta(days=RETENTION_APPLICATION_DAYS)).isoformat()
+    old = await db.applications.find({"status_changed_at": {"$lt": app_limit}}, {"id": 1, "tracking_code": 1}).to_list(2000)
+    if old:
+        codes = [d["tracking_code"] for d in old if d.get("tracking_code")]
+        ids = [d["id"] for d in old if d.get("id")]
+        await db.messages.delete_many({"conv_code": {"$in": codes}})
+        await db.peer_messages.delete_many({"$or": [{"from_id": {"$in": ids}}, {"to_id": {"$in": ids}}]})
+        await db.applications.delete_many({"id": {"$in": ids}})
+    res["applications"] = len(old)
+    don_limit = (now - timedelta(days=RETENTION_DONATION_DAYS)).isoformat()
+    r = await db.donators.delete_many({"created_at": {"$lt": don_limit}})
+    res["donations"] = r.deleted_count
+    # Tentatives de connexion Conseil : journal gardé 30 jours
+    login_limit = (now - timedelta(days=30)).isoformat()
+    r = await db.login_attempts.delete_many({"last_at": {"$lt": login_limit}})
+    res["login_attempts"] = r.deleted_count
+    return res
 
 
 REAPPLY_COOLDOWN_DAYS = 30
@@ -378,9 +425,9 @@ async def admin_login(data: LoginInput, request: Request, response: Response):
     user = await db.users.find_one({"email": email})
     if not user or not verify_password(data.password, user.get("password_hash", "")):
         fails = (attempt.get("fails", 0) if attempt else 0) + 1
-        update = {"$inc": {"fails": 1}}
+        update = {"$inc": {"fails": 1}, "$set": {"last_at": now_utc().isoformat()}}
         if fails >= 5:
-            update["$set"] = {"locked_until": (now_utc() + timedelta(minutes=15)).isoformat()}
+            update["$set"]["locked_until"] = (now_utc() + timedelta(minutes=15)).isoformat()
         await db.login_attempts.update_one({"identifier": ident}, update, upsert=True)
         raise HTTPException(
             status_code=401,
@@ -2068,6 +2115,10 @@ async def seed():
         await db.rejections.update_one({"_id": rj["_id"]}, {"$set": {"pseudo_norm": _pseudo_norm(rj.get("pseudo_lower") or "")}})
     await db.login_attempts.create_index("identifier")
     await db.messages.create_index([("conv_code", 1), ("created_at", 1)])
+    try:
+        logger.info("Rétention RGPD au démarrage : %s", await run_retention(force=True))
+    except Exception as exc:  # ne jamais bloquer le démarrage
+        logger.warning("Rétention RGPD : %s", exc)
     admin = await db.users.find_one({"email": ADMIN_EMAIL})
     if admin is None:
         await db.users.insert_one({

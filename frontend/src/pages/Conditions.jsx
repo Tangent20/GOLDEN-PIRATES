@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLang } from "@/lib/i18n";
+import { CONDITIONS_COPY } from "@/lib/conditionsCopy";
 import Seo from "@/lib/Seo";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -40,8 +42,16 @@ function Toc({ d, variant }) {
 }
 
 export default function Conditions() {
-  const { c } = useLang();
-  const d = c.conditions;
+  const { c, lang } = useLang();
+  // Textes juridiques : source unique lib/conditionsCopy.js (+ bandeaux communs de l'i18n)
+  const d = { ...c.conditions, ...(CONDITIONS_COPY[lang] || CONDITIONS_COPY.fr) };
+  // Lien profond /conditions#dons, #donnees… : va directement à l'article demandé
+  useEffect(() => {
+    const id = (window.location.hash || "").replace("#", "");
+    if (!id) return undefined;
+    const tmr = setTimeout(() => jump(id), 450);
+    return () => clearTimeout(tmr);
+  }, []);
   return (
     <div className="min-h-screen bg-ink text-bone">
       <Seo route="/conditions" />
