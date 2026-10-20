@@ -239,3 +239,5 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 
 ## Bandeau « Conditions mises à jour (V2.2) » (2026-10-20)
 - `components/TermsBanner.jsx` monté dans App.js : bandeau bas discret (verre obsidienne, liseré or), affiché 1,4 s après l'arrivée, une seule fois par version (`gp_terms_seen` = CONDITIONS_VERSION), jamais sur /conditions (la lecture vaut prise de connaissance), fermeture croix ou lien LIRE → /conditions. z-index 90 (sous les modales). Clé déclarée dans la section Stockage local des CGU (FR/EN).
+
+- 2026-10-20 : bandeau « Conditions mises à jour » RETIRÉ à la demande de l'utilisateur (composant, i18n et mention CGU supprimés).

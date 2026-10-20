@@ -114,7 +114,6 @@ const fr = {
       ],
       bullets: [
         "gp_lang : ta langue (français ou anglais) ;",
-        "gp_terms_seen : la version des Conditions dont tu as pris connaissance, pour ne pas t'afficher deux fois le bandeau de mise à jour ;",
         "gp_bottles et gp_last_seen : tes codes de suivi gardés sur l'Étagère, et la date de ta dernière visite pour les notifications ;",
         "gp_apply_draft_v2 et gp_gift_draft : les brouillons de ta candidature et de ton don, sauvegardés en silence pour ne rien perdre si tu quittes la page ;",
         "gp_gifts : les bordereaux de tes dons, pour ton carnet de dons ;",
@@ -299,7 +298,6 @@ const en = {
       ],
       bullets: [
         "gp_lang: your language (French or English);",
-        "gp_terms_seen: the version of the Terms you have acknowledged, so the update banner is not shown twice;",
         "gp_bottles and gp_last_seen: your tracking codes kept on the Rack, and the date of your last visit for notifications;",
         "gp_apply_draft_v2 and gp_gift_draft: drafts of your application and donation, silently saved so nothing is lost if you leave the page;",
         "gp_gifts: your donation receipt numbers, for your gift logbook;",

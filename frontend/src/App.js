@@ -11,7 +11,6 @@ import Suivi from "@/pages/Suivi";
 import Donations from "@/pages/Donations";
 import Admin from "@/pages/Admin";
 import Conditions from "@/pages/Conditions";
-import { TermsBanner } from "@/components/TermsBanner";
 
 export function scrollToId(id) {
   smoothScrollTo(id);
@@ -99,7 +98,6 @@ function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-          <TermsBanner />
           <Toaster
             position="top-center"
             offset={{ top: "calc(96px + env(safe-area-inset-top))" }}
