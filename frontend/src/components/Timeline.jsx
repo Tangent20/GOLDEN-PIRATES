@@ -29,7 +29,7 @@ export default function Timeline() {
         aria-hidden="true"
         className="absolute right-[-10%] top-[10%] w-[40vw] max-w-[560px] opacity-[0.07] hidden md:block"
       >
-        <img decoding="async" src={COMPASS_IMG} alt="" className="w-full h-auto rounded-full object-cover aspect-square" />
+        <img decoding="async" loading="lazy" src={COMPASS_IMG} alt="" className="w-full h-auto rounded-full object-cover aspect-square" />
       </div>
       <div className="max-w-5xl mx-auto px-5 sm:px-8">
         <motion.p

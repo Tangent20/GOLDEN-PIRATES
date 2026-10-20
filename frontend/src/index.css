@@ -341,3 +341,139 @@ a, button, [role="button"], label, summary { touch-action: manipulation; -webkit
 /* Mobile / tablette / « réduire les animations » : grain sans mélange de calques (fluidité 60 i/s) */
 .grain-layer { transform: translateZ(0); }
 /* (grain désormais sans mélange de calques sur TOUS les appareils — voir Grain.jsx) */
+
+
+/* ===================== AUDIT HARDENING — adaptabilité universelle & anti-lag =====================
+ * Toutes les règles ci-dessous visent une compatibilité pixel-perfect : ordinateurs 4K/ultra-wide,
+ * portables, tablettes, smartphones (iOS, Samsung, Xiaomi, Google, Huawei), écrans pliables,
+ * portrait + paysage, préférences d'accessibilité (mouvement réduit, haute densité).
+ */
+
+/* 1) Zones sécurisées iOS/Android (encoches, barres de navigation, Dynamic Island, Face ID bar).
+      Appliquées sur le body + conteneurs pleine largeur ; chaque page peut y greffer `pt-safe` etc. */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Utilitaires `safe-area` pour les composants top/bottom bars (navbar, footer sticky). */
+@layer utilities {
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
+  .mt-safe { margin-top: env(safe-area-inset-top); }
+  .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+  /* Hauteur viewport dynamique (gère les barres Safari/Chrome qui se replient). */
+  .min-h-screen-dvh { min-height: 100vh; min-height: 100dvh; }
+  .h-screen-dvh    { height: 100vh;     height: 100dvh; }
+  /* Petit viewport (barres sorties) — utile pour les menus déroulants mobiles. */
+  .min-h-screen-svh { min-height: 100vh; min-height: 100svh; }
+  /* Large viewport (barres rétractées) — utile pour les écrans d'accueil. */
+  .min-h-screen-lvh { min-height: 100vh; min-height: 100lvh; }
+}
+
+/* 2) iOS Safari — forcer min 16px sur les inputs pour empêcher le zoom automatique au focus.
+      Règle extrêmement répandue mais oubliée : si <16 px, Safari zoome sur le champ. */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* 3) Scroll fluide et sans saccade — élastique iOS désactivé sur <html> pour éviter l'effet "pull to
+      refresh" accidentel, mais préservé sur les conteneurs scrollables internes. */
+html {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* 4) Images : pas de décalage de mise en page (CLS = 0).
+      max-width, hauteur auto, et un ratio par défaut quand aspect-ratio est fourni par le HTML. */
+img, picture, video, svg, canvas {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+img[loading="lazy"], img[decoding="async"] { content-visibility: auto; }
+
+/* 5) Accélération matérielle sur classes fréquemment animées — hint explicite GPU + composition. */
+@layer utilities {
+  .gpu          { transform: translateZ(0); backface-visibility: hidden; }
+  .will-animate { will-change: transform, opacity; }
+}
+/* Classes connues du design système */
+.ember, .storm-flash, .wave-drift, .wave-drift-slow, .ship-bob, .bottle-bob,
+.pennant-sway, .wheel-idle, .lantern-flicker,
+.motion-preset-hero, .motion-preset-fade {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* 6) Fluidité typographique universelle — titres responsives via clamp() */
+@layer base {
+  h1 { font-size: clamp(2rem, 2.4vw + 1.2rem, 4.75rem); line-height: 1.05; }
+  h2 { font-size: clamp(1.5rem, 1.6vw + 1rem, 3rem); line-height: 1.1; }
+  h3 { font-size: clamp(1.25rem, 0.9vw + 1rem, 2rem); line-height: 1.2; }
+  p  { line-height: 1.55; }
+}
+
+/* 7) Zones tactiles — minimum 44×44px conforme WCAG 2.2 AA + Apple HIG.
+      Appliqué comme filet de sécurité sur les contrôles sans min-height explicite. */
+@media (pointer: coarse) {
+  button, [role="button"], a.btn, input[type="button"], input[type="submit"], select {
+    min-height: 44px;
+  }
+}
+
+/* 8) Focus visible universel — accessibilité clavier (contours dorés). */
+:focus-visible {
+  outline: 2px solid #d4af37;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* 9) Pliables (Galaxy Fold / Z Fold fermé = ~280 px de large).
+      Serrage des paddings horizontaux pour éviter le débordement. */
+@media (max-width: 320px) {
+  body { font-size: 15px; }
+  .frame-plate { box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.25); }
+}
+
+/* 10) Écrans ultra-wide 4K+ — on borne la largeur de lecture pour un confort oculaire. */
+@media (min-width: 2400px) {
+  main, section article, .max-w-7xl { margin-left: auto; margin-right: auto; }
+}
+
+/* 11) `print` : masque la navbar/floating buttons pour une impression propre des reçus HTML. */
+@media print {
+  nav, aside, .no-print, [data-no-print] { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+}
+
+/* 12) Mouvement réduit — override globale pour TOUTES les animations/transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 13) Override progressive de `min-h-screen` et `h-screen` de Tailwind : utilisation de `dvh` quand
+       supporté (iOS 15.4+, Chrome 108+, Safari 15.4+, Firefox 101+). Évite les sauts d'un bon
+       1/5 de l'écran quand la barre d'adresse Safari se replie/déplie sur mobile. */
+@supports (height: 100dvh) {
+  .min-h-screen { min-height: 100dvh; }
+  .h-screen     { height: 100dvh; }
+  .max-h-screen { max-height: 100dvh; }
+}

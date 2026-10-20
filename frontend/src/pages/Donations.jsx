@@ -180,15 +180,27 @@ export default function Donations() {
     return () => { document.removeEventListener("visibilitychange", onVis); clearInterval(iv); };
   }, [loadHall, refreshGifts]);
 
-  // Barre collante mobile : visible quand le coffre n'est pas à l'écran
+  // Barre collante mobile : visible quand le coffre n'est pas à l'écran.
+  // Scroll handler throttlé via rAF pour éviter tout micro-lag sur scroll rapide.
   useEffect(() => {
     const el = coffreRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(([e]) => setShowSticky(!e.isIntersecting && window.scrollY > 400), { threshold: 0.05 });
     io.observe(el);
-    const onScroll = () => { if (window.scrollY < 400) setShowSticky(false); };
+    let rafId = 0;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        if (window.scrollY < 400) setShowSticky(false);
+      });
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => { io.disconnect(); window.removeEventListener("scroll", onScroll); };
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Dérivés jauge

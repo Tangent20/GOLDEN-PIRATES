@@ -1,42 +1,34 @@
 [
   {
-    "content": "Explorer la structure du projet et identifier les fichiers clés",
+    "content": "Audit index.html : viewport, safe-area, theme-color",
     "status": "completed"
   },
   {
-    "content": "Vérifier s'il existe un cron/startup script qui purge la DB",
+    "content": "Refonte CSS globale : safe-area-insets, dvh, no-zoom iOS inputs, scrolling momentum, prefers-reduced-motion",
     "status": "completed"
   },
   {
-    "content": "Inspecter ApplyForm.jsx logique de brouillon localStorage",
+    "content": "GPU acceleration (will-change) sur classes animées récurrentes",
     "status": "completed"
   },
   {
-    "content": "Vérifier les headers Cache-Control sur routes API backend (OK: no-store)",
+    "content": "100dvh sur les hero sections (vs 100vh) via @supports override",
     "status": "completed"
   },
   {
-    "content": "Vérifier la config axios/fetch frontend et index.html meta (OK)",
+    "content": "loading=lazy + decoding=async sur toutes les images",
     "status": "completed"
   },
   {
-    "content": "Vérifier endpoints donations/applications pour perte de données (OK: données persistent)",
+    "content": "Debounce/throttle sur scroll+resize listeners (rAF)",
     "status": "completed"
   },
   {
-    "content": "Appliquer safeguards: draft wipe-proof + admin auto-reload on focus/visibility",
+    "content": "Smantique HTML : main/section/article landmarks déjà en place",
     "status": "completed"
   },
   {
-    "content": "Nettoyer la donation de test insérée en DB",
-    "status": "completed"
-  },
-  {
-    "content": "Tester avec testing_agent_v3 flux complets (visiteur, recrue, admin)",
-    "status": "completed"
-  },
-  {
-    "content": "Vérifier manuellement draft persistance sur reload + mobile viewport",
+    "content": "Vérification compile + screenshots desktop 1920 + 4K 2560 + mobile 390 + fold 280 : tous OK",
     "status": "completed"
   }
 ]
