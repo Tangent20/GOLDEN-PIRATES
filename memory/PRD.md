@@ -230,3 +230,9 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Backend : nouveau champ optionnel `contact` (ApplicationCreate, track, exports XLSX colonne « AUTRE CONTACT », PDF repli). Champ `experience` conservé mais plus saisi (envoyé vide).
 - Admin/Suivi : colonne « DISCORD / CONTACT » avec repli sur `contact`.
 - Vérifié : testing agent iteration_59 (100 % frontend, backend OK) + vérifs manuelles : brouillon+reload, pseudo déjà pris, panneau recrue, panneau conseil (envoi désactivé), EN, 390/768/1920 sans débordement, inputs 16px.
+
+## Audit de cohérence pré-publication (2026-10-20)
+- Processus étape 1 (FR/EN) : plus de « 5 escales / deux minutes » → « un seul parchemin, une page, une minute, Discord facultatif ».
+- Conditions générales → **VERSION 2.2** : données collectées mises à jour (canal de contact facultatif Discord/Telegram/WhatsApp/en jeu, expérience uniquement pour les dossiers antérieurs au 20/10/2026, clé brouillon `gp_apply_draft_v2`), mention « aucun contact obligatoire ».
+- Bloc « Expérience » affiché uniquement s'il est renseigné (anciens dossiers) dans Suivi, Admin et PDF registre ; placeholder recherche admin inclut « contact ».
+- Vérifié : /, /suivi, /donations, /conditions, /admin sans erreur console ni débordement (390 px) ; PDF registre affiche le contact alternatif.

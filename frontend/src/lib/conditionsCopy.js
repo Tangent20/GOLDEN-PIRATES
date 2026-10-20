@@ -2,10 +2,10 @@
 // Source unique : toute évolution du Site (données, durées, services tiers) doit être reportée ICI.
 // Durées alignées sur backend/server.py (RETENTION_* + REAPPLY_COOLDOWN_DAYS).
 
-export const CONDITIONS_VERSION = "2.1";
+export const CONDITIONS_VERSION = "2.2";
 
 const fr = {
-  updated: "VERSION 2.1 — EN VIGUEUR DEPUIS LE 20 OCTOBRE 2026",
+  updated: "VERSION 2.2 — EN VIGUEUR DEPUIS LE 20 OCTOBRE 2026",
   intro:
     "La confiance d'un équipage se gagne à voix haute. Ce parchemin dit tout, sans langue de bois : qui édite et héberge ce site, quelles informations nous recueillons, combien de temps nous les gardons, ce que deviennent les dons, et les règles du bord. Il est rédigé conformément au droit français et européen (LCEN, RGPD, loi Informatique et Libertés).",
   contactTitle: "UNE QUESTION, UN DOUTE, UNE RÉCLAMATION ?",
@@ -67,7 +67,7 @@ const fr = {
       id: "recrutement", toc: "Recrutement & candidatures",
       title: "6 · Recrutement & candidatures",
       paras: [
-        "Les informations du formulaire (pseudo, puissance, troupes, activité, expérience, message et, si tu le souhaites, ton tag Discord) servent uniquement à l'examen de ta candidature par le Conseil des Capitaines.",
+        "Les informations du formulaire (pseudo, puissance, troupes, activité, message et, si tu le souhaites, un canal de contact : ton tag Discord ou un autre moyen de te joindre — Telegram, WhatsApp, pseudo en jeu) servent uniquement à l'examen de ta candidature par le Conseil des Capitaines. Aucun contact n'est obligatoire : sans Discord, le Conseil te répond dans la Bouteille à la Mer de ton Espace Recrue.",
         "Déposer une candidature ne donne aucun droit à l'admission. Chaque dossier est lu avec soin, mais la décision du Conseil reste souveraine ; un refus n'est pas toujours motivé et n'ouvre droit à aucune indemnité.",
         "Règles anti-abus : un seul dossier en examen à la fois par pseudo, au plus 6 candidatures par jour depuis un même appareil, et un délai de 30 jours après un refus avant de pouvoir postuler à nouveau. Ce délai s'applique au même pseudo, à ses variantes d'écriture (accents, majuscules, points, espaces) et au même tag Discord. Le Conseil peut lever ce délai à tout moment en réexaminant le dossier.",
         "Le recrutement suit les règles de migration du jeu (fin de Saison 2). Les dates affichées sont indicatives : seules les annonces officielles de l'éditeur du jeu font foi.",
@@ -92,7 +92,7 @@ const fr = {
         "Responsable du traitement : M. Charly Soudan (coordonnées à l'article 1). Le Site ne recueille que le strict nécessaire. Voici, pour chaque traitement, les données concernées, leur but, leur base légale (article 6 du RGPD) et leur durée de conservation :",
       ],
       bullets: [
-        "Candidature et suivi : pseudo, puissance, troupes, activité, expérience, message, tag Discord (facultatif), statut et note du Conseil. But : examiner ta candidature et te répondre. Base : ton consentement, donné à l'envoi. Durée : 12 mois après la dernière décision, puis suppression automatique avec les messages liés.",
+        "Candidature et suivi : pseudo, puissance, troupes, activité, message, canal de contact facultatif (tag Discord ou autre moyen de te joindre), expérience pour les dossiers déposés avant le 20 octobre 2026, statut et note du Conseil. But : examiner ta candidature et te répondre. Base : ton consentement, donné à l'envoi. Durée : 12 mois après la dernière décision, puis suppression automatique avec les messages liés.",
         "Messageries : messages de la Bouteille à la Mer et de la Tanière des Recrues. But : échanger avec le Conseil et entre recrues, modérer. Base : consentement et intérêt légitime (modération). Durée : celle du dossier auquel ils sont rattachés.",
         "Délai après refus : pseudo, son empreinte d'écriture et tag Discord. But : faire respecter le délai de 30 jours. Base : intérêt légitime (lutte contre les abus). Durée : 30 jours, puis suppression automatique.",
         "Dons : pseudo, montant, devise, numéro de bordereau, choix d'anonymat et, si tu les donnes, courriel et mot pour l'équipage. But : établir ton reçu, afficher le Hall, traiter un remboursement. Base : consentement et intérêt légitime (preuve du don). Durée : 3 ans, puis suppression automatique.",
@@ -115,7 +115,7 @@ const fr = {
       bullets: [
         "gp_lang : ta langue (français ou anglais) ;",
         "gp_bottles et gp_last_seen : tes codes de suivi gardés sur l'Étagère, et la date de ta dernière visite pour les notifications ;",
-        "gp_apply_draft et gp_gift_draft : les brouillons de ta candidature et de ton don, pour ne rien perdre si tu quittes la page ;",
+        "gp_apply_draft_v2 et gp_gift_draft : les brouillons de ta candidature et de ton don, sauvegardés en silence pour ne rien perdre si tu quittes la page ;",
         "gp_gifts : les bordereaux de tes dons, pour ton carnet de dons ;",
         "des indicateurs de session temporaires (sessionStorage), effacés à la fermeture de l'onglet ;",
         "access_token : le cookie de connexion de l'Espace Conseil (administrateurs uniquement, valable 12 heures).",
@@ -189,7 +189,7 @@ const fr = {
 };
 
 const en = {
-  updated: "VERSION 2.1 — IN EFFECT SINCE 20 OCTOBER 2026",
+  updated: "VERSION 2.2 — IN EFFECT SINCE 20 OCTOBER 2026",
   intro:
     "A crew's trust is earned out loud. This scroll tells everything, in plain words: who runs and hosts this site, what information we collect, how long we keep it, what happens to donations, and the ship's rules. It is written in line with French and EU law (LCEN, GDPR, French Data Protection Act). The French version prevails in case of discrepancy.",
   contactTitle: "A QUESTION, A DOUBT, A COMPLAINT?",
@@ -251,7 +251,7 @@ const en = {
       id: "recrutement", toc: "Recruitment & applications",
       title: "6 · Recruitment & applications",
       paras: [
-        "The form information (pseudonym, power, troops, activity, experience, message and, if you wish, your Discord tag) is used only for the Captains' Council to review your application.",
+        "The form information (pseudonym, power, troops, activity, message and, if you wish, a contact channel: your Discord tag or another way to reach you — Telegram, WhatsApp, in-game name) is used only for the Captains' Council to review your application. No contact is mandatory: without Discord, the Council answers you in the Bottle to the Sea of your Recruit Space.",
         "Applying gives no right to admission. Every file is read carefully, but the Council's decision is final; a refusal is not always explained and gives no right to compensation.",
         "Anti-abuse rules: only one file under review at a time per pseudonym, at most 6 applications per day from the same device, and a 30-day wait after a refusal before applying again. This wait applies to the same pseudonym, its spelling variants (accents, capitals, dots, spaces) and the same Discord tag. The Council can lift it at any time by reviewing the file again.",
         "Recruitment follows the game's migration rules (end of Season 2). Dates shown are indicative: only the game publisher's official announcements prevail.",
@@ -276,7 +276,7 @@ const en = {
         "Data controller: Mr Charly Soudan (details in Article 1). The Site collects only what is strictly needed. For each processing, here is the data, its purpose, its legal basis (GDPR Article 6) and how long it is kept:",
       ],
       bullets: [
-        "Application and tracking: pseudonym, power, troops, activity, experience, message, Discord tag (optional), status and Council note. Purpose: review your application and answer you. Basis: your consent, given when you send. Retention: 12 months after the last decision, then automatic deletion along with linked messages.",
+        "Application and tracking: pseudonym, power, troops, activity, message, optional contact channel (Discord tag or another way to reach you), experience for files submitted before 20 October 2026, status and Council note. Purpose: review your application and answer you. Basis: your consent, given when you send. Retention: 12 months after the last decision, then automatic deletion along with linked messages.",
         "Messaging: Message in a Bottle and Recruits' Den messages. Purpose: talk with the Council and between recruits, moderation. Basis: consent and legitimate interest (moderation). Retention: same as the file they belong to.",
         "Post-refusal wait: pseudonym, its spelling fingerprint and Discord tag. Purpose: enforce the 30-day wait. Basis: legitimate interest (preventing abuse). Retention: 30 days, then automatic deletion.",
         "Donations: pseudonym, amount, currency, receipt number, anonymity choice and, if you give them, email and message to the crew. Purpose: issue your receipt, show the Hall, handle a refund. Basis: consent and legitimate interest (proof of the gift). Retention: 3 years, then automatic deletion.",
@@ -299,7 +299,7 @@ const en = {
       bullets: [
         "gp_lang: your language (French or English);",
         "gp_bottles and gp_last_seen: your tracking codes kept on the Rack, and the date of your last visit for notifications;",
-        "gp_apply_draft and gp_gift_draft: drafts of your application and donation, so nothing is lost if you leave the page;",
+        "gp_apply_draft_v2 and gp_gift_draft: drafts of your application and donation, silently saved so nothing is lost if you leave the page;",
         "gp_gifts: your donation receipt numbers, for your gift logbook;",
         "temporary session flags (sessionStorage), cleared when you close the tab;",
         "access_token: the Council Area login cookie (administrators only, valid 12 hours).",

@@ -944,10 +944,12 @@ export default function Suivi() {
                                 </div>
                               ))}
                             </div>
-                            <div className="mt-5">
-                              <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{s.fields.experience}</p>
-                              <p className="font-fell text-base text-bone/85 whitespace-pre-wrap break-words">{result.experience || s.noExp}</p>
-                            </div>
+                            {result.experience ? (
+                              <div className="mt-5">
+                                <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{s.fields.experience}</p>
+                                <p className="font-fell text-base text-bone/85 whitespace-pre-wrap break-words">{result.experience}</p>
+                              </div>
+                            ) : null}
                             <div className="mt-4">
                               <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{s.fields.message}</p>
                               <p className="font-fell text-base text-bone/85 whitespace-pre-wrap break-words">{result.message}</p>

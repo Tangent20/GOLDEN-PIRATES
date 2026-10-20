@@ -634,12 +634,12 @@ function AppRow({ app, onUpdate, onDelete, history }) {
                   <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{d.activity}</p>
                   <p className="font-fell text-base text-bone/85">{app.activity}</p>
                 </div>
-                <div>
-                  <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{d.experience}</p>
-                  <p className="font-fell text-base text-bone/85 whitespace-pre-wrap">
-                    {app.experience || d.noExp}
-                  </p>
-                </div>
+                {app.experience ? (
+                  <div>
+                    <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{d.experience}</p>
+                    <p className="font-fell text-base text-bone/85 whitespace-pre-wrap">{app.experience}</p>
+                  </div>
+                ) : null}
                 <div>
                   <p className="font-mono2 text-[9px] tracking-[0.2em] text-mist mb-1">{d.message}</p>
                   <p className="font-fell text-base text-bone/85 whitespace-pre-wrap">{app.message}</p>

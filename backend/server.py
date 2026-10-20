@@ -1839,10 +1839,12 @@ async def export_pdf(lang: str = "fr", tz: str | None = None, _: str = Depends(r
             [Paragraph(L["labels"]["activity"], lab), Paragraph(escape(d.get("activity", "")) or "—", val),
              Paragraph(L["labels"]["discord"], lab), Paragraph(escape(d.get("discord", "") or d.get("contact", "")) or "—", val)],
             [Paragraph(L["labels"]["filed"], lab), Paragraph(fmt_dt(d.get("created_at"), _tz) or "—", val), "", ""],
-            [Paragraph(L["labels"]["exp"], lab), Paragraph(escape(d.get("experience", "")) or L["no_exp"], val_italic), "", ""],
-            [Paragraph(L["labels"]["msg"], lab), Paragraph(escape(d.get("message", "")) or "—", val), "", ""],
         ]
-        span_rows = [4, 5, 6]
+        # Expérience : uniquement pour les anciens dossiers (champ retiré du formulaire une page)
+        if d.get("experience"):
+            rows.append([Paragraph(L["labels"]["exp"], lab), Paragraph(escape(d["experience"]), val_italic), "", ""])
+        rows.append([Paragraph(L["labels"]["msg"], lab), Paragraph(escape(d.get("message", "")) or "—", val), "", ""])
+        span_rows = list(range(4, len(rows)))
         if d.get("note"):
             rows.append([Paragraph(L["labels"]["council_note"], lab), Paragraph(escape(d["note"]), val), "", ""])
             span_rows.append(len(rows) - 1)
