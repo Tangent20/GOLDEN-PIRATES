@@ -2,10 +2,10 @@
 // Source unique : toute évolution du Site (données, durées, services tiers) doit être reportée ICI.
 // Durées alignées sur backend/server.py (RETENTION_* + REAPPLY_COOLDOWN_DAYS).
 
-export const CONDITIONS_VERSION = "2.0";
+export const CONDITIONS_VERSION = "2.1";
 
 const fr = {
-  updated: "VERSION 2.0 — EN VIGUEUR DEPUIS LE 19 OCTOBRE 2026",
+  updated: "VERSION 2.1 — EN VIGUEUR DEPUIS LE 20 OCTOBRE 2026",
   intro:
     "La confiance d'un équipage se gagne à voix haute. Ce parchemin dit tout, sans langue de bois : qui édite et héberge ce site, quelles informations nous recueillons, combien de temps nous les gardons, ce que deviennent les dons, et les règles du bord. Il est rédigé conformément au droit français et européen (LCEN, RGPD, loi Informatique et Libertés).",
   contactTitle: "UNE QUESTION, UN DOUTE, UNE RÉCLAMATION ?",
@@ -189,7 +189,7 @@ const fr = {
 };
 
 const en = {
-  updated: "VERSION 2.0 — IN EFFECT SINCE 19 OCTOBER 2026",
+  updated: "VERSION 2.1 — IN EFFECT SINCE 20 OCTOBER 2026",
   intro:
     "A crew's trust is earned out loud. This scroll tells everything, in plain words: who runs and hosts this site, what information we collect, how long we keep it, what happens to donations, and the ship's rules. It is written in line with French and EU law (LCEN, GDPR, French Data Protection Act). The French version prevails in case of discrepancy.",
   contactTitle: "A QUESTION, A DOUBT, A COMPLAINT?",
