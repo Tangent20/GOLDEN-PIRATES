@@ -215,3 +215,9 @@ Choix confirmés : thème « jamais vu » 100% pirates et impressionnant ; formu
 - Bandeau visiteur neutre « UN NAVIRE EN VUE — REJOINS L'ÉQUIPAGE ».
 - Image de partage dynamique : GET /api/og-image.jpg sert backend/static/og/og-preinscription.jpg ou og-recrutement.jpg selon le calendrier ; og:image / twitter:image / Seo.jsx = /api/og-image.jpg?v=4 ; make_og.py paramétrable (OG_LABEL, OG_OUT).
 - Agent de test iteration_52 : 100 %. Calendrier réel restauré (s2 31/10 23:59 Paris, fin S2 non annoncée).
+
+## 2026-10-20 — Contrôle de déploiement : PASS
+- Bloquant 1 corrigé : la purge RGPD ne tourne plus au démarrage (aucune suppression lors d'un déploiement) — uniquement via le cron /api/cron/keep-alive (1×/h).
+- Bloquant 2 corrigé : CORS_ORIGINS='*' → allow_origins ['*'] + credentials (Starlette renvoie l'origine exacte).
+- /api/admin/applications : projection {"ip": 0} (IP jamais envoyée au navigateur).
+- deployment_agent : PASS ; agent de test iteration_53 : 100 % ; pytest 79/79 sur base propre.

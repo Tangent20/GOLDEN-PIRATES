@@ -453,7 +453,8 @@ async def me(email: str = Depends(require_admin)):
 @api_router.get("/admin/applications")
 async def list_applications(status: Optional[str] = None, _: str = Depends(require_admin)):
     query = {"status": status} if status else {}
-    docs = await db.applications.find(query).sort("created_at", -1).to_list(500)
+    # Projection : l'IP technique anti-abus n'est jamais envoyée au navigateur du Conseil
+    docs = await db.applications.find(query, {"ip": 0}).sort("created_at", -1).to_list(500)
     return [clean_doc(d) for d in docs]
 
 
@@ -2175,10 +2176,8 @@ async def seed():
         await db.rejections.update_one({"_id": rj["_id"]}, {"$set": {"pseudo_norm": _pseudo_norm(rj.get("pseudo_lower") or "")}})
     await db.login_attempts.create_index("identifier")
     await db.messages.create_index([("conv_code", 1), ("created_at", 1)])
-    try:
-        logger.info("Rétention RGPD au démarrage : %s", await run_retention(force=True))
-    except Exception as exc:  # ne jamais bloquer le démarrage
-        logger.warning("Rétention RGPD : %s", exc)
+    # Rétention RGPD : JAMAIS au démarrage (aucune suppression lors d'un déploiement) —
+    # uniquement via le cron planifié POST /api/cron/keep-alive (1×/heure max).
     admin = await db.users.find_one({"email": ADMIN_EMAIL})
     if admin is None:
         await db.users.insert_one({
@@ -2211,12 +2210,15 @@ async def safe_validation_handler(request: Request, exc: RequestValidationError)
         content={"detail": "Requête invalide — vérifie les champs envoyés."},
     )
 
-origins = [
-    o.strip() for o in os.environ.get('CORS_ORIGINS', '').split(',')
-    if o.strip() and o.strip() != '*'
-]
-if FRONTEND_URL not in origins:
-    origins.append(FRONTEND_URL)
+# CORS : « * » dans CORS_ORIGINS = toutes origines (Starlette renvoie alors l'origine exacte de la
+# requête quand les cookies sont utilisés, ce qui reste valide pour les navigateurs).
+cors_env = os.environ.get('CORS_ORIGINS', '').strip()
+if cors_env == '*':
+    origins = ['*']
+else:
+    origins = [o.strip() for o in cors_env.split(',') if o.strip()]
+    if FRONTEND_URL and FRONTEND_URL not in origins:
+        origins.append(FRONTEND_URL)
 
 app.add_middleware(
     CORSMiddleware,
