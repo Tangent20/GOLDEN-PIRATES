@@ -1005,12 +1005,24 @@ function ButinPanel() {
     if (pseudo.trim().length < 2 || !(amt >= 0.5)) return;
     setBusy(true);
     try {
-      // Construit la date du don si l'admin l'a renseignée
+      // Construit la date du don si l'admin l'a renseignée (JJ/MM/AAAA + HH:MM)
       let whenISO = null;
       if (whenDate) {
+        const dm = whenDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (!dm) {
+          toast.error(lang === "en" ? "Invalid date — use DD/MM/YYYY." : "Date invalide — utilise JJ/MM/AAAA.");
+          setBusy(false);
+          return;
+        }
+        const [, dd, mm, yyyy] = dm;
         const t = whenTime && /^\d{2}:\d{2}$/.test(whenTime) ? whenTime : "12:00";
-        const local = new Date(`${whenDate}T${t}:00`);
-        if (!isNaN(local.getTime())) whenISO = local.toISOString();
+        const local = new Date(`${yyyy}-${mm}-${dd}T${t}:00`);
+        if (isNaN(local.getTime())) {
+          toast.error(lang === "en" ? "Invalid date or time." : "Date ou heure invalide.");
+          setBusy(false);
+          return;
+        }
+        whenISO = local.toISOString();
       }
       await api.post("/admin/donators", {
         pseudo: pseudo.trim(),
@@ -1240,29 +1252,44 @@ function ButinPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <input
               data-testid="butin-when-date-input"
-              type="date"
+              type="text"
+              inputMode="numeric"
               value={whenDate}
-              onChange={(e) => setWhenDate(e.target.value)}
-              max={(() => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); })()}
-              aria-label={lang === "en" ? "Date" : "Date"}
-              style={{ colorScheme: "light" }}
-              className="w-full min-h-[46px] bg-bone/95 border border-gold/40 px-4 py-2.5 font-fell text-base text-ink focus:border-gold focus:outline-none transition-colors"
+              onChange={(e) => {
+                // Autoriser JJ/MM/AAAA uniquement — ajoute automatiquement les séparateurs
+                const raw = e.target.value.replace(/\D/g, "").slice(0, 8);
+                let out = raw;
+                if (raw.length >= 5) out = `${raw.slice(0,2)}/${raw.slice(2,4)}/${raw.slice(4)}`;
+                else if (raw.length >= 3) out = `${raw.slice(0,2)}/${raw.slice(2)}`;
+                setWhenDate(out);
+              }}
+              placeholder={lang === "en" ? "DD/MM/YYYY" : "JJ/MM/AAAA"}
+              maxLength={10}
+              aria-label={lang === "en" ? "Date (DD/MM/YYYY)" : "Date (JJ/MM/AAAA)"}
+              className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone placeholder:text-bone/40 focus:border-gold focus:outline-none transition-colors"
             />
             <input
               data-testid="butin-when-time-input"
-              type="time"
+              type="text"
+              inputMode="numeric"
               value={whenTime}
-              onChange={(e) => setWhenTime(e.target.value)}
-              step={60}
-              aria-label={lang === "en" ? "Time" : "Heure"}
-              style={{ colorScheme: "light" }}
-              className="w-full min-h-[46px] bg-bone/95 border border-gold/40 px-4 py-2.5 font-fell text-base text-ink focus:border-gold focus:outline-none transition-colors"
+              onChange={(e) => {
+                // Autoriser HH:MM uniquement — ajoute automatiquement le ":"
+                const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
+                let out = raw;
+                if (raw.length >= 3) out = `${raw.slice(0,2)}:${raw.slice(2)}`;
+                setWhenTime(out);
+              }}
+              placeholder={lang === "en" ? "HH:MM (24h)" : "HH:MM (24h)"}
+              maxLength={5}
+              aria-label={lang === "en" ? "Time (HH:MM)" : "Heure (HH:MM)"}
+              className="w-full min-h-[46px] bg-ink/70 border border-gold/25 px-4 py-2.5 font-fell text-base text-bone placeholder:text-bone/40 focus:border-gold focus:outline-none transition-colors"
             />
           </div>
           <p className="mt-1 font-fell italic text-xs text-mist">
             {lang === "en"
-              ? "Use this to retroactively log a donation received yesterday or earlier."
-              : "Utilise ce champ pour rattraper un don reçu hier ou un autre jour."}
+              ? "Format: DD/MM/YYYY and HH:MM (24h). Use this to log a donation received yesterday or earlier."
+              : "Format : JJ/MM/AAAA et HH:MM (24h). Utilise ce champ pour rattraper un don reçu hier ou un autre jour."}
           </p>
         </div>
         <button
