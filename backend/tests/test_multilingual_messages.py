@@ -18,14 +18,14 @@ _FENV = "/app/frontend/.env"
 if os.path.exists(_FENV):
     with open(_FENV) as _f:
         for _ln in _f:
-            if _ln.startswith("REACT_APP_BACKEND_URL"):
-                os.environ["REACT_APP_BACKEND_URL"] = _ln.split("=", 1)[1].strip().strip('"')
+            if _ln.startswith("VITE_BACKEND_URL"):
+                os.environ["VITE_BACKEND_URL"] = _ln.split("=", 1)[1].strip().strip('"')
                 break
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
-assert BASE_URL, "REACT_APP_BACKEND_URL missing"
+BASE_URL = os.environ.get("VITE_BACKEND_URL", "").rstrip("/")
+assert BASE_URL, "VITE_BACKEND_URL missing"
 API = f"{BASE_URL}/api"
-ADMIN_EMAIL = "admin@goldenpirates.io"
-ADMIN_PASSWORD = "Capitaine1023!"
+ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
+ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 # Payload JSON brut qui contient un surrogate isolé (séquence d'échappement \uXXXX
 # non appariée, parfaitement légale au niveau JSON mais produit un lone surrogate

@@ -15,7 +15,7 @@ const OG_ALT = "GOLDEN PIRATES — l'équipage trinque autour du coffre au trés
 const ROUTES = {
   "/suivi": {
     title: "Suivre ma candidature · Espace Recrue — GOLDEN PIRATES",
-    desc: "Consultez l'état de votre dossier avec votre code de suivi GP-1023-XXXX. Code perdu ? Retrouvez-le avec votre pseudo et votre Discord, ou votre puissance exacte.",
+    desc: "Consultez l'état de votre dossier avec votre code de suivi GP-1023-XXXXXXXXXXXX. Code perdu ? Retrouvez-le avec votre pseudo et Discord, ou puissance et contact exacts.",
   },
   "/admin": {
     title: "Espace Conseil — GOLDEN PIRATES",

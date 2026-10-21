@@ -6,12 +6,12 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 
 load_dotenv("/app/backend/.env")
-BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/") if os.environ.get("REACT_APP_BACKEND_URL") else None
+BASE_URL = os.environ["VITE_BACKEND_URL"].rstrip("/") if os.environ.get("VITE_BACKEND_URL") else None
 if not BASE_URL:
     # Fallback: read frontend/.env
     with open("/app/frontend/.env") as f:
         for line in f:
-            if line.startswith("REACT_APP_BACKEND_URL="):
+            if line.startswith("VITE_BACKEND_URL="):
                 BASE_URL = line.split("=", 1)[1].strip().rstrip("/")
 
 MONGO = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]

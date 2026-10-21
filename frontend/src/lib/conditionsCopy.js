@@ -58,7 +58,7 @@ const fr = {
       title: "5 · Les espaces du Site",
       bullets: [
         "Le site public : la présentation de l'alliance, le Code des Pirates, le récit des saisons, le processus d'embarquement et le formulaire de candidature.",
-        "L'Espace Recrue : le suivi de ton dossier avec ton code personnel GP-1023-XXXX, la Bouteille à la Mer (ta messagerie privée avec le Conseil), la Tanière des Recrues (échanges entre recrues) et l'Étagère à bouteilles (tes codes gardés sur ton appareil). Ton code de suivi est ta clé : garde-le pour toi.",
+        "L'Espace Recrue : le suivi de ton dossier avec ton code personnel GP-1023-XXXXXXXXXXXX, la Bouteille à la Mer (ta messagerie privée avec le Conseil), la Tanière des Recrues (échanges entre recrues) et l'Étagère à bouteilles (tes codes gardés sur ton appareil). Ton code de suivi est ta clé : garde-le pour toi.",
         "Le Coffre du Navire : les dons volontaires, ton carnet de dons, tes reçus et le Hall des donateurs.",
         "L'Espace Conseil : l'espace privé des administrateurs de l'alliance, protégé par identifiants et par un verrou anti-intrusion (5 essais, puis 15 minutes de blocage).",
       ],
@@ -78,7 +78,7 @@ const fr = {
       title: "7 · Les dons volontaires (PayPal)",
       paras: [
         "Le Site accepte des dons volontaires par PayPal. Un don est un cadeau libre, sans aucune contrepartie : il n'ouvre aucun droit, avantage ni rang, et ne pèse jamais sur l'examen d'une candidature. Donateur ou non, ta place à bord est la même.",
-        "Déroulement : tu choisis un montant, tu indiques ton pseudo (ou choisis l'anonymat), puis un bordereau GPD-1023-XXXX est créé avant que tu sois redirigé vers PayPal. Le paiement a lieu uniquement chez PayPal : le Site ne voit jamais tes coordonnées bancaires ni ton compte PayPal. Le Conseil confirme ensuite manuellement l'arrivée du don.",
+        "Déroulement : tu choisis un montant, tu indiques ton pseudo (ou choisis l'anonymat), puis un bordereau GPD-1023-XXXXXXXXXXXX est créé avant que tu sois redirigé vers PayPal. Le paiement a lieu uniquement chez PayPal : le Site ne voit jamais tes coordonnées bancaires ni ton compte PayPal. Le Conseil confirme ensuite manuellement l'arrivée du don.",
         "Reçu de don non fiscal : le document PDF ou Excel délivré atteste d'un don. Ce n'est pas une facture et il n'ouvre droit à aucune réduction d'impôt, car le Site n'est pas un organisme d'intérêt général (articles 200 et 238 bis du Code général des impôts non applicables). Aucune TVA n'est due, aucun bien ni service n'étant fourni.",
         "Remboursement : sur simple demande écrite à golden.pirates@outlook.fr dans les 14 jours suivant le paiement, sans justification. Passé ce délai, le don est définitif. Les dons financent exclusivement le Site (hébergement, nom de domaine) et la vie de l'alliance.",
         "Le Hall des donateurs affiche ton pseudo, ou « Marin anonyme » si tu l'as demandé, avec le montant donné. Ton courriel et ton mot pour l'équipage ne sont jamais publiés.",
@@ -242,7 +242,7 @@ const en = {
       title: "5 · The Site's areas",
       bullets: [
         "The public site: the alliance presentation, the Pirate Code, the season saga, the boarding process and the application form.",
-        "The Recruit Area: tracking your file with your personal GP-1023-XXXX code, the Message in a Bottle (your private messages with the Council), the Recruits' Den (exchanges between recruits) and the Bottle Rack (your codes kept on your device). Your tracking code is your key: keep it to yourself.",
+        "The Recruit Area: tracking your file with your personal GP-1023-XXXXXXXXXXXX code, the Message in a Bottle (your private messages with the Council), the Recruits' Den (exchanges between recruits) and the Bottle Rack (your codes kept on your device). Your tracking code is your key: keep it to yourself.",
         "The ship's treasure chest: voluntary donations, your gift logbook, your receipts and the Donors' Hall.",
         "The Council Area: the alliance administrators' private area, protected by credentials and an anti-intrusion lock (5 attempts, then a 15-minute block).",
       ],
@@ -262,7 +262,7 @@ const en = {
       title: "7 · Voluntary donations (PayPal)",
       paras: [
         "The Site accepts voluntary donations through PayPal. A donation is a free gift with nothing in return: it grants no right, perk or rank, and never weighs on an application. Donor or not, your place on board is the same.",
-        "How it works: you choose an amount, enter your pseudonym (or choose to stay anonymous), then a GPD-1023-XXXX receipt number is created before you are sent to PayPal. Payment happens only at PayPal: the Site never sees your bank details or your PayPal account. The Council then confirms manually that the donation arrived.",
+        "How it works: you choose an amount, enter your pseudonym (or choose to stay anonymous), then a GPD-1023-XXXXXXXXXXXX receipt number is created before you are sent to PayPal. Payment happens only at PayPal: the Site never sees your bank details or your PayPal account. The Council then confirms manually that the donation arrived.",
         "Non-tax donation receipt: the PDF or Excel document you get certifies a gift. It is not an invoice and gives no tax deduction, as the Site is not a public-interest organisation (Articles 200 and 238 bis of the French Tax Code do not apply). No VAT is due, since no goods or services are provided.",
         "Refunds: on simple written request to golden.pirates@outlook.fr within 14 days of payment, no reason needed. After that, the donation is final. Donations fund only the Site (hosting, domain name) and the alliance's life.",
         "The Donors' Hall shows your pseudonym, or “Anonymous sailor” if you asked for it, with the amount given. Your email and your message to the crew are never published.",

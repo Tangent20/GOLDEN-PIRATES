@@ -255,7 +255,7 @@ export default function Suivi() {
   const [tab, setTab] = useState("dossier");
   const [showRecover, setShowRecover] = useState(false);
   const [recRoute, setRecRoute] = useState("discord");
-  const [rec, setRec] = useState({ pseudo: "", discord: "", power: "" });
+  const [rec, setRec] = useState({ pseudo: "", discord: "", power: "", contact: "" });
   const [recRes, setRecRes] = useState(null);
   const [recErr, setRecErr] = useState("");
   const [recBusy, setRecBusy] = useState(false);
@@ -289,9 +289,10 @@ export default function Suivi() {
 
   const normalize = (raw) => {
     const clean = raw.trim().toUpperCase().replace(/\s+/g, "");
-    // 4 derniers signes seulement → on complète le préfixe du royaume
+    // Compatibilité des anciens codes courts, tout en acceptant le nouveau suffixe sécurisé.
     if (/^[A-Z0-9]{4}$/.test(clean)) return `GP-1023-${clean}`;
-    if (/^GP1023[A-Z0-9]{4}$/.test(clean)) return `GP-1023-${clean.slice(6)}`;
+    if (/^[A-Z0-9]{12}$/.test(clean)) return `GP-1023-${clean}`;
+    if (/^GP1023(?:[A-Z0-9]{4}|[A-Z0-9]{12})$/.test(clean)) return `GP-1023-${clean.slice(6)}`;
     return clean;
   };
 
@@ -354,8 +355,8 @@ export default function Suivi() {
     if (recBusy) return;
     const payload = recRoute === "discord"
       ? { pseudo: rec.pseudo, discord: rec.discord }
-      : { pseudo: rec.pseudo, power: rec.power };
-    if (!payload.pseudo?.trim() || (!payload.discord?.trim() && !payload.power?.trim())) {
+      : { pseudo: rec.pseudo, power: rec.power, contact: rec.contact };
+    if (!payload.pseudo?.trim() || (!payload.discord?.trim() && (!payload.power?.trim() || !payload.contact?.trim()))) {
       setRecErr(s.recoverNeedOne);
       return;
     }
@@ -396,7 +397,7 @@ export default function Suivi() {
     setShowRecover(false);
     setRecRes(null);
     setRecErr("");
-    setRec({ pseudo: "", discord: "", power: "" });
+    setRec({ pseudo: "", discord: "", power: "", contact: "" });
   };
 
   // Liens directs : /suivi#dossier | #mer | #taniere | #etagere → ouvre la dernière bouteille + l'onglet.
@@ -454,7 +455,7 @@ export default function Suivi() {
   return (
     <div className="bg-ink min-h-screen flex flex-col">
       <Nav />
-      <main className="flex-1 pt-24 md:pt-28 pb-24 map-grid relative overflow-hidden">
+      <main id="main-content" className="flex-1 pt-[calc(6rem+env(safe-area-inset-top))] md:pt-[calc(7rem+env(safe-area-inset-top))] pb-24 map-grid relative overflow-hidden">
         {/* lueurs d'ambiance */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(ellipse_at_50%_0%,rgba(212,175,55,0.14),transparent_65%)]" />
         <div aria-hidden="true" className="pointer-events-none absolute -left-40 top-80 w-[520px] h-[520px] bg-[radial-gradient(circle,rgba(11,25,44,0.9),transparent_70%)]" />
@@ -539,7 +540,7 @@ export default function Suivi() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder={s.codePh}
-                  maxLength={12}
+                  maxLength={20}
                   autoComplete="off"
                   autoCapitalize="characters"
                   spellCheck={false}
@@ -560,7 +561,7 @@ export default function Suivi() {
             </div>
             <p className="mt-3 font-fell italic text-sm text-mist">{x.plateHint}</p>
             {error && (
-              <p data-testid="status-error" className="mt-4 font-fell text-base text-bloodglow flex items-center gap-2">
+              <p data-testid="status-error" className="mt-4 font-fell text-base text-bloodhot flex items-center gap-2">
                 <FileQuestion className="w-5 h-5 shrink-0" /> {error}
               </p>
             )}
@@ -610,28 +611,45 @@ export default function Suivi() {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     <input
+                      id="recover-pseudo"
                       data-testid="recover-input-pseudo"
                       value={rec.pseudo}
                       onChange={(e) => setRec({ ...rec, pseudo: e.target.value })}
                       placeholder={s.recoverPseudo}
+                      aria-label={s.recoverPseudo}
                       className={inputCls}
                     />
                     {recRoute === "discord" ? (
                       <input
+                        id="recover-discord"
                         data-testid="recover-input-discord"
                         value={rec.discord}
                         onChange={(e) => setRec({ ...rec, discord: e.target.value })}
                         placeholder={s.recoverDiscord}
+                        aria-label={s.recoverDiscord}
                         className={inputCls}
                       />
                     ) : (
-                      <input
-                        data-testid="recover-input-power"
-                        value={rec.power}
-                        onChange={(e) => setRec({ ...rec, power: e.target.value })}
-                        placeholder={s.recoverPowerPh}
-                        className={inputCls}
-                      />
+                      <>
+                        <input
+                          id="recover-power"
+                          data-testid="recover-input-power"
+                          value={rec.power}
+                          onChange={(e) => setRec({ ...rec, power: e.target.value })}
+                          placeholder={s.recoverPowerPh}
+                          aria-label={s.recoverPowerPh}
+                          className={inputCls}
+                        />
+                        <input
+                          id="recover-contact"
+                          data-testid="recover-input-contact"
+                          value={rec.contact}
+                          onChange={(e) => setRec({ ...rec, contact: e.target.value })}
+                          placeholder={s.recoverContact}
+                          aria-label={s.recoverContact}
+                          className={inputCls}
+                        />
+                      </>
                     )}
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -655,7 +673,7 @@ export default function Suivi() {
                     </button>
                   </div>
                   {recErr && (
-                    <p data-testid="recover-error" className="font-fell text-sm text-bloodglow flex items-start gap-2">
+                    <p data-testid="recover-error" className="font-fell text-sm text-bloodhot flex items-start gap-2">
                       <FileQuestion className="w-4 h-4 mt-0.5 shrink-0" /> {recErr}
                     </p>
                   )}

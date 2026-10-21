@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, MessageSquare, ArrowLeft, Send, Users, Anchor as AnchorIcon, Lock, Gauge, Feather } from "lucide-react";
 import { useLang } from "@/lib/i18n";
@@ -6,6 +6,13 @@ import api from "@/lib/api";
 import StatusBadge from "@/components/StatusBadge";
 
 const EASE = [0.22, 1, 0.36, 1];
+const POWER_RANGES = [
+  { min: null, max: 6 },
+  { min: 6, max: 10 },
+  { min: 10, max: 15 },
+  { min: 15, max: 20 },
+  { min: 20, max: null },
+];
 
 export default function PeerDen({ code, myName = "", initialNote = "" }) {
   const { c, lang } = useLang();
@@ -39,15 +46,7 @@ export default function PeerDen({ code, myName = "", initialNote = "" }) {
   }, [msgs, active]);
 
   // Tranches de puissance en millions (bornes : min inclus, max exclu)
-  const RANGES = [
-    { min: null, max: 6 },
-    { min: 6, max: 10 },
-    { min: 10, max: 15 },
-    { min: 15, max: 20 },
-    { min: 20, max: null },
-  ];
-
-  const search = async (value) => {
+  const search = useCallback(async (value) => {
     const q = (typeof value === "string" ? value : query).trim();
     const hasRange = range > 0;
     if (q.length < 2 && !hasRange) { setResults(null); return; }
@@ -55,7 +54,7 @@ export default function PeerDen({ code, myName = "", initialNote = "" }) {
     setBusy(true);
     setError("");
     try {
-      const r = RANGES[range - 1];
+      const r = POWER_RANGES[range - 1];
       const { data } = await api.get("/peers/search", { params: {
         q, code,
         ...(range > 0 ? { min_power: r.min ?? undefined, max_power: r.max ?? undefined } : {}),
@@ -75,13 +74,13 @@ export default function PeerDen({ code, myName = "", initialNote = "" }) {
     } finally {
       if (gen === searchGen.current) setBusy(false);
     }
-  };
+  }, [code, p.error, query, range]);
 
   // Recherche en direct : résultats dès 2 lettres (ou une tranche choisie), 300 ms après la dernière frappe.
   useEffect(() => {
     const t = setTimeout(() => search(), 300);
     return () => clearTimeout(t);
-  }, [query, range]);
+  }, [search]);
 
   const saveNote = async () => {
     if (busy) return;

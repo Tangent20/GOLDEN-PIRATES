@@ -16,29 +16,18 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from pathlib import Path
 
-load_dotenv(Path("/app/backend/.env"))
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/") \
-    if os.environ.get("REACT_APP_BACKEND_URL") \
-    else "https://golden-pirates.preview.emergentagent.com"
-
-# Load frontend .env to prefer that URL (that's what the user sees)
-try:
-    with open("/app/frontend/.env") as f:
-        for line in f:
-            if line.startswith("REACT_APP_BACKEND_URL="):
-                BASE_URL = line.split("=", 1)[1].strip().rstrip("/")
-                break
-except Exception:
-    pass
+# Le garde-fou conftest.py impose une cible localhost et une base isolée.
+BASE_URL = os.environ["VITE_BACKEND_URL"].rstrip("/")
 
 MONGO_URL = os.environ["MONGO_URL"]
 DB_NAME = os.environ["DB_NAME"]
 mongo = MongoClient(MONGO_URL)
 db = mongo[DB_NAME]
 
-ADMIN_EMAIL = "admin@goldenpirates.io"
-ADMIN_PASSWORD = "Capitaine1023!"
+ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
+ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 TEST_PREFIX = "TEST_"
 

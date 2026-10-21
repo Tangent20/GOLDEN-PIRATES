@@ -23,7 +23,7 @@ const EASE = [0.22, 1, 0.36, 1];
 const WHY_ICONS = { ship: Ship, growth: TrendingUp, fest: Beer, free: Lock };
 const GIFTS_KEY = "gp_gifts";
 const DRAFT_KEY = "gp_gift_draft";
-const RID_RX = /^GPD-1023-[A-Z0-9]{4}$/;
+const RID_RX = /^GPD-1023-(?:[A-Z0-9]{4}|[A-Z0-9]{12})$/;
 
 // ---------- Stockage local (carnet de bord + brouillon) ----------
 const readJSON = (k, fb) => {
@@ -139,8 +139,9 @@ export default function Donations() {
 
   // brouillon
   useEffect(() => {
-    writeJSON(DRAFT_KEY, { tier, custom, pseudo, anon, message, email });
-  }, [tier, custom, pseudo, anon, message, email]);
+    // L'e-mail est volontairement exclu : un navigateur partagé ne doit pas le retenir.
+    writeJSON(DRAFT_KEY, { tier, custom, pseudo, anon, message });
+  }, [tier, custom, pseudo, anon, message]);
 
   // Hall : chargement + rafraîchissement
   const loadHall = useCallback(() => (
@@ -316,7 +317,7 @@ export default function Donations() {
       <Seo route="/donations" />
       <Nav />
 
-      <main data-testid="donations-main" className="pt-24 sm:pt-32 pb-20 sm:pb-28">
+      <main id="main-content" data-testid="donations-main" className="pt-[calc(6rem+env(safe-area-inset-top))] sm:pt-[calc(8rem+env(safe-area-inset-top))] pb-20 sm:pb-28">
         {/* ================= 1. HÉROS + JAUGE ================= */}
         <section className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-14 items-center">
@@ -729,7 +730,7 @@ export default function Donations() {
             </label>
             <div className="grid grid-cols-[1fr_auto] gap-2.5">
               <input id="lookup-input" data-testid="lookup-input" value={lookup} placeholder={t.track.lookupPh} autoComplete="off" autoCapitalize="characters" spellCheck={false}
-                onChange={(e) => { setLookup(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 13)); setLookupErr(null); }}
+                onChange={(e) => { setLookup(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 21)); setLookupErr(null); }}
                 className={`${inputCls} font-mono2 tracking-[0.16em] text-goldlight uppercase`} />
               <button type="submit" data-testid="lookup-btn" disabled={lookupBusy || lookup.length < 4}
                 className="gold-ingot inline-flex items-center justify-center gap-2 font-mono2 text-[10px] tracking-[0.18em] px-4 sm:px-5 min-h-[50px] text-ink disabled:opacity-45 disabled:cursor-not-allowed">

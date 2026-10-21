@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 Golden Pirates Comprehensive Backend API Testing
 Tests ALL P0/P1 features from audit requirements:
@@ -15,9 +16,9 @@ import sys
 import time
 from datetime import datetime
 
-BASE_URL = "https://golden-pirates.preview.emergentagent.com/api"
-ADMIN_EMAIL = "admin@goldenpirates.io"
-ADMIN_PASSWORD = "Capitaine1023!"
+BASE_URL = os.environ["VITE_BACKEND_URL"].rstrip("/")
+ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
+ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 class Colors:
     GREEN = '\033[92m'

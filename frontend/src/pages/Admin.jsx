@@ -2009,7 +2009,7 @@ export default function Admin() {
         try { sessionStorage.removeItem(AUTH_FLAG); } catch {}
         setAuthed(false);
       });
-  }, [loadAll]);
+  }, [cachedAuth, loadAll]);
 
   // Quand l'onglet redevient visible ou que la fenêtre reprend le focus,
   // on retire silencieusement les candidatures + stats pour voir l'état réel
@@ -2151,7 +2151,7 @@ export default function Admin() {
   return (
     <div className="bg-ink min-h-screen flex flex-col">
       <Nav />
-      <main className="flex-1 pt-28 md:pt-36 pb-24 map-grid" data-testid="admin-section">
+      <main id="main-content" className="flex-1 pt-[calc(7rem+env(safe-area-inset-top))] md:pt-[calc(9rem+env(safe-area-inset-top))] pb-24 map-grid" data-testid="admin-section">
         <div className="max-w-6xl mx-auto px-5 sm:px-8">
           {authed === false && (
             <LoginScreen

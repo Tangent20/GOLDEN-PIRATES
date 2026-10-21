@@ -49,7 +49,7 @@ export default function Conditions() {
     <div className="min-h-screen bg-ink text-bone">
       <Seo route="/conditions" />
       <Nav />
-      <main data-testid="conditions-main" className="pt-28 sm:pt-36 map-grid">
+      <main id="main-content" data-testid="conditions-main" className="pt-[calc(7rem+env(safe-area-inset-top))] sm:pt-[calc(9rem+env(safe-area-inset-top))] map-grid">
         {/* HERO — le parchemin de confiance */}
         <section className="max-w-6xl mx-auto px-5 sm:px-8">
           <motion.p

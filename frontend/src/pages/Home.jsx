@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="bg-ink min-h-screen">
       <Nav />
-      <main>
+      <main id="main-content">
         <Hero />
         <Marquee />
         <Manifesto />

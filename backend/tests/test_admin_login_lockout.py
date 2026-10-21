@@ -4,11 +4,11 @@ import time
 import pytest
 import requests
 
-BASE = os.environ["REACT_APP_BACKEND_URL"].rstrip("/") if os.environ.get("REACT_APP_BACKEND_URL") else "https://golden-pirates.preview.emergentagent.com"
+BASE = os.environ["VITE_BACKEND_URL"].rstrip("/")
 API = f"{BASE}/api"
 
-ADMIN_EMAIL = "admin@goldenpirates.io"
-ADMIN_PW = "Capitaine1023!"
+ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
+ADMIN_PW = os.environ["ADMIN_PASSWORD"]
 FAKE_EMAIL = f"pirate-fantome-{int(time.time())}@test.com"
 
 
@@ -20,9 +20,10 @@ def session():
 
 
 def test_health_me_unauth(session):
-    # /auth/me without cookie should be 401
+    # L'absence de session est l'état normal d'un visiteur et ne doit pas produire de 401 console.
     r = session.get(f"{API}/auth/me")
-    assert r.status_code == 401, r.text
+    assert r.status_code == 200, r.text
+    assert r.json() == {"authed": False}
 
 
 def test_admin_login_bad_pw_returns_401(session):
@@ -77,8 +78,8 @@ def test_cleanup_fake_login_attempts():
     # best-effort cleanup via mongo
     try:
         from pymongo import MongoClient
-        mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-        db_name = os.environ.get("DB_NAME", "test_database")
+        mongo_url = os.environ["MONGO_URL"]
+        db_name = os.environ["DB_NAME"]
         client = MongoClient(mongo_url)
         db = client[db_name]
         res = db.login_attempts.delete_many({"identifier": {"$regex": FAKE_EMAIL}})

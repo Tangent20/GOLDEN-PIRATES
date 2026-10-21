@@ -1,12 +1,15 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
+from urllib.parse import urlparse
+from contextlib import asynccontextmanager
 import os
 import io
 import jwt
@@ -43,23 +46,94 @@ import logging  # noqa: E402
 logger = logging.getLogger("golden_pirates")
 load_dotenv(ROOT_DIR / '.env')
 
-MONGO_URL = os.environ['MONGO_URL']
-DB_NAME = os.environ['DB_NAME']
+def _required_env(name: str, min_length: int = 1) -> str:
+    """Lit une valeur de production indispensable sans jamais fournir de secret par défaut."""
+    value = os.getenv(name, "").strip()
+    if len(value) < min_length:
+        raise RuntimeError(f"La variable d'environnement {name} doit être configurée.")
+    return value
+
+
+MONGO_URL = _required_env("MONGO_URL")
+DB_NAME = _required_env("DB_NAME")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
-JWT_SECRET = os.environ['JWT_SECRET']
+JWT_SECRET = _required_env("JWT_SECRET", min_length=32)
 JWT_ALGORITHM = "HS256"
-ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@goldenpirates.io').strip().lower()
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'Capitaine1023!')
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
+ADMIN_EMAIL = _required_env("ADMIN_EMAIL").lower()
+ADMIN_PASSWORD = _required_env("ADMIN_PASSWORD", min_length=12)
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000').strip().rstrip('/')
+COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true" if FRONTEND_URL.startswith("https://") else "false").strip().lower() == "true"
+COOKIE_SAMESITE = "none" if COOKIE_SECURE else "lax"
+TRUST_PROXY_HEADERS = os.environ.get("TRUST_PROXY_HEADERS", "false").strip().lower() == "true"
 
-app = FastAPI(title="Golden Pirates — Royaume 1023")
+
+def _configured_origins() -> tuple[str, ...]:
+    """Retourne uniquement des origines explicites, jamais un joker avec des cookies."""
+    raw = os.environ.get("CORS_ORIGINS", "").strip()
+    if raw == "*":
+        raise RuntimeError("CORS_ORIGINS='*' est interdit lorsque les cookies d'administration sont actifs.")
+    candidates = [item.strip().rstrip("/") for item in raw.split(",") if item.strip()] or [FRONTEND_URL]
+    if FRONTEND_URL not in candidates:
+        candidates.append(FRONTEND_URL)
+    origins = []
+    for origin in candidates:
+        parsed = urlparse(origin)
+        canonical = f"{parsed.scheme}://{parsed.netloc}"
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc or canonical != origin:
+            raise RuntimeError(f"Origine CORS invalide : {origin}")
+        if canonical not in origins:
+            origins.append(canonical)
+    return tuple(origins)
+
+
+ALLOWED_ORIGINS = _configured_origins()
+
+@asynccontextmanager
+async def application_lifespan(_: FastAPI):
+    await seed()
+    try:
+        yield
+    finally:
+        client.close()
+
+
+app = FastAPI(title="Golden Pirates — Royaume 1023", lifespan=application_lifespan)
 api_router = APIRouter(prefix="/api")
 
 
 def now_utc():
     return datetime.now(timezone.utc)
+
+
+def client_ip(request: Request) -> str:
+    """Utilise X-Forwarded-For seulement quand l'ingress de confiance le garantit."""
+    if TRUST_PROXY_HEADERS:
+        forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+        if forwarded:
+            return forwarded
+    return request.client.host if request.client else "unknown"
+
+
+FAILED_LOOKUPS_PER_HOUR = 20
+
+
+async def register_failed_public_lookup(request: Request, scope: str):
+    """Freine l'énumération d'un code inexistant sans gêner les vraies consultations."""
+    now = now_utc()
+    bucket = now.strftime("%Y%m%d%H")
+    entry = await db.public_lookup_attempts.find_one_and_update(
+        {"scope": scope, "ip": client_ip(request), "bucket": bucket},
+        {
+            "$inc": {"count": 1},
+            "$setOnInsert": {"created_at": now.isoformat(), "expires_at": now + timedelta(hours=2)},
+        },
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    if entry.get("count", 0) > FAILED_LOOKUPS_PER_HOUR:
+        raise HTTPException(status_code=429, detail="Trop de tentatives de consultation — réessaie plus tard.")
 
 
 def safe_text(t: str) -> str:
@@ -87,8 +161,8 @@ def make_token(email: str, minutes: int) -> str:
 def set_auth_cookies(response: Response, email: str):
     token = make_token(email, 60 * 12)
     response.set_cookie(
-        key="access_token", value=token, httponly=True, secure=True,
-        samesite="none", max_age=60 * 60 * 12, path="/",
+        key="access_token", value=token, httponly=True, secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE, max_age=60 * 60 * 12, path="/",
     )
 
 
@@ -113,7 +187,7 @@ async def require_admin(request: Request) -> str:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Session invalide")
     email = (payload.get("sub") or "").strip().lower()
-    user = await db.users.find_one({"email": email})
+    user = await db.users.find_one({"email": email, "role": "admin"})
     if not user:
         raise HTTPException(status_code=401, detail="Compte introuvable")
     return email
@@ -158,16 +232,33 @@ async def root():
     return {"message": "Golden Pirates API — Royaume 1023", "status": "ok"}
 
 
+@api_router.get("/healthz")
+async def healthz():
+    """Sonde de vie sans dépendance externe, adaptée au démarrage du conteneur."""
+    return {"status": "ok"}
+
+
+@api_router.get("/readyz")
+async def readyz():
+    """Sonde de disponibilité : le trafic attend un accès MongoDB effectif."""
+    try:
+        await db.command("ping")
+    except Exception as exc:
+        logger.warning("MongoDB indisponible pour la sonde readyz : %s", exc)
+        raise HTTPException(status_code=503, detail="Base de données indisponible")
+    return {"status": "ready"}
+
+
 # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
 @api_router.post("/cron/keep-alive")
-async def cron_keep_alive(request: Request):
+async def cron_keep_alive(request: Request, background_tasks: BackgroundTasks):
     secret = os.environ.get("WEBHOOK_CRON_SECRET", "")
     auth = request.headers.get("authorization", "")
     if not secret or not secrets.compare_digest(auth, f"Bearer {secret}"):
         raise HTTPException(status_code=401, detail="Unauthorized")
-    # Ce ping maintient l'app en éveil ET applique les durées de conservation RGPD (1×/heure max).
-    purged = await run_retention()
-    return {"ok": True, "ts": now_utc().isoformat(), "retention": purged}
+    # Le cron reçoit son 2xx sans attendre l'entretien MongoDB (au plus 1×/heure).
+    background_tasks.add_task(run_retention)
+    return {"ok": True, "ts": now_utc().isoformat(), "retention": "scheduled"}
 
 
 # ---------------- Durées de conservation (RGPD art. 5-1-e) ----------------
@@ -233,6 +324,20 @@ def _discord_key(discord: str) -> str:
     if d.endswith("#0"):
         d = d[:-2]
     return d if len(d) >= 2 else ""
+
+
+ACCESS_CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+TRACKING_CODE_SUFFIX_LENGTH = 12
+RECEIPT_CODE_SUFFIX_LENGTH = 12
+
+
+def _new_access_code(prefix: str, suffix_length: int) -> str:
+    """Crée un secret lisible d'environ 60 bits, sans caractères ambiguës."""
+    return prefix + "".join(secrets.choice(ACCESS_CODE_ALPHABET) for _ in range(suffix_length))
+
+
+def _generate_tracking_code() -> str:
+    return _new_access_code("GP-1023-", TRACKING_CODE_SUFFIX_LENGTH)
 
 
 async def _pseudo_state(pseudo_key: str, now, pseudo_norm: str = "", discord_key: str = ""):
@@ -312,9 +417,7 @@ async def create_application(data: ApplicationCreate, request: Request):
         })
 
     # Garde 4 — limite anti-flood par appareil (IP)
-    ip = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-    if not ip:
-        ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
     day_ago = (now - timedelta(days=1)).isoformat()
     ip_count = await db.applications.count_documents({"ip": ip, "created_at": {"$gte": day_ago}})
     if ip_count >= IP_APPLICATIONS_PER_DAY:
@@ -333,26 +436,24 @@ async def create_application(data: ApplicationCreate, request: Request):
     doc["status_changed_at"] = now.isoformat()
     doc["pseudo_lower"] = pseudo_key
     doc["ip"] = ip
-    code = None
     for _ in range(6):
-        candidate = "GP-1023-" + "".join(
-            secrets.choice("23456789ABCDEFGHJKMNPQRSTUVWXYZ") for _ in range(4)
-        )
-        if not await db.applications.find_one({"tracking_code": candidate}):
-            code = candidate
-            break
-    if not code:
-        raise HTTPException(status_code=500, detail="Génération du code impossible")
-    doc["tracking_code"] = code
-    await db.applications.insert_one(doc)
-    return {"id": doc["id"], "tracking_code": code, "pseudo": doc["pseudo"]}
+        code = _generate_tracking_code()
+        doc["tracking_code"] = code
+        try:
+            await db.applications.insert_one(doc)
+            return {"id": doc["id"], "tracking_code": code, "pseudo": doc["pseudo"]}
+        except DuplicateKeyError:
+            # L'index unique tranche atomiquement une collision concurrente éventuelle.
+            continue
+    raise HTTPException(status_code=503, detail="Génération du code impossible — réessaie dans un instant.")
 
 
 @api_router.get("/applications/track/{code}")
-async def track_application(code: str):
+async def track_application(code: str, request: Request):
     code = code.strip().upper()
     doc = await db.applications.find_one({"tracking_code": code})
     if not doc:
+        await register_failed_public_lookup(request, "tracking")
         raise HTTPException(status_code=404, detail="Aucun parchemin à ce code de suivi")
     new_status = doc["status"] != doc.get("seen_status", doc["status"])
     new_note = bool(doc.get("note")) and doc.get("note", "") != doc.get("seen_note", "")
@@ -393,10 +494,11 @@ async def track_application(code: str):
 
 
 @api_router.get("/notifications/{code}")
-async def notifications(code: str):
+async def notifications(code: str, request: Request):
     code = code.strip().upper()
     doc = await db.applications.find_one({"tracking_code": code}, {"status": 1, "note": 1, "seen_status": 1, "seen_note": 1})
     if not doc:
+        await register_failed_public_lookup(request, "tracking")
         raise HTTPException(status_code=404, detail="Aucun dossier à ce code de suivi")
     unread = await db.messages.count_documents({
         "conv_code": code, "sender": "council", "deleted": False, "read_by_recruit": False,
@@ -413,10 +515,8 @@ async def notifications(code: str):
 @api_router.post("/admin/login")
 async def admin_login(data: LoginInput, request: Request, response: Response):
     email = data.email.strip().lower()
-    # Derrière l'ingress, request.client.host est l'IP d'un proxy interne (variable) :
-    # identifier basé sur la VRAIE IP client (première entrée de X-Forwarded-For).
-    ip = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-    ident = f"{ip or (request.client.host if request.client else 'unknown')}:{email}"
+    # X-Forwarded-For n'est retenu que lorsqu'un ingress de confiance l'a assaini.
+    ident = f"{client_ip(request)}:{email}"
     attempt = await db.login_attempts.find_one({"identifier": ident})
     if attempt and attempt.get("locked_until"):
         try:
@@ -451,14 +551,14 @@ async def admin_login(data: LoginInput, request: Request, response: Response):
 @api_router.post("/auth/logout")
 async def logout(response: Response):
     # Les attributs doivent correspondre EXACTEMENT à ceux du set_cookie
-    # (secure + samesite=none), sinon le navigateur ignore la suppression.
+    # (secure + samesite), sinon le navigateur ignore la suppression.
     response.delete_cookie(
-        "access_token", path="/", secure=True, httponly=True, samesite="none",
+        "access_token", path="/", secure=COOKIE_SECURE, httponly=True, samesite=COOKIE_SAMESITE,
     )
     # Ceinture et bretelles : écrase aussi la valeur avec une expiration passée.
     response.set_cookie(
-        key="access_token", value="", httponly=True, secure=True,
-        samesite="none", max_age=0, expires=0, path="/",
+        key="access_token", value="", httponly=True, secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE, max_age=0, expires=0, path="/",
     )
     return {"ok": True}
 
@@ -484,6 +584,9 @@ async def me(request: Request):
         return {"authed": False}
     email = (payload.get("sub") or "").strip().lower()
     if not email:
+        return {"authed": False}
+    user = await db.users.find_one({"email": email, "role": "admin"}, {"_id": 1})
+    if not user:
         return {"authed": False}
     return {"authed": True, "email": email, "role": "admin"}
 
@@ -515,6 +618,7 @@ class RecoveryCreate(BaseModel):
     pseudo: str = Field(min_length=2, max_length=32)
     discord: Optional[str] = Field(default=None, max_length=60)
     power: Optional[str] = Field(default=None, max_length=16)
+    contact: Optional[str] = Field(default=None, max_length=120)
 
 
 RECOVERY_PER_HOUR = 5
@@ -522,23 +626,19 @@ RECOVERY_PER_HOUR = 5
 
 @api_router.post("/applications/recover")
 async def recover_tracking_code(data: RecoveryCreate, request: Request):
-    """La bouteille perdue : la recrue retrouve son code avec son pseudo + UNE
-    clé d'identité — son Discord (semi-privé) OU sa puissance exacte (pour les
-    joueurs privés de Discord par les blocages pays)."""
+    """Récupération : pseudo + Discord, ou puissance + canal de contact exacts."""
     now = now_utc()
-    ip = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-    if not ip:
-        ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
+    pseudo_key = data.pseudo.strip().lower()
     hour_ago = now - timedelta(hours=1)
     attempts = await db.recovery_attempts.count_documents({"ip": ip, "at": {"$gte": hour_ago}})
-    if attempts >= RECOVERY_PER_HOUR:
+    attempts_for_pseudo = await db.recovery_attempts.count_documents({"pseudo_lower": pseudo_key, "at": {"$gte": hour_ago}})
+    if attempts >= RECOVERY_PER_HOUR or attempts_for_pseudo >= RECOVERY_PER_HOUR:
         raise HTTPException(status_code=429, detail={
             "code": "recover_limit",
             "msg": "Trop de tentatives depuis cet appareil — réessaie dans une heure.",
         })
-    await db.recovery_attempts.insert_one({"ip": ip, "at": now})
-
-    pseudo_key = data.pseudo.strip().lower()
+    await db.recovery_attempts.insert_one({"ip": ip, "pseudo_lower": pseudo_key, "at": now})
     docs = await db.applications.find({"pseudo_lower": pseudo_key}).sort("created_at", -1).to_list(50)
 
     def norm(v):
@@ -546,15 +646,16 @@ async def recover_tracking_code(data: RecoveryCreate, request: Request):
 
     target_discord = norm(data.discord)
     target_power = norm(data.power)
-    if not target_discord and not target_power:
+    target_contact = norm(data.contact)
+    if not target_discord and not (target_power and target_contact):
         raise HTTPException(status_code=400, detail={
             "code": "recover_need_one",
-            "msg": "Donne ton Discord OU ta puissance exacte pour retrouver ta bouteille.",
+            "msg": "Donne ton Discord, ou ta puissance ET ton contact exacts pour retrouver ta bouteille.",
         })
     doc = next(
         (d for d in docs
          if (target_discord and norm(d.get("discord")) == target_discord)
-         or (target_power and norm(d.get("power")) == target_power)),
+         or (target_power and target_contact and norm(d.get("power")) == target_power and norm(d.get("contact")) == target_contact)),
         None,
     )
     if not doc:
@@ -1030,24 +1131,31 @@ class ButinGoalIn(BaseModel):
 
 
 def _generate_receipt_id() -> str:
-    """Numéro de bordereau unique type GPD-1023-XXXX (4 car hex majuscules)."""
-    return f"GPD-1023-{secrets.token_hex(2).upper()}"
+    """Bordereau opaque de type GPD-1023-XXXXXXXXXXXX, lisible mais imprévisible."""
+    return _new_access_code("GPD-1023-", RECEIPT_CODE_SUFFIX_LENGTH)
 
 
 async def _ensure_receipt_id(doc: dict) -> dict:
     """Rétro-compat : attribue un receipt_id aux dons historiques sans bordereau."""
     if doc.get("receipt_id"):
         return doc
-    rid = _generate_receipt_id()
-    # on retente en cas de collision (très improbable mais safe)
-    for _ in range(5):
-        exists = await db.donators.find_one({"receipt_id": rid}, {"_id": 1})
-        if not exists:
-            break
+    for _ in range(6):
         rid = _generate_receipt_id()
-    await db.donators.update_one({"_id": doc["_id"]}, {"$set": {"receipt_id": rid}})
-    doc["receipt_id"] = rid
-    return doc
+        try:
+            result = await db.donators.update_one(
+                {"_id": doc["_id"], "receipt_id": {"$exists": False}},
+                {"$set": {"receipt_id": rid}},
+            )
+        except DuplicateKeyError:
+            continue
+        if result.modified_count:
+            doc["receipt_id"] = rid
+            return doc
+        current = await db.donators.find_one({"_id": doc["_id"]}, {"receipt_id": 1})
+        if current and current.get("receipt_id"):
+            doc["receipt_id"] = current["receipt_id"]
+            return doc
+    raise HTTPException(status_code=503, detail="Génération du bordereau impossible — réessaie dans un instant.")
 
 
 async def get_butin_goal():
@@ -1198,20 +1306,13 @@ class DonationDeclareIn(BaseModel):
 async def donation_declare(data: DonationDeclareIn, request: Request):
     """Le donateur grave lui-même son don après PayPal → bordereau immédiat, statut « en attente »
     jusqu'à vérification par le Conseil sur son compte PayPal."""
-    ip = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-    if not ip:
-        ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
     hour_ago = (now_utc() - timedelta(hours=1)).isoformat()
     if await db.donators.count_documents({"ip": ip, "created_at": {"$gte": hour_ago}}) >= 5:
         raise HTTPException(status_code=429, detail={"code": "flood", "msg": "Trop de déclarations depuis cet appareil — patiente une heure, marin."})
     email = (data.email or "").strip().lower()[:120] or None
     if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
         raise HTTPException(status_code=422, detail={"code": "bad_email", "msg": "Courriel invalide."})
-    receipt_id = _generate_receipt_id()
-    for _attempt in range(5):
-        if not await db.donators.find_one({"receipt_id": receipt_id}, {"_id": 1}):
-            break
-        receipt_id = _generate_receipt_id()
     doc = {
         "pseudo": safe_text(data.pseudo.strip())[:40],
         "amount": round(float(data.amount), 2),
@@ -1219,28 +1320,35 @@ async def donation_declare(data: DonationDeclareIn, request: Request):
         "currency": "EUR",
         "message": safe_text((data.message or "").strip())[:400] or None,
         "provider": "paypal",
-        "receipt_id": receipt_id,
         "status": "pending",
         "declared_by_donor": True,
         "anonymous": bool(data.anonymous),
         "ip": ip,
         "created_at": now_utc().isoformat(),
     }
-    await db.donators.insert_one(doc)
-    return {
-        "ok": True, "receipt_id": receipt_id, "status": "pending", "pseudo": doc["pseudo"],
-        "amount": doc["amount"], "anonymous": doc["anonymous"], "created_at": doc["created_at"],
-        "paypal_url": _paypal_url(doc["amount"]),
-    }
+    for _ in range(6):
+        receipt_id = _generate_receipt_id()
+        doc["receipt_id"] = receipt_id
+        try:
+            await db.donators.insert_one(doc)
+            return {
+                "ok": True, "receipt_id": receipt_id, "status": "pending", "pseudo": doc["pseudo"],
+                "amount": doc["amount"], "anonymous": doc["anonymous"], "created_at": doc["created_at"],
+                "paypal_url": _paypal_url(doc["amount"]),
+            }
+        except DuplicateKeyError:
+            continue
+    raise HTTPException(status_code=503, detail="Génération du bordereau impossible — réessaie dans un instant.")
 
 
 @api_router.get("/donations/status/{receipt_id}")
-async def donation_status(receipt_id: str):
+async def donation_status(receipt_id: str, request: Request):
     """Le donateur suit son don : en attente / confirmé / refusé."""
     rid = (receipt_id or "").strip().upper()[:32]
     d = await db.donators.find_one({"receipt_id": rid})
     if not d:
-        raise HTTPException(status_code=404, detail={"code": "not_found", "msg": "Bordereau introuvable — vérifie le code (ex: GPD-1023-ABCD)."})
+        await register_failed_public_lookup(request, "receipt")
+        raise HTTPException(status_code=404, detail={"code": "not_found", "msg": "Bordereau introuvable — vérifie le code (ex: GPD-1023-A2B3C4D5E6F7)."})
     return {
         "receipt_id": rid,
         "pseudo": d.get("pseudo", ""),
@@ -1539,7 +1647,7 @@ async def _fetch_donator_by_receipt(receipt_id: str) -> dict:
         raise HTTPException(status_code=404, detail={"code": "bad_receipt", "msg": "Bordereau introuvable."})
     doc = await db.donators.find_one({"receipt_id": rid})
     if not doc:
-        raise HTTPException(status_code=404, detail={"code": "not_found", "msg": "Bordereau introuvable — vérifie le code (ex: GPD-1023-ABCD)."})
+        raise HTTPException(status_code=404, detail={"code": "not_found", "msg": "Bordereau introuvable — vérifie le code (ex: GPD-1023-A2B3C4D5E6F7)."})
     return doc
 
 
@@ -1980,10 +2088,11 @@ async def update_application(app_id: str, data: StatusUpdate, _: str = Depends(r
 
 @api_router.delete("/admin/applications/{app_id}")
 async def delete_application(app_id: str, _: str = Depends(require_admin)):
-    doc = await db.applications.find_one({"id": app_id}, {"tracking_code": 1})
+    doc = await db.applications.find_one({"id": app_id}, {"tracking_code": 1, "id": 1})
     if not doc:
         raise HTTPException(status_code=404, detail="Candidature introuvable")
     await db.messages.delete_many({"conv_code": doc["tracking_code"]})
+    await db.peer_messages.delete_many({"$or": [{"from_id": doc["id"]}, {"to_id": doc["id"]}]})
     await db.applications.delete_one({"id": app_id})
     return {"ok": True}
 
@@ -2332,8 +2441,10 @@ async def admin_mark_read(code: str, _: str = Depends(require_admin)):
 async def seed():
     await db.users.create_index("email", unique=True)
     await db.applications.create_index("tracking_code", unique=True)
+    await db.applications.create_index("id", unique=True, partialFilterExpression={"id": {"$type": "string"}})
     await db.applications.create_index("pseudo_lower")
     await db.applications.create_index("ip")
+    await db.donators.create_index("receipt_id", unique=True, partialFilterExpression={"receipt_id": {"$type": "string"}})
     await db.applications.update_many(
         {"pseudo_lower": {"$exists": False}},
         [{"$set": {
@@ -2345,6 +2456,8 @@ async def seed():
     await db.rejections.create_index("pseudo_lower", unique=True)
     # Tentatives de récupération de code : auto-purge au bout de 2 h.
     await db.recovery_attempts.create_index("at", expireAfterSeconds=7200)
+    await db.recovery_attempts.create_index([("ip", 1), ("at", 1)])
+    await db.recovery_attempts.create_index([("pseudo_lower", 1), ("at", 1)])
     await db.rejections.create_index("pseudo_norm")
     await db.rejections.create_index("discord_key")
     async for rej_doc in db.applications.find(
@@ -2368,6 +2481,9 @@ async def seed():
         await db.rejections.update_one({"_id": rj["_id"]}, {"$set": {"pseudo_norm": _pseudo_norm(rj.get("pseudo_lower") or "")}})
     await db.login_attempts.create_index("identifier")
     await db.messages.create_index([("conv_code", 1), ("created_at", 1)])
+    await db.peer_messages.create_index([("from_id", 1), ("created_at", 1)])
+    await db.peer_messages.create_index([("to_id", 1), ("created_at", 1)])
+    await db.public_lookup_attempts.create_index("expires_at", expireAfterSeconds=0)
     # Rétention RGPD : JAMAIS au démarrage (aucune suppression lors d'un déploiement) —
     # uniquement via le cron planifié POST /api/cron/keep-alive (1×/heure max).
     admin = await db.users.find_one({"email": ADMIN_EMAIL})
@@ -2378,16 +2494,6 @@ async def seed():
             "role": "admin",
             "created_at": now_utc().isoformat(),
         })
-    elif not verify_password(ADMIN_PASSWORD, admin.get("password_hash", "")):
-        await db.users.update_one(
-            {"email": ADMIN_EMAIL},
-            {"$set": {"password_hash": hash_password(ADMIN_PASSWORD)}},
-        )
-
-
-@app.on_event("startup")
-async def startup():
-    await seed()
 
 
 app.include_router(api_router)
@@ -2402,26 +2508,32 @@ async def safe_validation_handler(request: Request, exc: RequestValidationError)
         content={"detail": "Requête invalide — vérifie les champs envoyés."},
     )
 
-# CORS : « * » dans CORS_ORIGINS = toutes origines (Starlette renvoie alors l'origine exacte de la
-# requête quand les cookies sont utilisés, ce qui reste valide pour les navigateurs).
-cors_env = os.environ.get('CORS_ORIGINS', '').strip()
-if cors_env == '*':
-    origins = ['*']
-else:
-    origins = [o.strip() for o in cors_env.split(',') if o.strip()]
-    if FRONTEND_URL and FRONTEND_URL not in origins:
-        origins.append(FRONTEND_URL)
+def _request_origin(request: Request) -> str | None:
+    origin = request.headers.get("origin", "").strip().rstrip("/")
+    if origin:
+        return origin
+    referer = request.headers.get("referer", "").strip()
+    if not referer:
+        return None
+    parsed = urlparse(referer)
+    return f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else None
+
+
+@app.middleware("http")
+async def reject_untrusted_sensitive_origin(request: Request, call_next):
+    """Bloque les mutations Conseil venant d'une origine non déclarée (CSRF inter-site)."""
+    sensitive_path = request.url.path.startswith("/api/admin/") or request.url.path == "/api/auth/logout"
+    if request.method in {"POST", "PUT", "PATCH", "DELETE"} and sensitive_path:
+        origin = _request_origin(request)
+        if origin and origin not in ALLOWED_ORIGINS:
+            return JSONResponse(status_code=403, content={"detail": "Origine non autorisée"})
+    return await call_next(request)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=list(ALLOWED_ORIGINS),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Attempts-Left", "Content-Disposition"],
 )
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()

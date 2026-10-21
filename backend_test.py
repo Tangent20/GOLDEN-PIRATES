@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 GOLDEN PIRATES — Backend API Test Suite (Iteration 57)
 Verifies P0 fixes: /api/auth/me always returns 200, frontend auth check reads r.data.authed
@@ -7,9 +8,9 @@ import requests
 import sys
 from datetime import datetime
 
-BASE_URL = "https://golden-pirates.preview.emergentagent.com/api"
-ADMIN_EMAIL = "admin@goldenpirates.io"
-ADMIN_PASSWORD = "Capitaine1023!"
+BASE_URL = os.environ["VITE_BACKEND_URL"].rstrip("/")
+ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
+ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 class Colors:
     GREEN = '\033[92m'

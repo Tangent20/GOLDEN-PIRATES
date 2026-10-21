@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes" />
+    <meta name="theme-color" content="#06090E" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#06090E" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Dis au navigateur de NE PAS mémoriser cette page HTML (seuls les JS/CSS versionnés sont cachés) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <!-- Tueur de Service Worker + nettoyage de caches résiduels d'anciennes versions.
+         Essentiel : si un internaute a visité le site quand il était publié via Emergent/Vercel,
+         un service worker a pu rester installé et renvoyer la vieille version. Ce script le tue. -->
+    <script>
+      (function () {
+        try {
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              regs.forEach(function (r) { r.unregister(); });
+            }).catch(function () {});
+          }
+          if (window.caches && caches.keys) {
+            caches.keys().then(function (keys) {
+              keys.forEach(function (k) { caches.delete(k); });
+            }).catch(function () {});
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      try {
+        localStorage.removeItem("GP_SUN");
+        var __root = document.documentElement;
+        var __applySun = function () {
+          var h = new Date().getHours();
+          var day = h >= 9 && h <= 19;
+          var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+          var contrast = window.matchMedia && window.matchMedia("(prefers-contrast: more)").matches;
+          __root.classList.toggle("sun-mode", contrast || (light && day));
+        };
+        __applySun();
+        ["(prefers-color-scheme: light)", "(prefers-contrast: more)"].forEach(function (q) {
+          var mq = window.matchMedia(q);
+          if (mq.addEventListener) mq.addEventListener("change", __applySun);
+        });
+        setInterval(__applySun, 60000);
+        if ("AmbientLightSensor" in window) {
+          try {
+            var __sensor = new AmbientLightSensor({ frequency: 0.25 });
+            __sensor.addEventListener("reading", function () {
+              if (typeof __sensor.illuminance === "number") __root.classList.toggle("sun-mode", __sensor.illuminance > 120);
+            });
+            __sensor.start();
+          } catch (e) {}
+        }
+      } catch (e) {}
+    </script>
+    <meta
+      name="description"
+      content="Hissez le pavillon noir avec les GOLDEN PIRATES, alliance souveraine du Royaume 1023 de Call of Dragons. Équipage soudé, KvK coordonnés : candidatez en ligne."
+    />
+    <meta name="keywords" content="Golden Pirates, Royaume 1023, Kingdom 1023, Call of Dragons, alliance, recrutement, migration, KvK, Saison 2" />
+    <meta name="author" content="GOLDEN PIRATES — Conseil des Capitaines" />
+    <title>GOLDEN PIRATES — Alliance pirate du Royaume 1023 · Call of Dragons</title>
+    <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg?v=3" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png?v=3" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=3" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
+    <link rel="manifest" href="/site.webmanifest?v=3" />
+    <meta name="apple-mobile-web-app-title" content="Golden Pirates" />
+    <meta name="application-name" content="Golden Pirates" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <link rel="canonical" href="https://golden-pirates.org/" />
+    <link rel="alternate" hreflang="fr" href="https://golden-pirates.org/" />
+    <link rel="alternate" hreflang="en" href="https://golden-pirates.org/" />
+    <link rel="alternate" hreflang="x-default" href="https://golden-pirates.org/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GOLDEN PIRATES" />
+    <meta property="og:url" content="https://golden-pirates.org/" />
+    <meta property="og:title" content="GOLDEN PIRATES — Royaume / Kingdom 1023 · Call of Dragons" />
+    <meta
+      property="og:description"
+      content="Hissez le pavillon noir : l'alliance souveraine du Royaume 1023 recrute ses marins. Équipage soudé, KvK coordonnés — candidature en ligne. Raise the black flag: apply online."
+    />
+    <meta property="og:image" content="https://golden-pirates.org/api/og-image.jpg?v=4" />
+    <meta property="og:image:secure_url" content="https://golden-pirates.org/api/og-image.jpg?v=4" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="GOLDEN PIRATES — l'équipage trinque autour du coffre au trésor, logo étoile-boussole dorée, alliance du Royaume 1023" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://golden-pirates.org/api/og-image.jpg?v=4" />
+    <meta name="twitter:image:alt" content="GOLDEN PIRATES — l'équipage trinque autour du coffre au trésor, alliance du Royaume 1023" />
+    <meta name="twitter:title" content="GOLDEN PIRATES — Royaume / Kingdom 1023 · Call of Dragons" />
+    <meta
+      name="twitter:description"
+      content="Hissez le pavillon noir : l'alliance souveraine du Royaume 1023 recrute ses marins. Candidature en ligne."
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://golden-pirates.org/#alliance",
+            "name": "GOLDEN PIRATES",
+            "alternateName": ["Golden Pirates — Royaume 1023", "Golden Pirates — Kingdom 1023"],
+            "url": "https://golden-pirates.org/",
+            "logo": "https://golden-pirates.org/icon-512.png?v=3",
+            "image": "https://golden-pirates.org/api/og-image.jpg?v=4",
+            "email": "golden.pirates@outlook.fr",
+            "description": "Alliance souveraine du Royaume 1023 de Call of Dragons. Recrutement de marins pour la fin de la Saison 2.",
+            "slogan": "L'or de la victoire ne coule que pour les équipages soudés."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://golden-pirates.org/#site",
+            "url": "https://golden-pirates.org/",
+            "name": "GOLDEN PIRATES",
+            "inLanguage": ["fr-FR", "en-US"],
+            "publisher": { "@id": "https://golden-pirates.org/#alliance" }
+          }
+        ]
+      }
+    </script>
+    <!-- Polices hébergées sur le site lui-même : aucun transfert vers Google (RGPD).
+         Préchargées + font-display:block pour le header (Pirata One, JetBrains Mono) : le texte attend
+         la vraie police au lieu de s'afficher d'abord dans une police de secours plus large, ce qui
+         faisait « s'étirer » la barre de navigation au chargement puis la faisait revenir en place.
+         Repli métrique « Fell Fallback » : Georgia ajustée pour que le texte courant ne saute pas. -->
+    <link rel="preload" href="/fonts/pirata-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/im-fell-english-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face { font-family: "Pirata One"; font-style: normal; font-weight: 400; font-display: block; src: url(/fonts/pirata-one-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+      @font-face { font-family: "Pirata One"; font-style: normal; font-weight: 400; font-display: block; src: url(/fonts/pirata-one-latin-ext-400-normal.woff2) format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+      @font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: block; src: url(/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+      @font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: block; src: url(/fonts/jetbrains-mono-latin-ext-400-normal.woff2) format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+      @font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 700; font-display: block; src: url(/fonts/jetbrains-mono-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+      @font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 700; font-display: block; src: url(/fonts/jetbrains-mono-latin-ext-700-normal.woff2) format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+      @font-face { font-family: "IM Fell English"; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/im-fell-english-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+      @font-face { font-family: "IM Fell English"; font-style: italic; font-weight: 400; font-display: swap; src: url(/fonts/im-fell-english-latin-400-italic.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+      /* Polices de secours à métriques ajustées (mesurées) : si une vraie police tarde, le texte
+         de remplacement occupe déjà la même largeur → aucun saut de mise en page. */
+      @font-face { font-family: "Pirata Fallback"; src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Noto Serif"), local("Liberation Serif"), local("Georgia"), local("DejaVu Serif"); size-adjust: 63%; ascent-override: 95%; descent-override: 25%; line-gap-override: 0%; }
+      @font-face { font-family: "Mono Fallback"; src: local("Courier New"), local("CourierNewPSMT"), local("Droid Sans Mono"), local("Liberation Mono"), local("DejaVu Sans Mono"), local("Menlo"); size-adjust: 103%; ascent-override: 100%; descent-override: 30%; line-gap-override: 0%; }
+      @font-face { font-family: "Fell Fallback"; src: local("Georgia"), local("Times New Roman"), local("TimesNewRomanPSMT"), local("Noto Serif"), local("Liberation Serif"); size-adjust: 108%; ascent-override: 92%; descent-override: 24%; line-gap-override: 0%; }
+      /* Barre de navigation : rendue seulement quand les polices du header sont prêtes (≤ 1,2 s max). */
+      html.gp-fonts-loading [data-testid="nav-header"] { visibility: hidden; }
+    </style>
+    <script>
+      (function () {
+        var h = document.documentElement;
+        h.classList.add("gp-fonts-loading");
+        var done = function () { h.classList.remove("gp-fonts-loading"); };
+        if (document.fonts && document.fonts.ready) { document.fonts.ready.then(done, done); } else { done(); }
+        setTimeout(done, 1200);
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <h1>GOLDEN PIRATES — l'alliance souveraine du Royaume 1023 de Call of Dragons</h1>
+      <p>
+        Les GOLDEN PIRATES ne recrutent pas des soldats : nous recrutons des marins que la mer n'a
+        pas encore domptés. Dans le Royaume 1023, notre pavillon noir ne flotte pas par hasard : il
+        flotte parce que derrière lui, chaque membre tire dans le même sens.
+      </p>
+      <p>
+        Recrutement préparé pour la fin de la Saison 2 : déposez votre candidature, puis suivez
+        votre dossier avec votre code de suivi GP-1023-XXXXXXXXXXXX. Code perdu ? Retrouvez-le avec votre
+        pseudo et votre Discord, ou votre puissance et votre contact exacts.
+      </p>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/index.jsx"></script>
+  </body>
+</html>

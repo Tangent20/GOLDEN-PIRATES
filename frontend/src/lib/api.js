@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const backendOrigin = (import.meta.env.VITE_BACKEND_URL || "").trim().replace(/\/$/, "");
+
 const api = axios.create({
-  baseURL: `${process.env.REACT_APP_BACKEND_URL}/api`,
+  // Domaine unique (reverse proxy) par défaut ; URL absolue seulement si l’API est séparée.
+  baseURL: backendOrigin ? `${backendOrigin}/api` : "/api",
   withCredentials: true,
   timeout: 15000,
 });

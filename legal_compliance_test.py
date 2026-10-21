@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 Golden Pirates — Legal Compliance Testing
 Tests GDPR retention, cron security, and admin export functionality
@@ -6,9 +7,9 @@ Tests GDPR retention, cron security, and admin export functionality
 import requests
 import sys
 
-BASE_URL = "https://golden-pirates.preview.emergentagent.com/api"
-ADMIN_EMAIL = "admin@goldenpirates.io"
-ADMIN_PASSWORD = "Capitaine1023!"
+BASE_URL = os.environ["VITE_BACKEND_URL"].rstrip("/")
+ADMIN_EMAIL = os.environ["ADMIN_EMAIL"]
+ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 class LegalComplianceTester:
     def __init__(self):

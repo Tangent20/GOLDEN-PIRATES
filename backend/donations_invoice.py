@@ -2,7 +2,7 @@
 Golden Pirates — Facture de don (parchemin pirate PDF + Excel, FR/EN).
 
 Génère une facture 100% immersive à partir d'un donateur enrichi :
-- `receipt_id` : identifiant unique "GPD-1023-XXXX"
+- `receipt_id` : identifiant unique "GPD-1023-XXXXXXXXXXXX"
 - `pseudo`, `amount`, `currency`, `email`, `message`, `created_at`, `provider`
 
 Style : parchemin, sceau cire rouge, filigrane GOLDEN PIRATES, numéro de bordereau.

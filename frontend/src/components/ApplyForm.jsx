@@ -131,6 +131,23 @@ function BlockHeader({ icon: Icon, title, done }) {
 }
 
 function ChoiceGroup({ id, label, options, value, onChange, error, groupRef }) {
+  const moveFocus = (index) => {
+    onChange(index);
+    requestAnimationFrame(() => document.getElementById(`${id}-option-${index}`)?.focus());
+  };
+
+  const onRadioKeyDown = (event, index) => {
+    let next = null;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % options.length;
+    if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + options.length) % options.length;
+    if (event.key === "Home") next = 0;
+    if (event.key === "End") next = options.length - 1;
+    if (next !== null) {
+      event.preventDefault();
+      moveFocus(next);
+    }
+  };
+
   return (
     <div ref={groupRef} tabIndex={-1} className="outline-none">
       <p id={`${id}-label`} className={labelCls}><span>{label}</span></p>
@@ -139,12 +156,15 @@ function ChoiceGroup({ id, label, options, value, onChange, error, groupRef }) {
           const on = value === i;
           return (
             <button
+              id={`${id}-option-${i}`}
               key={`${id}-${i}`}
               type="button"
               role="radio"
               aria-checked={on}
+              tabIndex={on || ((value === undefined || value === null) && i === 0) ? 0 : -1}
               data-testid={`${id}-option-${i}`}
               onClick={() => onChange(i)}
+              onKeyDown={(event) => onRadioKeyDown(event, i)}
               className={`group relative min-h-[48px] flex items-center gap-3 text-left px-3.5 py-2.5 border transition-[border-color,background-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 focus-visible:ring-offset-2 focus-visible:ring-offset-ink ${
                 on
                   ? "border-gold bg-gold/10 shadow-[inset_0_0_18px_rgba(212,175,55,0.12)]"
